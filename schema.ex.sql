@@ -26,8 +26,8 @@ CREATE TABLE threads (
     subject    VARCHAR(200),
     body       TEXT NOT NULL,
     img_path   VARCHAR(300),
-    created_at TIMESTAMPZ DEFAULT NOW(),
-    bumped_at  TIMESTAMPZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    bumped_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE posts (
@@ -35,7 +35,7 @@ CREATE TABLE posts (
     thread_id  INT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
     body       TEXT NOT NULL,
     img_path   VARCHAR(300),
-    created_at TIMESTAMPZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 INSERT INTO boards (slug, name, descript) VALUES
