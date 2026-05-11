@@ -1,0 +1,181 @@
+/* public/style.css */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #1a1a1a;
+  --surface:  #242424;
+  --border:   #3a3a3a;
+  --orange:   #ff6600;
+  --orange2:  #cc5200;
+  --white:    #e8e8e8;
+  --grey:     #888;
+  --link:     #4a9eff;
+  --link-vis: #9b59b6;
+  --quote:    #789922;
+  --postbg:   #1e1e1e;
+  --replybg:  #1a1a1a;
+  --num:      #ff6600;
+}
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font: 14px/1.5 'Courier New', Courier, monospace;
+}
+
+a            { color: var(--link); text-decoration: none; }
+a:visited    { color: var(--link-vis); }
+a:hover      { text-decoration: underline; }
+
+/* ── top bar ── */
+#topbar {
+  background: var(--orange);
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 2px solid var(--orange2);
+}
+#topbar .site-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: #000;
+  letter-spacing: 1px;
+}
+#topbar a { color: #000; font-size: 13px; }
+#topbar a:hover { text-decoration: underline; }
+
+/* ── page wrapper ── */
+.wrap { max-width: 900px; margin: 0 auto; padding: 12px; }
+
+/* ── board list (homepage) ── */
+.board-list { margin-top: 16px; }
+.board-list h2 {
+  font-size: 13px;
+  color: var(--orange);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.board-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.board-item .slug {
+  color: var(--orange);
+  font-weight: bold;
+  min-width: 40px;
+}
+.board-item .desc { color: var(--grey); font-size: 12px; }
+
+/* ── page header ── */
+.page-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+.page-header h1 { font-size: 18px; color: var(--orange); }
+.page-header p  { font-size: 12px; color: var(--grey); }
+
+/* ── post form ── */
+.postform {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.postform h3 { color: var(--orange); margin-bottom: 8px; font-size: 13px; }
+.postform table { border-collapse: collapse; width: 100%; }
+.postform td { padding: 3px 6px; vertical-align: top; }
+.postform td:first-child { color: var(--grey); white-space: nowrap; width: 80px; }
+.postform input[type=text],
+.postform textarea {
+  background: #111;
+  border: 1px solid var(--border);
+  color: var(--white);
+  font: 13px/1.4 'Courier New', monospace;
+  padding: 4px 6px;
+  width: 100%;
+}
+.postform textarea { resize: vertical; min-height: 80px; }
+.postform input[type=file] { color: var(--grey); font-size: 12px; }
+.postform button {
+  background: var(--orange);
+  border: none;
+  color: #000;
+  cursor: pointer;
+  font: bold 13px 'Courier New', monospace;
+  padding: 5px 18px;
+  margin-top: 4px;
+}
+.postform button:hover { background: var(--orange2); }
+
+/* ── thread (on board page) ── */
+.thread {
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+.thread-op, .post {
+  background: var(--postbg);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  margin-bottom: 6px;
+}
+.post-header {
+  font-size: 12px;
+  color: var(--grey);
+  margin-bottom: 4px;
+}
+.post-header .subject { color: var(--orange); font-weight: bold; margin-right: 6px; }
+.post-header .postnum { color: var(--num); }
+.post-header .postnum::before { content: "No."; }
+.post-body { font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+
+/* greentext */
+.post-body .gt { color: var(--quote); }
+
+/* reply arrow link */
+.reply-link { color: var(--orange); font-size: 12px; }
+
+.post-img img {
+  max-width: 200px;
+  max-height: 200px;
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+  cursor: pointer;
+  display: block;
+}
+.post-img img:hover { opacity: 0.85; }
+
+/* replies block */
+.replies {
+  margin-left: 24px;
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+}
+
+/* omitted notice */
+.omitted { color: var(--grey); font-size: 12px; margin: 4px 0 4px 0; }
+.omitted a { color: var(--orange); }
+
+/* ── pagination / nav ── */
+.nav { font-size: 13px; margin: 10px 0; color: var(--grey); }
+.nav a { color: var(--link); margin: 0 4px; }
+
+/* ── footer ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 0;
+  text-align: center;
+  color: var(--grey);
+  font-size: 11px;
+  margin-top: 24px;
+}
