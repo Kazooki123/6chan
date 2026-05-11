@@ -5,7 +5,7 @@ discrimination bullshit happens, we're making this website as friendly and welco
 
 Read the **/rules/**, don't be an idiot.
 
-## Setup:
+## Setup
 
 **Prerequisites:**
 
