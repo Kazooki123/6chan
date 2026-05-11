@@ -2,3 +2,4 @@
 *.json
 sql
 dump
+uploads/*
