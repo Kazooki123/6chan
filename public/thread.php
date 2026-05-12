@@ -31,6 +31,45 @@ function render_body(string $text): string {
 <title><?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
 <link rel="stylesheet" href="style.css">
 </head>
+<div id="quote-popup"></div>
+<script>
+  const popup = document.getElemetById('quote-popup');
+
+  document.querySelectAll('.quotelink').forEach(link => {
+    link.addEventListener('mouseenter', async function(e) {
+      const postId = this.dataset.post;
+      const target = document.getElemetById('p' + postId);
+
+      let html = '';
+      if (target) {
+        const header = target.querySelector('.post-header')?.innerHTML ?? '';
+        const body   = target.querySelector('.post-body')?.innerHTML ?? '';
+        html = `<div class="post-header">${header}</div><div class="post-body">${body}</div>`;
+      } else {
+        html = `<div class="post-header">No.${postId}</div><div class="post-body">[post not in thread..]</div>`;
+      }
+
+      popup.innerHTML = html;
+      popup.style.display = 'block';
+      movePopup(e);
+    });
+
+    link.addEventListener('mousemove', movePopup);
+    link.addEventListener('mouseleave', () => popup.style.display = 'none');
+  });
+
+  function movePopup(e) {
+    const pad = 14;
+    let x = e.clientX + pad;
+    let y = e.clientY + pad;
+
+    if (x + 440 > window.innerHTML) x = e.clientX - 440 - pad;
+    if (y + 200 > window.innerHTML) y = e.clientY - 200 - pad;
+
+    popup.style.left = x + 'px';
+    popup.style.top  = y + 'px';
+  }
+</script>
 <body>
 <div id="topbar">
   <span class="site-name">@6chan</span>
@@ -44,7 +83,6 @@ function render_body(string $text): string {
     <p>/<?= htmlspecialchars($thread['slug']) ?>/ — <?= htmlspecialchars($thread['bname']) ?></p>
   </div>
 
-  <!-- OP -->
   <div class="thread">
     <div class="thread-op">
       <?php if (!empty($thread['image_path'])): ?>
@@ -62,10 +100,9 @@ function render_body(string $text): string {
       <div class="post-body"><?= render_body($thread['body']) ?></div>
     </div>
 
-    <!-- Replies -->
     <div class="replies">
       <?php foreach ($posts as $p): ?>
-      <div class="post" id="p<?= $p['id'] ?>">
+      <div class="post" id="p<?= $thread['id'] ?>">
         <div class="post-header">
           <span class="postnum"><?= $p['id'] ?></span>
           <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
@@ -81,7 +118,7 @@ function render_body(string $text): string {
     </div>
   </div>
 
-  <!-- Reply form -->
+
   <div class="postform">
     <h3>Post a reply</h3>
     <form method="post" action="post.php" enctype="multipart/form-data">
@@ -97,6 +134,6 @@ function render_body(string $text): string {
   </div>
 </div>
 
-<footer>@6chan — <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">[back]</a> — <a href="index.php">home</a></footer>
+<footer>@6chan — <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">[back]</a> — <a href="index.php">Home</a></footer>
 </body>
 </html>

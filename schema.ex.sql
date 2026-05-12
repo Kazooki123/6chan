@@ -42,6 +42,12 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('r', 'Random', 'Anythong goes.'),
   ('t', 'Tech', 'Kwomptuwers'),
   ('a', 'Anime', 'Japs & Manga'),
-  ('g', 'Games', 'Vidyoe Gaemes');
+  ('g', 'Games', 'Vidyoe Gaemes'),
+  ('m', 'Music', 'Music topics and discussions'),
+  ('rs', 'Rust', 'Rust Programming Language'),
+  ('c', 'Chud', 'Friendly Chuds'),
+  ('f', 'FaceDev', 'Peak Youtuber, Face'),
+  ('tu', 'Turtles', 'About Turtles'),
+  ('l', 'LGBTQ', 'LGBTQ+ Topics');
 
 INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH')

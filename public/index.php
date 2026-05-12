@@ -20,6 +20,19 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
     </div>
 
     <div class="wrap">
+        <div class="welcome-block">
+            <div class="welcome-title">Welcome to @6chan</div>
+            <p>
+                A simple, no-frills imageboard. Pick a board, start a thread, keep it real.
+                This is a community built on honest and thoughtful discussion - read the rules, respect the boards, and don't be an IDIOT.
+            </p>
+            <div class="welcome-links">
+                <a href="rules.php">[Rules]</a>
+                <a href="board.php?b=r">[/r/ - random]</a>
+                <a href="rules.php?b=t">[/t/ - tech]</a>
+            </div>
+        </div>
+        
         <div class="board-list">
             <h2>Boards!</h2>
             <?php foreach ($boards as $b): ?>

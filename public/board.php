@@ -15,12 +15,15 @@ $page     = max(1, (int)($_GET['p'] ?? 1));
 $per_page = 10;
 $offset   = ($page - 1) * $per_page;
 
-$total_stmt = $db->prepare();
+$total_stmt = $db->prepare("SELECT COUNT(*) FROM threads WHERE board_id = ?");
+$total_stmt->execute([$board['id']]);
+$total_threads = (int)$total_stmt->fetchColumn();
+$total_pages   = max(1, (int)ceil($total_threads / $per_page));
 
 $threads = $db->prepare(
-    "SELECT * FROM threads WHERE board_id = ? ORDER BY bumped_at DESC LIMIT 15"
+    "SELECT * FROM threads WHERE board_id = ? ORDER BY bumped_at DESC LIMIT ? OFFSET ?"
 );
-$threads->execute([$board['id']]);
+$threads->execute([$board['id'], $per_page, $offset]);
 $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($threads as &$t) {
@@ -42,11 +45,11 @@ function render_body(string $text, int $thread_id): string {
     foreach ($lines as $line) {
         $line = preg_replace_callback('/&gt;&gt;(\d+)/', function($m) use ($thread_id) {
             $num = $m[1];
-            return '<a class="quotelink" href="thread.php"?id='.thread_id.'#p'.$num.'" '
+            return '<a class="quotelink" href="thread.php"?id='.$thread_id.'#p'.$num.'" '
                  . 'data-post="'.$num.'">&gt;&gt;'.$num.'</a>';
         }, $line);
         
-        if (preg_match('/^(\s*)&gt;(?!&gt;)/', $line)
+        if (preg_match('/^(\s*)&gt;(?!&gt;)/', $line))
             $out[] = '<span class="gt">' . $line . '</span>';
         else
             $out[] = $line;
@@ -106,7 +109,7 @@ function render_body(string $text, int $thread_id): string {
                     <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($t['created_at'])) ?></span>
                     <a href="thread.php?id=<?= $t['id'] ?>" style="margin-left:10px;font-size:12px;color:var(--orange);">[Reply]</a>
                 </div>
-                <div class="post-body"><?= render_body($t['body']) ?></div>
+                <div class="post-body"><?= render_body($t['body'], $t['id']) ?></div>
             </div>
 
             <?php
@@ -119,26 +122,45 @@ function render_body(string $text, int $thread_id): string {
               </div>
             <?php endif; ?>
         
-            <div class="replies">
-              <?php foreach ($t['replies'] as $p): ?>
-              <div class="post" id="p<?= $p['id'] ?>">
-                <div class="post-header">
-                  <span class="postnum"><?= $p['id'] ?></span>
-                  <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
-                </div>
-                <?php if (!empty($p['image_path'])): ?>
-                <div class="post-img">
-                  <img src="../uploads/<?= htmlspecialchars($p['image_path']) ?>" alt="image">
-                </div>
-                <?php endif; ?>
-                <div class="post-body"><?= render_body($p['body'], $t['id']) ?></div>
-              </div>
-              <?php endforeach; ?>
+            <div class="replies"> 
+               <?php foreach ($t['replies'] as $p): ?>
+               <div class="post" id="p<?= $p['id'] ?>">
+                   <div class="post-header">
+                       <span class="postnum"><?= $p['id'] ?></span>
+                       <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
+                   </div>
+                   <?php if (!empty($p['image_path'])): ?>
+                   <div class="post-img">
+                       <img src="../uploads/<?= htmlspecialchars($p['image_path']) ?>" alt="image">
+                   </div>
+                   <?php endif; ?>
+                   <div class="post-body"><?= render_body($p['body'], $t['id']) ?></div>
+               </div>
+               <?php endforeach; ?>
             </div>
-          </div>
-          <?php endforeach; ?>
         </div>
+        <?php endforeach; ?>
+
+        <!-- Pagination :3 -->
+        <div class="nav">
+            <?php if ($page > 1): ?>
+                <a href="board.php?b=<?= $slug ?>$&p=<?= $page-1 ?>">[&loque; Prev]</a>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <?php if ($i === $page): ?>
+                    <strong style="color:var(--orange)">[<?= $i ?>]</strong>
+                <?php else: ?>
+                    <a href="board.php?b=<?= $slug ?>&p=<?= $i ?>">[<?= $i ?>]</a>
+                <?php endif; ?>
+            <?php endfor; ?>
+
+            <?php if ($page < $total_pages): ?>
+                <a href="board.php?b=<?= $slug ?>&p=<?= $page+1 ?>">[Next &raquo;]</a>
+            <?php endif; ?>
+        </div>
+    </div>
         
-        <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a></footer>
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a></footer>
 </body>
 </html>

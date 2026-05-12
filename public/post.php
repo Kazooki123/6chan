@@ -9,6 +9,22 @@ $board->execute([$slug]);
 $board = $board->fetch(PDO::FETCH_ASSOC);
 if (!$board) die('Invalid board.');
 
+$ip        = $_SERVER['REMOTE_ADDR'];
+$ban_check = $db->prepare(
+    "SELECT * FROM bans WHERE ip = ? AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1"
+);
+$ban_check->execute([$ip]);
+$ban = $ban_check->fetch(PDO::FETCH_ASSOC);
+
+if ($ban) {
+    http_response_code(403);
+    $reason = $ban['reason'] ? htmlspecialchars($ban['reason']): 'No reason given.';
+    $expiry = $ban['expires_at'] ? date('Y-m-d H:i', strtotime($ban['expires_at'])): 'Permanent';
+    die("
+      <link rel='stylesheet' href='style.css'>
+    ");
+}
+
 function handle_upload(): ?string {
     if (empty($_FILES['image']['tmp_name'])) return null;
     $f    = $_FILES['image'];

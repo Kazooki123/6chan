@@ -1,4 +1,6 @@
-.env
-*.json
+*.env
+
+uploads
 sql
 dump
+vendor
