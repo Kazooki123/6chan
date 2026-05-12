@@ -20,7 +20,7 @@ preferred way to use postgresql. Hit run or execute and it should create the tab
 
 1. Running
 
- [!WARNING]
+> [!WARNING]
 > Make sure you have **PDO** and **pdo_pgsql** extension enabled! Check it with `php -m`!!
 
 ```bash
