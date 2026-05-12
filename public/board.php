@@ -69,6 +69,8 @@ function render_body(string $text, int $thread_id): string {
         <span class="site-name">@6chan</span>
         <a href="index.php">Home</a>
         <a href="board.php?b=<?= htmlspecialchars($board['slug']) ?>">/<?= htmlspecialchars($board['slug']) ?>/</a>
+        <a href="catalog.php?b=<?= htmlspecialchars($board['slug'] ?? $thread['slug']) ?>">[Catalog]</a>
+        <a href="rules.php">[Rules]</a>
     </div>
 
     <div class="wrap">

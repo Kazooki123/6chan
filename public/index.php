@@ -14,14 +14,18 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
     <div id="topbar">
         <span class="site-name">@6chan</span>
         <a href="index.php">Home</a>
+        <a href="rules.php">[Rules]</a>
+        <!--
         <?php foreach ($boards as $b): ?>
             <a href="board.php?b=<?= htmlspecialchars($b['slug']) ?>">/<?= htmlspecialchars($b['slug']) ?>/</a>
         <?php endforeach; ?>
+        -->
+        <a href="search.php">[Search]</a>
     </div>
 
     <div class="wrap">
         <div class="welcome-block">
-            <div class="welcome-title">Welcome to @6chan</div>
+            <div class="welcome-title">Welcome to @6chan!!</div>
             <p>
                 A simple, no-frills imageboard. Pick a board, start a thread, keep it real.
                 This is a community built on honest and thoughtful discussion - read the rules, respect the boards, and don't be an IDIOT.
@@ -34,7 +38,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
         </div>
         
         <div class="board-list">
-            <h2>Boards!</h2>
+            <h2>Boards</h2>
             <?php foreach ($boards as $b): ?>
             <div class="board-item">
                 <span class="slug">

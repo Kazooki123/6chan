@@ -245,3 +245,61 @@ footer {
 
 .welcome-links { margin-top: 8px; }
 .welcome-links a { margin-right: 10px; color: var(--link); }
+
+.ip-tag {
+    font-size: 11px;
+    color: var(--grey);
+    font-family: 'MapleMono-Semibold', monospace;
+    margin-right: 6px;
+}
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.catalog-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px;
+    text-decoration: none;
+    color: var(--white);
+    transition: border-color .15s;
+}
+.catalog-card:hover { border-color: var(--orange); }
+
+.catalog-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: #111;
+}
+
+.catalog-noimg {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--grey);
+}
+
+.catalog-subject {
+    font-size: 11px;
+    margin-top: 5px;
+    color: var(--white);
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+.catalog-meta {
+    font-size: 10px;
+    color: var(--grey);
+    margin-top: 3px;
+}

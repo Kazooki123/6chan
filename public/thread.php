@@ -17,14 +17,12 @@ function render_body(string $text, int $thread_id): string {
   $lines = explode("\n", htmlspecialchars($text, ENT_QUOTES));
   $out = [];
   foreach ($lines as $line) {
-    // >>quotelinks — must run before greentext check
     $line = preg_replace_callback('/&gt;&gt;(\d+)/', function($m) use ($thread_id) {
       $num = $m[1];
       return '<a class="quotelink" href="thread.php?id=' . $thread_id . '#p' . $num . '" '
            . 'data-post="' . $num . '">&gt;&gt;' . $num . '</a>';
     }, $line);
 
-    // greentext (lines starting with > but not >>quotelinks)
     if (preg_match('/^(\s*)&gt;(?!&gt;)/', $line))
       $out[] = '<span class="gt">' . $line . '</span>';
     else

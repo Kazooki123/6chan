@@ -106,7 +106,7 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
   <div class="admin-section" id="threads">
     <h2>Recent Threads</h2>
     <table class="admin-table">
-      <tr><th>ID</th><th>Board</th><th>Subject</th><th>Preview</th><th>Date</th><th>Action</th></tr>
+      <tr><th>ID</th><th>Board</th><th>Subject</th><th>Preview</th><th>Date</th><th>Action</th><th>IP</th></tr>
       <?php foreach ($threads as $t): ?>
       <tr>
         <td><a href="../thread.php?id=<?= $t['id'] ?>"><?= $t['id'] ?></a></td>
@@ -121,6 +121,19 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
             <button class="del-btn" type="submit">Delete</button>
           </form>
         </td>
+        <td>
+            <span class="ip-tag"><?= htmlspecialchars($t['ip'] ?? '-') ?></span>
+            <?php if (!empty($t['ip'])): ?>
+            <form method="post" style="display:inline;">
+                <input type="hidden" name="act"     value="ban_ip">
+                <input type="hidden" name="ip"      value="<?= htmlspecialchars($t['ip']) ?>">
+                <input type="hidden" name="reason"  value="Thread deletion">
+                <input type="hidden" name="expires" value="">
+                <button class="del-btn" style="border-color:#e67e00;color:#e67e00;"
+                    onclick="return confirm('Permaban <?= htmlspecialchars($t['ip']) ?>?')">Ban</button>
+            </form>
+            <?php endif; ?>
+        </td>
       </tr>
       <?php endforeach; ?>
     </table>
@@ -129,7 +142,7 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
   <div class="admin-section" id="posts">
     <h2>Recent Posts</h2>
     <table class="admin-table">
-      <tr><th>ID</th><th>Thread</th><th>Preview</th><th>Date</th><th>Action</th></tr>
+      <tr><th>ID</th><th>Thread</th><th>Preview</th><th>Date</th><th>Action</th><th>IP</th></tr>
       <?php foreach ($posts as $p): ?>
       <tr>
         <td><?= $p['id'] ?></td>
@@ -142,6 +155,19 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
             <input type="hidden" name="pid" value="<?= $p['id'] ?>">
             <button class="del-btn" type="submit">Delete</button>
           </form>
+        </td>
+        <td>
+            <span class="ip-tag"><?= htmlspecialchars($p['ip'] ?? '-') ?></span>
+            <?php if (!empty($p['ip'])): ?>
+            <form method="post" style="display:inline;">
+                <input type="hidden" name="act"     value="ban_ip">
+                <input type="hidden" name="ip"      value="<?= htmlspecialchars($p['ip']) ?>">
+                <input type="hidden" name="reason"  value="Posts deletion">
+                <input type="hidden" name="expires" value="">
+                <button class="del-btn" style="border-color:#e67e00;color:#e67e00;"
+                    onclick="return confirm('Permaban <?= htmlspecialchars($p['ip']) ?>?')">Ban</button>
+            </form>
+            <?php endif; ?>
         </td>
       </tr>
       <?php endforeach; ?>

@@ -22,6 +22,7 @@ CREATE TABLE boards (
 
 CREATE TABLE threads (
     id         SERIAL PRIMARY KEY,
+    ip         VARCHAR(45),
     board_id   INT NOT NULL REFERENCES boards(id),
     subject    VARCHAR(200),
     body       TEXT NOT NULL,
@@ -32,6 +33,7 @@ CREATE TABLE threads (
 
 CREATE TABLE posts (
     id         SERIAL PRIMARY KEY,
+    ip         VARCHAR(45),
     thread_id  INT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
     body       TEXT NOT NULL,
     img_path   VARCHAR(300),
