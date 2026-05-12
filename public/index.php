@@ -7,7 +7,8 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>6chan - boards</title>
+    <title>6chan - Home</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css"/>
 </head>
 <body>

@@ -33,6 +33,7 @@ if (strlen($q) >= 3) {
 <head>
 <meta charset="UTF-8">
 <title>Search — @6chan</title>
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

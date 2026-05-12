@@ -12,7 +12,6 @@ $posts = $db->prepare("SELECT * FROM posts WHERE thread_id = ? ORDER BY created_
 $posts->execute([$id]);
 $posts = $posts->fetchAll(PDO::FETCH_ASSOC);
 
-// BUG FIX: render_body now accepts $thread_id so >>quotes can link correctly
 function render_body(string $text, int $thread_id): string {
   $lines = explode("\n", htmlspecialchars($text, ENT_QUOTES));
   $out = [];
@@ -36,6 +35,7 @@ function render_body(string $text, int $thread_id): string {
 <head>
 <meta charset="UTF-8">
 <title><?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -44,6 +44,9 @@ function render_body(string $text, int $thread_id): string {
   <span class="site-name">@6chan</span>
   <a href="index.php">Home</a>
   <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">/<?= htmlspecialchars($thread['slug']) ?>/</a>
+  <a href="catalog.php?b=<?= htmlspecialchars($thread['slug']) ?>">[Catalog]</a>
+  <a href="rules.php">[Rules]</a>
+  <a href="search.php">[Search]</a>
 </div>
 
 <div class="wrap">
@@ -68,7 +71,7 @@ function render_body(string $text, int $thread_id): string {
       </div>
       <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
     </div>
-    
+
     <div class="replies">
       <?php foreach ($posts as $p): ?>
       <div class="post" id="p<?= $p['id'] ?>">
@@ -95,7 +98,7 @@ function render_body(string $text, int $thread_id): string {
       <input type="hidden" name="action" value="reply">
       <table>
         <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
-        <tr><td>Image</td><td><input type="file" name="image" accept="image/*"></td></tr>
+        <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"></td></tr>
         <tr><td></td><td><button type="submit">Reply</button></td></tr>
       </table>
     </form>
@@ -106,13 +109,6 @@ function render_body(string $text, int $thread_id): string {
 
 <div id="quote-popup"></div>
 
-<!--
-  BUG FIXES in JS:
-  1. Script moved to end of <body> so DOM is fully loaded before running
-  2. getElementById spelling fixed (was getElemetById)
-  3. querySelectorAll spelling fixed (was querySelectAll)
-  4. window.innerWidth / window.innerHeight fixed (was window.innerHTML)
--->
 <script>
 const popup = document.getElementById('quote-popup');
 

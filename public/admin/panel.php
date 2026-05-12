@@ -47,6 +47,7 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><title>Admin Panel — @6chan</title>
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
 <link rel="stylesheet" href="../style.css">
 <style>
 .admin-nav { display:flex; gap:12px; margin-bottom:14px; font-size:13px; }

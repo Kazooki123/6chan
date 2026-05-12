@@ -62,6 +62,7 @@ function render_body(string $text, int $thread_id): string {
 <head>
     <meta charset="UTF-8">
     <title>/<?= htmlspecialchars($board['slug']) ?>/ - <?= htmlspecialchars($board['name']) ?></title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -69,8 +70,9 @@ function render_body(string $text, int $thread_id): string {
         <span class="site-name">@6chan</span>
         <a href="index.php">Home</a>
         <a href="board.php?b=<?= htmlspecialchars($board['slug']) ?>">/<?= htmlspecialchars($board['slug']) ?>/</a>
-        <a href="catalog.php?b=<?= htmlspecialchars($board['slug'] ?? $thread['slug']) ?>">[Catalog]</a>
+        <a href="catalog.php?b=<?= htmlspecialchars($board['slug']) ?>">[Catalog]</a>
         <a href="rules.php">[Rules]</a>
+        <a href="search.php">[Search]</a>
     </div>
 
     <div class="wrap">
@@ -87,7 +89,7 @@ function render_body(string $text, int $thread_id): string {
                 <table>
                     <tr><td>Subject</td><td><input type="text" name="subject" maxlength="200"></td></tr>
                     <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
-                    <tr><td>Image</td><td><input type="file" name="image" accept="image/*"></td></tr>
+                    <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"></td></tr>
                     <tr><td></td><td><button type="submit">Post</button></td></tr>
                 </table>
             </form>

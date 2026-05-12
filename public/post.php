@@ -1,66 +1,76 @@
 <?php
-require_once '../config/db.php';
-$db     = get_db();
+$config_path = __DIR__ . '/../config/db.php';
+if (!file_exists($config_path)) {
+    die("FATAL: config/db.php not found at: $config_path
+         <br>__DIR__ is: " . __DIR__);
+}
 
-$ip        = $_SERVER['REMOTE_ADDR'];
+require_once '../config/db.php';
+$db = get_db();
+
+$ip = $_SERVER['REMOTE_ADDR'];
 $ban_check = $db->prepare(
     "SELECT * FROM bans WHERE ip = ? AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1"
 );
 $ban_check->execute([$ip]);
 $ban = $ban_check->fetch(PDO::FETCH_ASSOC);
-
 if ($ban) {
     http_response_code(403);
-    $reason = $ban['reason'] ? htmlspecialchars($ban['reason']): 'No reason given.';
-    $expiry = $ban['expires_at'] ? date('Y-m-d H:i', strtotime($ban['expires_at'])): 'Permanent';
+    $reason = htmlspecialchars($ban['reason'] ?? 'No reason given.');
+    $expiry = $ban['expires_at'] ? date('Y-m-d H:i', strtotime($ban['expires_at'])) : 'Permanent';
     die("
-      <link rel='stylesheet' href='style.css'>
-      <div style='max-width:400px;margin:60px auto;background:#1e1e1e;
-                  border:1px solid #ff4444;padding:20px;font-family;Courier New;'>
-           <div style='color:#ff4444;font-size:16px;font-weight:bold;margin-bottom:10px;'>
-               You are BANNED.
-           </div>
-           <div style='color:#aaa;font-size:13px;'>Reason: $reason</div>
-           <div style='color:#aaa;font-size:13px;'>Expires: $expiry</div>
-      </div>
+        <link rel='stylesheet' href='style.css'>
+        <div style='max-width:400px;margin:60px auto;background:#1e1e1e;
+                    border:1px solid #ff4444;padding:20px;font-family:Courier New;'>
+            <div style='color:#ff4444;font-size:16px;font-weight:bold;margin-bottom:10px;'>
+                You are banned.
+            </div>
+            <div style='color:#aaa;font-size:13px;'>Reason: $reason</div>
+            <div style='color:#aaa;font-size:13px;'>Expires: $expiry</div>
+        </div>
     ");
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    die('Method not allowed!');
+    die('Method not allowed.');
 }
 
-$action = $_POST['action'] ?? '';
-$slug   = $_POST['board_slug'] ?? '';
+$action = trim($_POST['action'] ?? '');
+$slug   = trim($_POST['board_slug'] ?? '');
 
-if (!$action || $slug) {
-    die('Missing action on board..');
+if (!$action || !$slug) {
+    // Debug dump so you can see exactly what arrived
+    http_response_code(400);
+    die('Missing action or board. Received POST keys: '
+        . implode(', ', array_keys($_POST))
+        . ' | action="' . htmlspecialchars($action)
+        . '" | board_slug="' . htmlspecialchars($slug) . '"');
 }
 
-$board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
-$board->execute([$slug]);
-$board = $board->fetch(PDO::FETCH_ASSOC);
-if (!$board) die('Invalid board.');
+$board_stmt = $db->prepare("SELECT * FROM boards WHERE slug = ?");
+$board_stmt->execute([$slug]);
+$board = $board_stmt->fetch(PDO::FETCH_ASSOC);
+if (!$board) die('Invalid board: ' . htmlspecialchars($slug));
 
 function handle_upload(): ?string {
     if (empty($_FILES['image']['tmp_name']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
 
-    $f    = $_FILES['image'];
-    $err  = $f['error'];
+    $f   = $_FILES['image'];
+    $err = $f['error'];
 
     if ($err !== UPLOAD_ERR_OK) {
         $msgs = [
-            UPLOAD_ERR_INI_SIZE     => 'File too large (server limit).',
-            UPLOAD_ERR_FORM_SIZE    => 'File too large (form limit).',
-            UPLOAD_ERR_PARTIAL      => 'Upload was cutoff, try again!',
-            UPLOAD_ERR_NO_TMP_DIR   => 'Server misconfiguration: no temp dir.',
-            UPLOAD_ERR_CANT_WRITE   => 'Server could not write file to disk.',
-            UPLOAD_ERR_EXTENSION    => 'Upload blocked by server extension.',
+            UPLOAD_ERR_INI_SIZE   => 'File too large (server limit).',
+            UPLOAD_ERR_FORM_SIZE  => 'File too large (form limit).',
+            UPLOAD_ERR_PARTIAL    => 'Upload was cut off, try again.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Server misconfiguration: no temp dir.',
+            UPLOAD_ERR_CANT_WRITE => 'Server could not write file to disk.',
+            UPLOAD_ERR_EXTENSION  => 'Upload blocked by server extension.',
         ];
-        die($msgs[$err] ?? "Upload error code $err.");
+        die($msgs[$err] ?? "Upload error code: $err");
     }
 
     $finfo   = new finfo(FILEINFO_MIME_TYPE);
@@ -77,7 +87,7 @@ function handle_upload(): ?string {
     }
 
     if ($f['size'] > 4 * 1024 * 1024) {
-        die("Image too large (max 4MB).");
+        die('Image too large (max 4 MB).');
     }
 
     $ext  = $allowed[$mime];
@@ -85,9 +95,9 @@ function handle_upload(): ?string {
     $dest = __DIR__ . '/uploads/' . $name;
 
     if (!move_uploaded_file($f['tmp_name'], $dest)) {
-        die('Could not move uploaded file. Check uploads/ permissions.');
+        die('Could not save file. Check that uploads/ exists and is writable (chmod 775).');
     }
-    
+
     chmod($dest, 0644);
     return $name;
 }
@@ -97,9 +107,7 @@ if ($action === 'new_thread') {
     $body    = trim($_POST['body'] ?? '');
     $subject = trim($_POST['subject'] ?? '');
 
-    if ($body === '') {
-        die('Post body is required.');
-    }
+    if ($body === '') die('Post body is required.');
 
     $img = handle_upload();
 
@@ -123,10 +131,9 @@ if ($action === 'new_thread') {
     $tid  = (int)($_POST['thread_id'] ?? 0);
     $body = trim($_POST['body'] ?? '');
 
-    if ($tid <= 0) die('Invalid thread.');
+    if ($tid <= 0)    die('Invalid thread ID.');
     if ($body === '') die('Reply body is required.');
 
-    // Verify thread exists
     $tc = $db->prepare("SELECT id FROM threads WHERE id = ?");
     $tc->execute([$tid]);
     if (!$tc->fetch()) die('Thread not found.');

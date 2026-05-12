@@ -21,6 +21,7 @@ $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
 <head>
 <meta charset="UTF-8">
 <title>Catalog — /<?= htmlspecialchars($board['slug']) ?>/</title>
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
