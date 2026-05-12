@@ -12,11 +12,20 @@ $posts = $db->prepare("SELECT * FROM posts WHERE thread_id = ? ORDER BY created_
 $posts->execute([$id]);
 $posts = $posts->fetchAll(PDO::FETCH_ASSOC);
 
-function render_body(string $text): string {
+// BUG FIX: render_body now accepts $thread_id so >>quotes can link correctly
+function render_body(string $text, int $thread_id): string {
   $lines = explode("\n", htmlspecialchars($text, ENT_QUOTES));
   $out = [];
   foreach ($lines as $line) {
-    if (str_starts_with(ltrim($line), '>') && !preg_match('/^>>\d+/', ltrim($line)))
+    // >>quotelinks — must run before greentext check
+    $line = preg_replace_callback('/&gt;&gt;(\d+)/', function($m) use ($thread_id) {
+      $num = $m[1];
+      return '<a class="quotelink" href="thread.php?id=' . $thread_id . '#p' . $num . '" '
+           . 'data-post="' . $num . '">&gt;&gt;' . $num . '</a>';
+    }, $line);
+
+    // greentext (lines starting with > but not >>quotelinks)
+    if (preg_match('/^(\s*)&gt;(?!&gt;)/', $line))
       $out[] = '<span class="gt">' . $line . '</span>';
     else
       $out[] = $line;
@@ -31,46 +40,8 @@ function render_body(string $text): string {
 <title><?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
 <link rel="stylesheet" href="style.css">
 </head>
-<div id="quote-popup"></div>
-<script>
-  const popup = document.getElemetById('quote-popup');
-
-  document.querySelectAll('.quotelink').forEach(link => {
-    link.addEventListener('mouseenter', async function(e) {
-      const postId = this.dataset.post;
-      const target = document.getElemetById('p' + postId);
-
-      let html = '';
-      if (target) {
-        const header = target.querySelector('.post-header')?.innerHTML ?? '';
-        const body   = target.querySelector('.post-body')?.innerHTML ?? '';
-        html = `<div class="post-header">${header}</div><div class="post-body">${body}</div>`;
-      } else {
-        html = `<div class="post-header">No.${postId}</div><div class="post-body">[post not in thread..]</div>`;
-      }
-
-      popup.innerHTML = html;
-      popup.style.display = 'block';
-      movePopup(e);
-    });
-
-    link.addEventListener('mousemove', movePopup);
-    link.addEventListener('mouseleave', () => popup.style.display = 'none');
-  });
-
-  function movePopup(e) {
-    const pad = 14;
-    let x = e.clientX + pad;
-    let y = e.clientY + pad;
-
-    if (x + 440 > window.innerHTML) x = e.clientX - 440 - pad;
-    if (y + 200 > window.innerHTML) y = e.clientY - 200 - pad;
-
-    popup.style.left = x + 'px';
-    popup.style.top  = y + 'px';
-  }
-</script>
 <body>
+
 <div id="topbar">
   <span class="site-name">@6chan</span>
   <a href="index.php">Home</a>
@@ -84,10 +55,10 @@ function render_body(string $text): string {
   </div>
 
   <div class="thread">
-    <div class="thread-op">
-      <?php if (!empty($thread['image_path'])): ?>
+    <div class="thread-op" id="p<?= $thread['id'] ?>">
+      <?php if (!empty($thread['img_path'])): ?>
       <div class="post-img">
-        <img src="../uploads/<?= htmlspecialchars($thread['image_path']) ?>" alt="image">
+        <img src="uploads/<?= htmlspecialchars($thread['img_path']) ?>" alt="image">
       </div>
       <?php endif; ?>
       <div class="post-header">
@@ -97,27 +68,26 @@ function render_body(string $text): string {
         <span class="postnum"><?= $thread['id'] ?></span>
         <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?></span>
       </div>
-      <div class="post-body"><?= render_body($thread['body']) ?></div>
+      <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
     </div>
-
+    
     <div class="replies">
       <?php foreach ($posts as $p): ?>
-      <div class="post" id="p<?= $thread['id'] ?>">
+      <div class="post" id="p<?= $p['id'] ?>">
         <div class="post-header">
           <span class="postnum"><?= $p['id'] ?></span>
           <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
         </div>
-        <?php if (!empty($p['image_path'])): ?>
+        <?php if (!empty($p['img_path'])): ?>
         <div class="post-img">
-          <img src="../uploads/<?= htmlspecialchars($p['image_path']) ?>" alt="image">
+          <img src="uploads/<?= htmlspecialchars($p['img_path']) ?>" alt="image">
         </div>
         <?php endif; ?>
-        <div class="post-body"><?= render_body($p['body']) ?></div>
+        <div class="post-body"><?= render_body($p['body'], $id) ?></div>
       </div>
       <?php endforeach; ?>
     </div>
   </div>
-
 
   <div class="postform">
     <h3>Post a reply</h3>
@@ -135,5 +105,52 @@ function render_body(string $text): string {
 </div>
 
 <footer>@6chan — <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">[back]</a> — <a href="index.php">Home</a></footer>
+
+<div id="quote-popup"></div>
+
+<!--
+  BUG FIXES in JS:
+  1. Script moved to end of <body> so DOM is fully loaded before running
+  2. getElementById spelling fixed (was getElemetById)
+  3. querySelectorAll spelling fixed (was querySelectAll)
+  4. window.innerWidth / window.innerHeight fixed (was window.innerHTML)
+-->
+<script>
+const popup = document.getElementById('quote-popup');
+
+document.querySelectorAll('.quotelink').forEach(link => {
+  link.addEventListener('mouseenter', function(e) {
+    const postId = this.dataset.post;
+    const target = document.getElementById('p' + postId);
+
+    let html = '';
+    if (target) {
+      const header = target.querySelector('.post-header')?.innerHTML ?? '';
+      const body   = target.querySelector('.post-body')?.innerHTML ?? '';
+      html = `<div class="post-header">${header}</div><div class="post-body">${body}</div>`;
+    } else {
+      html = `<div class="post-header">No.${postId}</div><div class="post-body">[post not in thread]</div>`;
+    }
+
+    popup.innerHTML = html;
+    popup.style.display = 'block';
+    movePopup(e);
+  });
+
+  link.addEventListener('mousemove', movePopup);
+  link.addEventListener('mouseleave', () => popup.style.display = 'none');
+});
+
+function movePopup(e) {
+  const pad = 14;
+  let x = e.clientX + pad;
+  let y = e.clientY + pad;
+  if (x + 440 > window.innerWidth)  x = e.clientX - 440 - pad;
+  if (y + 200 > window.innerHeight) y = e.clientY - 200 - pad;
+  popup.style.left = x + 'px';
+  popup.style.top  = y + 'px';
+}
+</script>
+
 </body>
 </html>

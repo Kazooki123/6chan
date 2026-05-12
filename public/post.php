@@ -33,7 +33,7 @@ function handle_upload(): ?string {
     if (!in_array($ext, $ok)) die('Invalid image type.');
     if ($f['size'] > 4 * 1024 * 1024) die('Image too large (max 4 MB).');
     $name = uniqid('img_', true) . '.' . $ext;
-    $dest = __DIR__ . '/../uploads/' . $name;
+    $dest = __DIR__ . '/uploads/' . $name;
     if (!move_uploaded_file($f['tmp_name'], $dest)) die('Upload failed.');
     return $name;
 }

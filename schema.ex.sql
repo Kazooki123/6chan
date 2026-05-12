@@ -40,12 +40,11 @@ CREATE TABLE posts (
 
 INSERT INTO boards (slug, name, descript) VALUES
   ('r', 'Random', 'Anythong goes.'),
-  ('t', 'Tech', 'Kwomptuwers'),
+  ('t', 'Tech', 'Kwompwutwers'),
   ('a', 'Anime', 'Japs & Manga'),
   ('g', 'Games', 'Vidyoe Gaemes'),
   ('m', 'Music', 'Music topics and discussions'),
   ('rs', 'Rust', 'Rust Programming Language'),
-  ('c', 'Chud', 'Friendly Chuds'),
   ('f', 'FaceDev', 'Peak Youtuber, Face'),
   ('tu', 'Turtles', 'About Turtles'),
   ('l', 'LGBTQ', 'LGBTQ+ Topics');
