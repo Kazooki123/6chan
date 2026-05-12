@@ -1,6 +1,6 @@
 *.env
 
-uploads
 sql
 dump
 vendor
+uploads/*
