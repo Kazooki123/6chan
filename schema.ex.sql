@@ -59,3 +59,15 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('l', 'LGBTQ', 'LGBTQ+ Topics');
 
 INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH')
+
+-- DROP NOT NULL in img_path
+ALTER TABLE threads ALTER COLUMN img_path DROP NOT NULL;
+ALTER TABLE posts   ALTER COLUMN img_path DROP NOT NULL;
+
+-- ADD PINS AND LOCKS
+ALTER TABLE threads ADD COLUMN pinned BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE threads ADD COLUMN locked BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ADD IPs
+ALTER TABLE threads ADD COLUMN ip VARCHAR(45);
+ALTER TABLE posts   ADD COLUMN ip VARCHAR(45);

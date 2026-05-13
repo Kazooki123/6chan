@@ -1,5 +1,7 @@
 # 6chan - The Peak Imageboard
 
+![Logo](6chan.png)
+
 Welcome to **6chan**! Unlike imageboards like **Soyjack.party** & **4chan** where racist, homophobic, and other
 discrimination bullshit happens, we're making this website as friendly and welcoming as possible!
 
@@ -27,6 +29,25 @@ preferred way to use postgresql. Hit run or execute and it should create the tab
 cd public
 php -S localhost:8080
 ```
+
+> [!NOTE]
+> If you're encountering errors, drop `NOT NULL` for `img_path`:
+
+```sql
+ALTER TABLE threads ALTER COLUMN img_path DROP NOT NULL;
+ALTER TABLE posts   ALTER COLUMN img_path DROP NOT NULL;
+```
+
+If you're having problems with PHP extensions, go to `php.ini` (OS may vary) and search for:
+
+```ini
+;extension='fileinfo'
+;extension='openssl'
+;extension='pdo_pgsql'
+;extension='pgsql'
+```
+
+And just remove the **semicolon** (;).
 
 ## Contribution
 
