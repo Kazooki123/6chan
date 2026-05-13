@@ -98,13 +98,16 @@ function render_body(string $text, int $thread_id): string {
         <?php foreach ($threads as $t): ?>
         <div class="thread">
             <div class="thread-op" id="p<?= $t['id'] ?>">
-                <?php if (!empty($t['img_path'])): ?>
+                <?php if (!empty($t["img_path"])):
+                    $imgpath = "uploads/" . htmlspecialchars($t['img_path']); ?>
                 <div class="post-img">
                     <a href="thread.php?id=<?= $t['id'] ?>">
-                        <img src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt="image">
+                        <img src="<?= $imgpath ?>" alt="image">
                     </a>
+                    <a href="<?= $imgpath ?>">View original</a>
                 </div>
-                <?php endif; ?>
+                <?php
+                endif; ?>
                 <div class="post-header">
                     <?php if ($t['subject']): ?>
                         <span class="subject"><?= htmlspecialchars($t['subject']) ?></span>
@@ -133,9 +136,14 @@ function render_body(string $text, int $thread_id): string {
                        <span class="postnum"><?= $p['id'] ?></span>
                        <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
                    </div>
-                   <?php if (!empty($p['img_path'])): ?>
+                   <?php if (!empty($p['img_path'])):
+                       $imgpath =
+                           "uploads/" . htmlspecialchars($p['img_path']); ?>
                    <div class="post-img">
-                       <img src="uploads/<?= htmlspecialchars($p['img_path']) ?>" alt="image">
+                       <a href="thread.php?id=<?= $t['id'] ?>">
+                           <img src="<?= $imgpath ?>" alt="image">
+                       </a>
+                       <a href="<?= $imgpath ?>">View original</a>
                    </div>
                    <?php endif; ?>
                    <div class="post-body"><?= render_body($p['body'], $t['id']) ?></div>
