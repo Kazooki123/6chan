@@ -10,9 +10,11 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 <div id="topbar">
   <span class="site-name">@6chan</span>
   <a href="index.php">Home</a>
+  <!--
   <?php foreach ($boards as $b): ?>
     <a href="board.php?b=<?= htmlspecialchars($b['slug']) ?>">/<?= htmlspecialchars($b['slug']) ?>/</a>
   <?php endforeach; ?>
+  -->
 </div>
 
 <div class="wrap">

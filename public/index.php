@@ -34,7 +34,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <div class="welcome-links">
                 <a href="rules.php">[Rules]</a>
                 <a href="board.php?b=r">[/r/ - random]</a>
-                <a href="rules.php?b=t">[/t/ - tech]</a>
+                <a href="board.php?b=t">[/t/ - tech]</a>
             </div>
         </div>
         
