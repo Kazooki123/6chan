@@ -30,6 +30,8 @@ $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
   <a href="index.php">Home</a>
   <a href="board.php?b=<?= htmlspecialchars($board['slug']) ?>">/<?= htmlspecialchars($board['slug']) ?>/</a>
   <a href="catalog.php?b=<?= htmlspecialchars($board['slug']) ?>">[Catalog]</a>
+  <a href="contact.php">[Contact]</a>
+  <a href="support.php">[Support]</a>
 </div>
 
 <div class="wrap">
@@ -55,6 +57,6 @@ $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
   </div>
 </div>
 
-<footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a></footer>
+<footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
 </body>
 </html>

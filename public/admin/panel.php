@@ -12,6 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($act === 'delete_post') {
         $db->prepare("DELETE FROM posts WHERE id=?")->execute([(int)$_POST['pid']]);
         $msg = 'Post deleted.';
+    } elseif ($act === 'toggle_pin') {
+        $db->prepare("UPDATE threads SET pinned = NOT pinned WHERE id = ?")
+           ->execute([(int)$_POST['tid']]);
+        $msg = 'Pin toggled.';
+    } elseif ($act === 'toggle_lock') {
+        $db->prepare("UPDATE threads SET locked = NOT locked WHERE id = ?")
+           ->execute([(int)$_POST['tid']]);
+        $msg = 'Lock toggled';
     } elseif ($act === 'delete_thread') {
         $db->prepare("DELETE FROM threads WHERE id=?")->execute([(int)$_POST['tid']]);
         $msg = 'Thread deleted.';
@@ -115,11 +123,27 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
         <td><?= htmlspecialchars(mb_substr($t['subject'] ?? '—', 0, 30)) ?></td>
         <td><?= htmlspecialchars(mb_substr($t['body'], 0, 60)) ?>…</td>
         <td><?= date('m/d H:i', strtotime($t['created_at'])) ?></td>
-        <td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap;">
           <form method="post" onsubmit="return confirm('Delete entire thread?')">
             <input type="hidden" name="act" value="delete_thread">
             <input type="hidden" name="tid" value="<?= $t['id'] ?>">
             <button class="del-btn" type="submit">Delete</button>
+          </form>
+          <form method="post">
+              <input type="hidden" name="act" value="toggle_pin">
+              <input type="hidden" name="tid" value="<?= $t['id'] ?>">
+              <button class="del-btn" type="submit"
+                      style="border-color:var(--orange);color:var(--orange);">
+                  <?= $t['pinned'] ? 'Unpin' : '📌 Pin' ?>          
+              </button>
+          </form>
+          <form method="post">
+              <input type="hidden" name="act" value="toggle_lock">
+              <input type="hidden" name="tid" value="<?= $t['id'] ?>">
+              <button class="del-btn" type="submit"
+                      style="border-color:#aaa;color:#aaa;">
+                  <?= $t['locked'] ? 'Unlock' : '🔒 Lock' ?>          
+              </button>
           </form>
         </td>
         <td>

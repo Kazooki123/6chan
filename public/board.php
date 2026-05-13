@@ -21,7 +21,9 @@ $total_threads = (int)$total_stmt->fetchColumn();
 $total_pages   = max(1, (int)ceil($total_threads / $per_page));
 
 $threads = $db->prepare(
-    "SELECT * FROM threads WHERE board_id = ? ORDER BY bumped_at DESC LIMIT ? OFFSET ?"
+    "SELECT * FROM threads WHERE board_id = ?
+     ORDER BY pinned, bumped_at DESC
+     LIMIT ? OFFSET ?"
 );
 $threads->execute([$board['id'], $per_page, $offset]);
 $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
@@ -73,6 +75,8 @@ function render_body(string $text, int $thread_id): string {
         <a href="catalog.php?b=<?= htmlspecialchars($board['slug']) ?>">[Catalog]</a>
         <a href="rules.php">[Rules]</a>
         <a href="search.php">[Search]</a>
+        <a href="contact.php">[Contact]</a>
+        <a href="support.php">[Support]</a>
     </div>
 
     <div class="wrap">
@@ -109,6 +113,12 @@ function render_body(string $text, int $thread_id): string {
                 <?php
                 endif; ?>
                 <div class="post-header">
+                    <?php if ($t['pinned']): ?>
+                        <span class="thread-badge pin">📌 Pinned</span>
+                    <?php endif; ?>
+                    <?php if ($t['locked']): ?>
+                        <span class="thread-badge lock">🔒 Locked</span>
+                    <?php endif; ?>
                     <?php if ($t['subject']): ?>
                         <span class="subject"><?= htmlspecialchars($t['subject']) ?></span>
                     <?php endif; ?>
@@ -173,6 +183,6 @@ function render_body(string $text, int $thread_id): string {
         </div>
     </div>
 
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a></footer>
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
 </body>
 </html>

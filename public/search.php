@@ -41,6 +41,8 @@ if (strlen($q) >= 3) {
   <span class="site-name">@6chan</span>
   <a href="index.php">Home</a>
   <a href="rules.php">[Rules]</a>
+  <a href="contact.php">[Contact]</a>
+  <a href="support.php">[Support]</a>
 </div>
 
 <div class="wrap">
@@ -124,6 +126,7 @@ if (strlen($q) >= 3) {
   <?php endif; ?>
 </div>
 
-<footer>@6chan — <a href="index.php">Home</a> — <a href="rules.php">Rules</a></footer>
+<footer>@6chan — <a href="index.php">Home</a> — <a href="rules.php">Rules</a> <a href="contact.php">[Contact]</a>
+ <a href="support.php">[Support]</a></footer>
 </body>
 </html>

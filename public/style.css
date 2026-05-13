@@ -7,6 +7,7 @@
   --border:   #3a3a3a;
   --orange:   #ff6600;
   --orange2:  #cc5200;
+  --pink:     #FFC0CB;
   --white:    #e8e8e8;
   --grey:     #888;
   --link:     #4a9eff;
@@ -227,8 +228,8 @@ footer {
 
 .welcome-block {
     background: var(--surface);
-    border: 1px solid var(--orange);
-    border-left: 4px solid vsr(--orange);
+    border: 1px solid var(--pink);
+    border-left: 4px solid var(--pink);
     padding: 12px 16px;
     margin-bottom: 16px;
     font-size: 13px;
@@ -302,4 +303,26 @@ footer {
     font-size: 10px;
     color: var(--grey);
     margin-top: 3px;
+}
+
+.thread-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-right: 6px;
+    font-weight: bold;
+    vertical-align: middle;
+}
+
+.thread-badge.pin  { background: #2a1f00; color: var(--orange); border: 1px solid var(--orange); }
+.thread-badge.lock { background: #1a1a2a; color: #aaaacc;     border: 1px solid #555577; }
+
+.locked-notice {
+    background: #1a1a2a;
+    border: 1px solid #555577;
+    color: #aaaacc;
+    font-size: 13px;
+    padding: 10px 14px;
+    margin-top: 12px;
 }

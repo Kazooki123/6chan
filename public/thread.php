@@ -8,6 +8,9 @@ $thread->execute([$id]);
 $thread = $thread->fetch(PDO::FETCH_ASSOC);
 if (!$thread) { http_response_code(404); die('Thread not found.'); }
 
+$is_locked = (bool)$thread['locked'];
+$is_pinned = (bool)$thread['pinned'];
+
 $posts = $db->prepare("SELECT * FROM posts WHERE thread_id = ? ORDER BY created_at ASC");
 $posts->execute([$id]);
 $posts = $posts->fetchAll(PDO::FETCH_ASSOC);
@@ -47,11 +50,17 @@ function render_body(string $text, int $thread_id): string {
   <a href="catalog.php?b=<?= htmlspecialchars($thread['slug']) ?>">[Catalog]</a>
   <a href="rules.php">[Rules]</a>
   <a href="search.php">[Search]</a>
+  <a href="contact.php">[Contact]</a>
+  <a href="support.php">[Support]</a>
 </div>
 
 <div class="wrap">
   <div class="page-header">
-    <h1><?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></h1>
+    <h1>
+        <?php if ($is_pinned): ?><span class="thread-badge pin">📌 Pinned</span><?php endif; ?>
+        <?php if ($is_locked): ?><span class="thread-badge lock">🔒 Locked</span><?php endif; ?>
+        <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?>
+    </h1>
     <p>/<?= htmlspecialchars($thread['slug']) ?>/ — <?= htmlspecialchars($thread['bname']) ?></p>
   </div>
 
@@ -90,6 +99,11 @@ function render_body(string $text, int $thread_id): string {
     </div>
   </div>
 
+  <?php if ($is_locked): ?>
+  <div class="locked-notice">
+    🔒 This thread is locked! No new replies can be posted.
+  </div>
+  <?php else: ?>
   <div class="postform">
     <h3>Post a reply</h3>
     <form method="post" action="post.php" enctype="multipart/form-data">
@@ -103,9 +117,10 @@ function render_body(string $text, int $thread_id): string {
       </table>
     </form>
   </div>
+  <?php endif; ?>
 </div>
 
-<footer>@6chan — <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">[back]</a> — <a href="index.php">Home</a></footer>
+<footer>@6chan — <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">[back]</a> — <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
 
 <div id="quote-popup"></div>
 

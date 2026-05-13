@@ -15,6 +15,8 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
     <a href="board.php?b=<?= htmlspecialchars($b['slug']) ?>">/<?= htmlspecialchars($b['slug']) ?>/</a>
   <?php endforeach; ?>
   -->
+  <a href="contact.php">[Contact]</a>
+  <a href="support.php">[Support]</a>
 </div>
 
 <div class="wrap">
@@ -43,6 +45,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
        Ban evasion results in an immediate permanent ban.</p>
   </div>
 </div>
-<footer>@6chan — <a href="index.php">home</a> — <a href="rules.php">Rules</a></footer>
+<footer>@6chan — <a href="index.php">home</a> — <a href="rules.php">Rules</a> <a href="contact.php">[Contact]</a>
+ <a href="support.php">[Support]</a></footer>
 </body>
 </html>

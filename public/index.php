@@ -22,6 +22,8 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
         <?php endforeach; ?>
         -->
         <a href="search.php">[Search]</a>
+        <a href="contact.php">[Contact]</a>
+        <a href="support.php">[Support]</a>
     </div>
 
     <div class="wrap">
@@ -51,6 +53,6 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <?php endforeach; ?>
         <div>
     </div>
-    <footer>@6chan v0.01 - aGPL v3.0 - all boards: <a href="index.php">Home</a></footer>
+    <footer>@6chan v0.01 - aGPL v3.0 - All boards: <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
 </body>
 </html>

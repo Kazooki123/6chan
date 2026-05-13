@@ -134,9 +134,11 @@ if ($action === 'new_thread') {
     if ($tid <= 0)    die('Invalid thread ID.');
     if ($body === '') die('Reply body is required.');
 
-    $tc = $db->prepare("SELECT id FROM threads WHERE id = ?");
+    $tc = $db->prepare("SELECT id, locked FROM threads WHERE id = ?");
     $tc->execute([$tid]);
-    if (!$tc->fetch()) die('Thread not found.');
+    $row = $tc->fetch();
+    if (!$row)          die('Thread not found.');
+    if ($row['locked']) die('This thread is locked! No new replies.');
 
     $img = handle_upload();
 
