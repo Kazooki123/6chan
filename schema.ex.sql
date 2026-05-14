@@ -24,6 +24,7 @@ CREATE TABLE threads (
     id         SERIAL PRIMARY KEY,
     ip         VARCHAR(45),
     board_id   INT NOT NULL REFERENCES boards(id),
+    author     VARCHAR(64) NOT NULL DEFAULT 'Anonymous',
     subject    VARCHAR(200),
     body       TEXT NOT NULL,
     img_path   VARCHAR(300),
@@ -35,8 +36,10 @@ CREATE TABLE posts (
     id         SERIAL PRIMARY KEY,
     ip         VARCHAR(45),
     thread_id  INT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
+    author     VARCHAR(64) NOT NULL DEFAULT 'Anonymous',
     body       TEXT NOT NULL,
     img_path   VARCHAR(300),
+    options    VARCHAR(64),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -75,3 +78,6 @@ ALTER TABLE threads ADD COLUMN locked BOOLEAN NOT NULL DEFAULT FALSE;
 -- ADD IPs
 ALTER TABLE threads ADD COLUMN ip VARCHAR(45);
 ALTER TABLE posts   ADD COLUMN ip VARCHAR(45);
+
+-- ADD OPTIONS (for Sage-ing)
+ALTER TABLE posts ADD COLUMN options VARCHAR(64);
