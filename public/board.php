@@ -145,6 +145,9 @@ function render_body(string $text, int $thread_id): string {
                <?php foreach ($t['replies'] as $p): ?>
                <div class="post" id="p<?= $p['id'] ?>">
                    <div class="post-header">
+                       <?php if (!empty($p['options']) && $p['options'] === 'sage'): ?>
+                         <span style="color:var(--grey);font-size:11px;margin-left:4px;">[sage]</span>
+                       <?php endif; ?>
                        <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
                        <span class="postnum"><?= $p['id'] ?></span>
                        <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>

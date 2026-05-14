@@ -108,14 +108,7 @@ if ($action === 'new_thread') {
     $subject = trim($_POST['subject'] ?? '');
     $author  = trim($_POST['author'] ?? '');
     $author  = ($author === '') ? 'Anon' : $author;
-    $options = strtolower(trim($_POST['options'] ?? ''));
-    $is_sage = ($options === 'sage');
 
-    if (!$is_sage) {
-        $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
-           ->execute([$tid]);
-    }
-    
     if ($body === '') die('Post body is required.');
 
     $img = handle_upload();
@@ -142,6 +135,8 @@ if ($action === 'new_thread') {
     $body = trim($_POST['body'] ?? '');
     $author  = trim($_POST['author'] ?? '');
     $author  = ($author === '') ? 'Anon' : $author;
+    $options = strtolower(trim($_POST['options'] ?? ''));
+    $is_sage = ($options === 'sage');
     
     if ($tid <= 0)    die('Invalid thread ID.');
     if ($body === '') die('Reply body is required.');
@@ -160,9 +155,11 @@ if ($action === 'new_thread') {
     );
     $s->execute([$tid, $body, $img, $ip, $author, $is_sage ? 'sage' : null]);
 
-    $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
-       ->execute([$tid]);
-
+    if (!$is_sage) {
+        $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
+           ->execute([$tid]);
+    }
+       
     header("Location: thread.php?id=$tid");
     exit;
 
