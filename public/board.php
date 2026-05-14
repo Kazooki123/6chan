@@ -91,6 +91,7 @@ function render_body(string $text, int $thread_id): string {
                 <input type="hidden" name="board_slug" value="<?= htmlspecialchars($board['slug']) ?>">
                 <input type="hidden" name="action" value="new_thread">
                 <table>
+                    <tr><td>Name</td><td><input type="text" name="author" maxlength="64" placeholder="Anon"></td></tr>
                     <tr><td>Subject</td><td><input type="text" name="subject" maxlength="200"></td></tr>
                     <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
                     <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"></td></tr>
@@ -113,18 +114,19 @@ function render_body(string $text, int $thread_id): string {
                 <?php
                 endif; ?>
                 <div class="post-header">
-                    <?php if ($t['pinned']): ?>
-                        <span class="thread-badge pin">📌 Pinned</span>
-                    <?php endif; ?>
-                    <?php if ($t['locked']): ?>
-                        <span class="thread-badge lock">🔒 Locked</span>
-                    <?php endif; ?>
                     <?php if ($t['subject']): ?>
                         <span class="subject"><?= htmlspecialchars($t['subject']) ?></span>
                     <?php endif; ?>
+                    <span class="author"><?= htmlspecialchars($t['author'] ?? 'Anon') ?></span>
                     <span class="postnum"><?= $t['id'] ?></span>
-                    <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($t['created_at'])) ?></span>
-                    <a href="thread.php?id=<?= $t['id'] ?>" style="margin-left:10px;font-size:12px;color:var(--orange);">[Reply]</a>
+                    <span class="postdate"><?= date('Y-m-d H:i', strtotime($t['created_at'])) ?></span>
+                    <a href="thread.php?id=<?= $t['id'] ?>" class="reply-link">[Reply]</a>
+                    <?php if ($t['pinned']): ?>
+                        <span class="thread-badge pin">📌</span>
+                    <?php endif; ?>
+                    <?php if ($t['locked']): ?>
+                        <span class="thread-badge lock">🔒</span>
+                    <?php endif; ?>
                 </div>
                 <div class="post-body"><?= render_body($t['body'], $t['id']) ?></div>
             </div>
@@ -143,8 +145,9 @@ function render_body(string $text, int $thread_id): string {
                <?php foreach ($t['replies'] as $p): ?>
                <div class="post" id="p<?= $p['id'] ?>">
                    <div class="post-header">
+                       <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
                        <span class="postnum"><?= $p['id'] ?></span>
-                       <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
+                       <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
                    </div>
                    <?php if (!empty($p['img_path'])):
                        $imgpath =

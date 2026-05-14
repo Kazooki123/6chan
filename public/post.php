@@ -106,21 +106,31 @@ if ($action === 'new_thread') {
 
     $body    = trim($_POST['body'] ?? '');
     $subject = trim($_POST['subject'] ?? '');
+    $author  = trim($_POST['author'] ?? '');
+    $author  = ($author === '') ? 'Anon' : $author;
+    $options = strtolower(trim($_POST['options'] ?? ''));
+    $is_sage = ($options === 'sage');
 
+    if (!$is_sage) {
+        $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
+           ->execute([$tid]);
+    }
+    
     if ($body === '') die('Post body is required.');
 
     $img = handle_upload();
 
     $s = $db->prepare(
-        "INSERT INTO threads (board_id, subject, body, img_path, ip)
-         VALUES (?, ?, ?, ?, ?) RETURNING id"
+        "INSERT INTO threads (board_id, subject, body, img_path, ip, author)
+         VALUES (?, ?, ?, ?, ?, ?) RETURNING id"
     );
     $s->execute([
         $board['id'],
         $subject !== '' ? $subject : null,
         $body,
         $img,
-        $ip
+        $ip,
+        $author
     ]);
     $tid = $s->fetchColumn();
     header("Location: thread.php?id=$tid");
@@ -130,7 +140,9 @@ if ($action === 'new_thread') {
 
     $tid  = (int)($_POST['thread_id'] ?? 0);
     $body = trim($_POST['body'] ?? '');
-
+    $author  = trim($_POST['author'] ?? '');
+    $author  = ($author === '') ? 'Anon' : $author;
+    
     if ($tid <= 0)    die('Invalid thread ID.');
     if ($body === '') die('Reply body is required.');
 
@@ -139,14 +151,14 @@ if ($action === 'new_thread') {
     $row = $tc->fetch();
     if (!$row)          die('Thread not found.');
     if ($row['locked']) die('This thread is locked! No new replies.');
-
+    
     $img = handle_upload();
 
     $s = $db->prepare(
-        "INSERT INTO posts (thread_id, body, img_path, ip)
-         VALUES (?, ?, ?, ?)"
+        "INSERT INTO posts (thread_id, body, img_path, ip, author, options)
+         VALUES (?, ?, ?, ?, ?, ?)"
     );
-    $s->execute([$tid, $body, $img, $ip]);
+    $s->execute([$tid, $body, $img, $ip, $author, $is_sage ? 'sage' : null]);
 
     $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
        ->execute([$tid]);

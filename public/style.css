@@ -138,12 +138,19 @@ a:hover      { text-decoration: underline; }
   margin-bottom: 6px;
 }
 .post-header {
-  font-size: 12px;
-  color: var(--grey);
-  margin-bottom: 4px;
+  font-size: 13px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
 }
-.post-header .subject { color: var(--orange); font-weight: bold; margin-right: 6px; }
-.post-header .postnum { color: var(--num); }
+.post-header .subject { color: #89c4ff; font-weight: bold; }
+.post-header .author { color: var(--orange); font-weight: bold; }
+.post-header .postnum { color: var(--grey); font-size: 12px; cursor: pointer; }
+.post-header .postnum:hover { color: var(--orange); }
+.post-header .postdate { color: var(--grey); font-size: 11px; }
+.post-header .reply-link { color: var(--orange); font-size: 12px; }
 .post-header .postnum::before { content: "No."; }
 .post-body { font-size: 13px; white-space: pre-wrap; word-break: break-word; }
 

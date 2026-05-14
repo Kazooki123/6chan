@@ -57,8 +57,8 @@ function render_body(string $text, int $thread_id): string {
 <div class="wrap">
   <div class="page-header">
     <h1>
-        <?php if ($is_pinned): ?><span class="thread-badge pin">📌 Pinned</span><?php endif; ?>
-        <?php if ($is_locked): ?><span class="thread-badge lock">🔒 Locked</span><?php endif; ?>
+        <?php if ($is_pinned): ?><span class="thread-badge pin">📌</span><?php endif; ?>
+        <?php if ($is_locked): ?><span class="thread-badge lock">🔒</span><?php endif; ?>
         <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?>
     </h1>
     <p>/<?= htmlspecialchars($thread['slug']) ?>/ — <?= htmlspecialchars($thread['bname']) ?></p>
@@ -75,8 +75,9 @@ function render_body(string $text, int $thread_id): string {
         <?php if ($thread['subject']): ?>
           <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
         <?php endif; ?>
+        <span class="author"><?= htmlspecialchars($t['author'] ?? 'Anon') ?></span>
         <span class="postnum"><?= $thread['id'] ?></span>
-        <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?></span>
+        <span class="postdate"><?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?></span>
       </div>
       <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
     </div>
@@ -85,8 +86,12 @@ function render_body(string $text, int $thread_id): string {
       <?php foreach ($posts as $p): ?>
       <div class="post" id="p<?= $p['id'] ?>">
         <div class="post-header">
+          <?php if (!empty($p['options']) && $p['options'] === 'sage'): ?>
+            <span style="color:var(--grey);font-size:11px;margin-left:4px;">[sage]</span>
+          <?php endif; ?>
+          <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
           <span class="postnum"><?= $p['id'] ?></span>
-          <span style="margin-left:8px;font-size:11px;"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
+          <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
         </div>
         <?php if (!empty($p['img_path'])): ?>
         <div class="post-img">
@@ -111,6 +116,12 @@ function render_body(string $text, int $thread_id): string {
       <input type="hidden" name="board_slug" value="<?= htmlspecialchars($thread['slug']) ?>">
       <input type="hidden" name="action" value="reply">
       <table>
+        <tr>
+            <td>Options</td>
+            <td><input type="text" name="options" maxlength="64"
+                       placeholder="sage to not bump thread"></td>
+        </tr>
+        <tr><td>Name</td><td><input type="text" name="author" maxlength="64" placeholder="Anon"></td></tr>
         <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
         <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"></td></tr>
         <tr><td></td><td><button type="submit">Reply</button></td></tr>

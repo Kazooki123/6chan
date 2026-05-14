@@ -58,7 +58,11 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('tu', 'Turtles', 'About Turtles'),
   ('l', 'LGBTQ', 'LGBTQ+ Topics');
 
-INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH')
+INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH');
+
+-- ADD AUTHORS
+ALTER TABLE threads ADD COLUMN author VARCHAR(64) NOT NULL DEFAULT 'Anonymous';
+ALTER TABLE posts   ADD COLUMN author VARCHAR(64) NOT NULL DEFAULT 'Anonymous';
 
 -- DROP NOT NULL in img_path
 ALTER TABLE threads ALTER COLUMN img_path DROP NOT NULL;
