@@ -6,7 +6,7 @@ $slug = $_GET['b'] ?? '';
 $board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
 $board->execute([$slug]);
 $board = $board->fetch(PDO::FETCH_ASSOC);
-if (!$board) { http_response_code(404); die('Board not found.'); }
+if (!$board) { http_response_code(404); header('Location: /404.php'); }
 
 $threads = $db->prepare(
     "SELECT t.*, (SELECT COUNT(*) FROM posts WHERE thread_id=t.id) AS reply_count
@@ -43,8 +43,13 @@ $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
   <div class="catalog-grid">
     <?php foreach ($threads as $t): ?>
     <a href="thread.php?id=<?= $t['id'] ?>" class="catalog-card">
+      <?php $is_video = str_ends_with($t['img_path'] ?? '', '.mp4'); ?>
       <?php if (!empty($t['img_path'])): ?>
+        <?php if ($is_video): ?>
+        <video src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt=""></video>
+        <?php else: ?>
         <img src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt="">
+        <?php endif; ?>
       <?php else: ?>
         <div class="catalog-noimg">No Image</div>
       <?php endif; ?>

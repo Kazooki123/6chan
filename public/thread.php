@@ -6,7 +6,7 @@ $id = (int)($_GET['id'] ?? 0);
 $thread = $db->prepare("SELECT t.*, b.slug, b.name AS bname FROM threads t JOIN boards b ON b.id=t.board_id WHERE t.id=?");
 $thread->execute([$id]);
 $thread = $thread->fetch(PDO::FETCH_ASSOC);
-if (!$thread) { http_response_code(404); die('Thread not found.'); }
+if (!$thread) { http_response_code(404); header('Location: /404.php'); }
 
 $is_locked = (bool)$thread['locked'];
 $is_pinned = (bool)$thread['pinned'];
@@ -52,6 +52,7 @@ function render_body(string $text, int $thread_id): string {
   <a href="search.php">[Search]</a>
   <a href="contact.php">[Contact]</a>
   <a href="support.php">[Support]</a>
+  <a href="feed.php">[RSS]</a>
 </div>
 
 <div class="wrap">
@@ -66,9 +67,17 @@ function render_body(string $text, int $thread_id): string {
 
   <div class="thread">
     <div class="thread-op" id="p<?= $thread['id'] ?>">
+      <?php $is_video = str_ends_with($thread['img_path'] ?? '', '.mp4'); ?>
       <?php if (!empty($thread['img_path'])): ?>
       <div class="post-img">
+        <?php if ($is_video): ?>
+        <video src="uploads/<?= htmlspecialchars($thread['img_path']) ?>"
+               controls loop playsinline
+               style="max-width:250px;max-height:250px;border:1px solid var(--border);">
+        </video>
+        <?php else: ?>
         <img src="uploads/<?= htmlspecialchars($thread['img_path']) ?>" alt="image">
+        <?php endif; ?>
       </div>
       <?php endif; ?>
       <div class="post-header">
@@ -92,10 +101,20 @@ function render_body(string $text, int $thread_id): string {
           <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
           <span class="postnum"><?= $p['id'] ?></span>
           <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
+          <a href="report.php?type=thread&id=<?= $thread['id'] ?>&b=<?= $thread['slug'] ?? $slug ?>"
+             class="report-link">[Report]</a>
         </div>
+        <?php $is_video = str_ends_with($p['img_path'] ?? '', '.mp4'); ?>
         <?php if (!empty($p['img_path'])): ?>
         <div class="post-img">
+          <?php if ($is_video): ?>
+          <video src="uploads/<?= htmlspecialchars($p['img_path']) ?>"
+                 controls loop playsinline
+                 style="max-width:250px;max-height:250px;border:1px solid var(--border);">
+          </video>
+          <?php else: ?>
           <img src="uploads/<?= htmlspecialchars($p['img_path']) ?>" alt="image">
+          <?php endif; ?>
         </div>
         <?php endif; ?>
         <div class="post-body"><?= render_body($p['body'], $id) ?></div>
@@ -123,7 +142,7 @@ function render_body(string $text, int $thread_id): string {
         </tr>
         <tr><td>Name</td><td><input type="text" name="author" maxlength="64" placeholder="Anon"></td></tr>
         <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
-        <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"></td></tr>
+        <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4"></td></tr>
         <tr><td></td><td><button type="submit">Reply</button></td></tr>
       </table>
     </form>

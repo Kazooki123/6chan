@@ -24,6 +24,7 @@ preferred way to use postgresql. Hit run or execute and it should create the tab
 
 > [!WARNING]
 > Make sure you have **PDO** and **pdo_pgsql** extension enabled! Check it with `php -m`!!
+> Also run `composer install` since it uses composer packages.
 
 ```bash
 cd public

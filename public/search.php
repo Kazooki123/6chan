@@ -55,9 +55,9 @@ if (strlen($q) >= 3) {
     <form method="get" style="display:flex;gap:8px;align-items:center;">
       <input type="text" name="q" value="<?= htmlspecialchars($q) ?>"
              placeholder="Search posts..." style="flex:1;background:#111;border:1px solid var(--border);
-             color:var(--white);font:13px 'Courier New',monospace;padding:5px 8px;">
+             color:var(--white);font:13px 'MapleMono-Semibold',monospace;padding:5px 8px;">
       <button type="submit" style="background:var(--orange);border:none;color:#000;
-              font:bold 13px 'Courier New',monospace;padding:5px 16px;cursor:pointer;">Search</button>
+              font:bold 13px 'MapleMono-Semibold',monospace;padding:5px 16px;cursor:pointer;">Search</button>
     </form>
   </div>
 

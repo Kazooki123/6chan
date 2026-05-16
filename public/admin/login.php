@@ -42,12 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .login-box input[type=text],
 .login-box input[type=password] {
   width: 100%; background: #111; border: 1px solid var(--border);
-  color: var(--white); font: 13px 'Courier New', monospace;
+  color: var(--white); font: 13px 'MapleMono-Semibold', monospace;
   padding: 5px 8px; margin-bottom: 10px;
 }
 .login-box button {
   width: 100%; background: var(--orange); border: none; color: #000;
-  font: bold 13px 'Courier New', monospace; padding: 7px; cursor: pointer;
+  font: bold 13px 'MapleMono-Semibold', monospace; padding: 7px; cursor: pointer;
 }
 .login-box button:hover { background: var(--orange2); }
 .error { color: #ff4444; font-size: 12px; margin-bottom: 8px; }

@@ -6,14 +6,19 @@ if (!file_exists($config_path)) {
 }
 
 require_once '../config/db.php';
+require_once '../config/automod.php';
+
 $db = get_db();
 
 $ip = $_SERVER['REMOTE_ADDR'];
+
 $ban_check = $db->prepare(
     "SELECT * FROM bans WHERE ip = ? AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1"
 );
+
 $ban_check->execute([$ip]);
 $ban = $ban_check->fetch(PDO::FETCH_ASSOC);
+
 if ($ban) {
     http_response_code(403);
     $reason = htmlspecialchars($ban['reason'] ?? 'No reason given.');
@@ -21,7 +26,7 @@ if ($ban) {
     die("
         <link rel='stylesheet' href='style.css'>
         <div style='max-width:400px;margin:60px auto;background:#1e1e1e;
-                    border:1px solid #ff4444;padding:20px;font-family:Courier New;'>
+                    border:1px solid #ff4444;padding:20px;font-family:MapleMono-Semibold;'>
             <div style='color:#ff4444;font-size:16px;font-weight:bold;margin-bottom:10px;'>
                 You are banned.
             </div>
@@ -76,21 +81,23 @@ function handle_upload(): ?string {
     $finfo   = new finfo(FILEINFO_MIME_TYPE);
     $mime    = $finfo->file($f['tmp_name']);
     $allowed = [
-        'image/jpeg' => 'jpg',
-        'image/png'  => 'png',
-        'image/gif'  => 'gif',
-        'image/webp' => 'webp',
+        'image/jpeg' => ['ext' => 'jpg',  'max' => 4 * 1024 * 1024],
+        'image/png'  => ['ext' => 'png',  'max' => 4 * 1024 * 1024],
+        'image/gif'  => ['ext' => 'gif',  'max' => 8 * 1024 * 1024],   // 8MB (for hq gifs)
+        'image/webp' => ['ext' => 'webp', 'max' => 4 * 1024 * 1024],
+        'video/mp4'  => ['ext' => 'mp4',  'max' => 10 * 1024 * 1024],  // 10MB
     ];
 
     if (!isset($allowed[$mime])) {
         die("File type not allowed: $mime");
     }
 
-    if ($f['size'] > 4 * 1024 * 1024) {
-        die('Image too large (max 4 MB).');
+    if ($f['size'] > $allowed[$mime]['max']) {
+        $cap = $allowed[$mime]['max'] / (1024 * 1024);
+        die("Image too large (max {$cap}MB for this type).");
     }
 
-    $ext  = $allowed[$mime];
+    $ext  = $allowed[$mime]['ext'];
     $name = uniqid('img_', true) . '.' . $ext;
     $dest = __DIR__ . '/uploads/' . $name;
 
@@ -100,6 +107,25 @@ function handle_upload(): ?string {
 
     chmod($dest, 0644);
     return $name;
+}
+
+function notify_automod(int $post_id, string $type, string $text): void {
+    $payload = json_encode([
+        'post_id'   => $post_id,
+        'post_type' => $type,
+        'text'      => $text,
+    ]);
+
+    $ctx = stream_context_create([
+        'http' => [
+            'method'  => 'POST',
+            'header'  => 'Content-Type: application/json',
+            'content' => $payload,
+            'timeout' => 1,
+        ]
+    ]);
+
+    @file_get_contents('http:/127.0.0.1:9000/analyze', false, $ctx);
 }
 
 if ($action === 'new_thread') {
@@ -112,10 +138,33 @@ if ($action === 'new_thread') {
     if ($body === '') die('Post body is required.');
 
     $img = handle_upload();
+    $check = automod_check($body, $db);
 
+    if ($check['action'] === 'block') {
+        http_response_code(403);
+        die("
+            <link rel='stylesheet' href='style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid #ff4444;padding:20px;font-family:MapleMono-Semibold;'>
+                <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    Post blocked by automod!!
+                </div>
+                <div style='color:#aaa;font-size:13px;'>
+                    Your post contains content that violates 6chan's rules.<br>
+                    If you believe this is a mistake, use the contact page <3
+                </div>
+                <div style='margin-top:12px;'>
+                    <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+                </div>
+            </div>
+        ");
+    }
+
+    $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
+    
     $s = $db->prepare(
-        "INSERT INTO threads (board_id, subject, body, img_path, ip, author)
-         VALUES (?, ?, ?, ?, ?, ?) RETURNING id"
+        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, automod_flag)
+         VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id"
     );
     $s->execute([
         $board['id'],
@@ -123,9 +172,11 @@ if ($action === 'new_thread') {
         $body,
         $img,
         $ip,
-        $author
+        $author,
+        $automod_flag
     ]);
-    $tid = $s->fetchColumn();
+    $tid = $s->fetchColumn();    
+    notify_automod((int)$tid, 'thread', $body);
     header("Location: thread.php?id=$tid");
     exit;
 
@@ -150,15 +201,17 @@ if ($action === 'new_thread') {
     $img = handle_upload();
 
     $s = $db->prepare(
-        "INSERT INTO posts (thread_id, body, img_path, ip, author, options)
-         VALUES (?, ?, ?, ?, ?, ?)"
+        "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag)
+         VALUES (?, ?, ?, ?, ?, ?, ?)"
     );
-    $s->execute([$tid, $body, $img, $ip, $author, $is_sage ? 'sage' : null]);
+    $s->execute([$tid, $body, $img, $ip, $author, $is_sage ? 'sage' : null, $automod_flag]);
 
     if (!$is_sage) {
         $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
            ->execute([$tid]);
     }
+    $new_post_id = (int)$db->lastInserId();
+    notify_automod($new_post_id, 'post', $body);
        
     header("Location: thread.php?id=$tid");
     exit;

@@ -8,6 +8,7 @@
   --orange:   #ff6600;
   --orange2:  #cc5200;
   --pink:     #FFC0CB;
+  --red:      #ff4444;
   --white:    #e8e8e8;
   --grey:     #888;
   --link:     #4a9eff;
@@ -333,3 +334,10 @@ footer {
     padding: 10px 14px;
     margin-top: 12px;
 }
+
+.report-link {
+    color: var(--grey);
+    font-size: 11px;
+    margin-left: 6px;
+}
+.report-link:hover { color: var(--red); }

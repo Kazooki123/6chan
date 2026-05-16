@@ -28,13 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><title>Contact — @6chan</title>
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css"></head>
 <body>
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="index.php">Home</a>
     <a href="rules.php">[Rules]</a>
-    <a href="contact.php">[Contact]</a>
     <a href="support.php">[Support]</a>
 </div>
 

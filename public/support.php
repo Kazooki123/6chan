@@ -3,15 +3,18 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Support — @6chan</title>
-<link rel="stylesheet" href="style.css"></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Support — @6chan</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="index.php">Home</a>
     <a href="rules.php">[Rules]</a>
     <a href="contact.php">[Contact]</a>
-    <a href="support.php">[Support]</a>
 </div>
 
 <div class="wrap">
@@ -23,7 +26,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
     <div class="rules-block">
         <h2>Why donate?</h2>
         <p>
-            @6chan runs on community support. Server costs, domain fees, and development
+            6chan runs on community support. Server costs, domain fees, and development
             time are all self-funded. If you enjoy the site and want to see it stay up
             and grow, consider throwing a few dollars our way.
         </p>
@@ -44,6 +47,8 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
             <a href="https://buymeacoffee.com/" target="_blank">[Buy Me a Coffee]</a>
             &nbsp;
             <a href="https://paypal.me/" target="_blank">[PayPal]</a>
+            &nbsp;
+            <a href="https://" target="_blank">[GCash]</a>
         </p>
 
         <h2>Crypto</h2>
@@ -53,9 +58,9 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
         </p>
 
         <h2>Other ways to help</h2>
-        <p>
-            Share @6chan with friends. Report rule-breaking posts. Contribute to discussion.
-            A healthy community is the best form of support.
+        <p style="color:var(--pink);">
+            Share 6chan with friends. Report rule-breaking posts. Contribute to discussion.
+            A healthy community is the best form of support! (*^▽^*)
         </p>
     </div>
 </div>

@@ -24,11 +24,12 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
         <a href="search.php">[Search]</a>
         <a href="contact.php">[Contact]</a>
         <a href="support.php">[Support]</a>
+        <a href="feed.php">[RSS]</a>
     </div>
 
     <div class="wrap">
         <div class="welcome-block">
-            <div class="welcome-title">Welcome to @6chan!!</div>
+            <div class="welcome-title">Welcome to 6chan !!</div>
             <p>
                 A simple, no-frills imageboard. Pick a board, start a thread, keep it real.
                 This is a community built on honest and thoughtful discussion - read the rules, respect the boards, and don't be an IDIOT.
@@ -53,6 +54,6 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <?php endforeach; ?>
         <div>
     </div>
-    <footer>@6chan v0.01 - aGPL v3.0 - All boards: <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
+    <footer>@6chan v0.2 - aGPL v3.0 - All boards: <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="etc/license.php">[License]</a> <a href="support.php">[Support]</a> <a href="feed.php">[RSS]</a></footer>
 </body>
 </html>

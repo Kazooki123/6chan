@@ -8,7 +8,7 @@ $board->execute([$slug]);
 $board = $board->fetch(PDO::FETCH_ASSOC);
 if (!$board) {
     http_response_code(404);
-    die('Board not found!');
+    header('Location: /404.php');
 }
 
 $page     = max(1, (int)($_GET['p'] ?? 1));
@@ -77,6 +77,7 @@ function render_body(string $text, int $thread_id): string {
         <a href="search.php">[Search]</a>
         <a href="contact.php">[Contact]</a>
         <a href="support.php">[Support]</a>
+        <a href="feed.php">[RSS]</a>
     </div>
 
     <div class="wrap">
@@ -94,7 +95,7 @@ function render_body(string $text, int $thread_id): string {
                     <tr><td>Name</td><td><input type="text" name="author" maxlength="64" placeholder="Anon"></td></tr>
                     <tr><td>Subject</td><td><input type="text" name="subject" maxlength="200"></td></tr>
                     <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
-                    <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp"></td></tr>
+                    <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4"></td></tr>
                     <tr><td></td><td><button type="submit">Post</button></td></tr>
                 </table>
             </form>
@@ -103,12 +104,20 @@ function render_body(string $text, int $thread_id): string {
         <?php foreach ($threads as $t): ?>
         <div class="thread">
             <div class="thread-op" id="p<?= $t['id'] ?>">
+                <?php $is_video = str_ends_with($t['img_path'] ?? '', '.mp4'); ?>
                 <?php if (!empty($t["img_path"])):
                     $imgpath = "uploads/" . htmlspecialchars($t['img_path']); ?>
                 <div class="post-img">
+                    <?php if ($is_video): ?>
+                    <video src="uploads/<?= htmlspecialchars($t['img_path']) ?>"
+                           controls loop playsinline
+                           style="max-width:250px;max-height:250px;border:1px solid var(--border);">
+                    </video>
+                    <?php else: ?>
                     <a href="thread.php?id=<?= $t['id'] ?>">
                         <img src="<?= $imgpath ?>" alt="image">
                     </a>
+                    <?php endif; ?>
                     <a href="<?= $imgpath ?>">View original</a>
                 </div>
                 <?php
@@ -121,6 +130,8 @@ function render_body(string $text, int $thread_id): string {
                     <span class="postnum"><?= $t['id'] ?></span>
                     <span class="postdate"><?= date('Y-m-d H:i', strtotime($t['created_at'])) ?></span>
                     <a href="thread.php?id=<?= $t['id'] ?>" class="reply-link">[Reply]</a>
+                    <a href="report.php?type=thread&id=<?= $t['id'] ?>&b=<?= $t['slug'] ?? $slug ?>"
+                       class="report-link">[Report]</a>
                     <?php if ($t['pinned']): ?>
                         <span class="thread-badge pin">📌</span>
                     <?php endif; ?>
@@ -151,14 +162,23 @@ function render_body(string $text, int $thread_id): string {
                        <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
                        <span class="postnum"><?= $p['id'] ?></span>
                        <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
+                       <a href="report.php?type=thread&id=<?= $t['id'] ?>&b=<?= $t['slug'] ?? $slug ?>"
+                          class="report-link">[Report]</a>
                    </div>
                    <?php if (!empty($p['img_path'])):
                        $imgpath =
                            "uploads/" . htmlspecialchars($p['img_path']); ?>
                    <div class="post-img">
+                       <?php if ($is_video): ?>
+                       <video src="uploads/<?= htmlspecialchars($p['img_path']) ?>"
+                              controls loop playsinline
+                              style="max-width:250px;max-height:250px;border:1px solid var(--border);">
+                       </video>
+                       <?php else: ?>
                        <a href="thread.php?id=<?= $t['id'] ?>">
                            <img src="<?= $imgpath ?>" alt="image">
                        </a>
+                       <?php endif; ?>
                        <a href="<?= $imgpath ?>">View original</a>
                    </div>
                    <?php endif; ?>

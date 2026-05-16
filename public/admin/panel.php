@@ -20,6 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->prepare("UPDATE threads SET locked = NOT locked WHERE id = ?")
            ->execute([(int)$_POST['tid']]);
         $msg = 'Lock toggled';
+    } elseif ($act === 'approve_flagged') {
+        if ($_POST['type'] === 'thread') {
+            $db->prepare("UPDATE threads SET automod_flag = NULL WHERE id = ?")
+               ->execute([(int)$_POST['tid']]);
+        } else {
+            $db->prepare("UPDATE posts SET automod_flag = NULL WHERE id = ?")
+               ->execute([(int)$_POST['pid']]);
+        }
+        $msg = 'Post approved and removed from queue.';
     } elseif ($act === 'delete_thread') {
         $db->prepare("DELETE FROM threads WHERE id=?")->execute([(int)$_POST['tid']]);
         $msg = 'Thread deleted.';
@@ -71,16 +80,16 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
 .admin-table tr:hover td { background:#1f1f1f; }
 .del-btn {
   background:none; border:1px solid #aa2222; color:#ff4444;
-  font:11px 'Courier New',monospace; padding:2px 7px; cursor:pointer;
+  font:11px 'MapleMono-Semibold',monospace; padding:2px 7px; cursor:pointer;
 }
 .del-btn:hover { background:#aa2222; color:#fff; }
 .ban-form input[type=text], .ban-form input[type=datetime-local] {
   background:#111; border:1px solid var(--border); color:var(--white);
-  font:12px 'Courier New',monospace; padding:3px 6px; width:100%;
+  font:12px 'MapleMono-Semibold',monospace; padding:3px 6px; width:100%;
 }
 .ban-form button {
   background:var(--orange); border:none; color:#000;
-  font:bold 12px 'Courier New',monospace; padding:4px 12px; cursor:pointer; margin-top:4px;
+  font:bold 12px 'MapleMono-Semibold',monospace; padding:4px 12px; cursor:pointer; margin-top:4px;
 }
 .msg { background:#1a3a1a; border:1px solid #3a6a3a; color:#6f6; padding:6px 12px; margin-bottom:12px; font-size:12px; }
 .logout { float:right; font-size:12px; color:var(--grey); }
@@ -108,6 +117,8 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
   <div class="admin-nav">
     <a href="#threads">[Threads]</a>
     <a href="#posts">[Posts]</a>
+    <a href="#flagged">[Queue]</a>
+    <a href="#reports">[Reports]</a>
     <a href="#bans">[Bans]</a>
     <a href="#newban">[New Ban]</a>
   </div>
@@ -197,6 +208,157 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
       </tr>
       <?php endforeach; ?>
     </table>
+  </div>
+
+  <div class="admin-section" id="flagged">
+      <h2>Automod Queue</h2>
+      <?php
+      $flagged_threads = $db->query(
+          "SELECT t.id, t.subject, t.body, t.created_at, t.ip,
+                  t.automod_flag, b.slug
+           FROM threads t JOIN boards b ON b.id=t.board_id
+           WHERE t.automod_flag IS NOT NULL
+           ORDER BY t.created_at DESC LIMIT 50"
+      )->fetchAll(PDO::FETCH_ASSOC);
+  
+      $flagged_posts = $db->query(
+          "SELECT p.id, p.body, p.created_at, p.ip,
+                  p.automod_flag, p.thread_id
+           FROM posts p
+           WHERE p.automod_flag IS NOT NULL
+           ORDER BY p.created_at DESC LIMIT 50"
+      )->fetchAll(PDO::FETCH_ASSOC);
+  
+      $total_flagged = count($flagged_threads) + count($flagged_posts);
+      ?>
+  
+      <?php if ($total_flagged === 0): ?>
+          <p style="color:var(--grey);font-size:13px;">Queue is clear. ✔</p>
+      <?php else: ?>
+          <p style="color:#e6a817;font-size:12px;margin-bottom:10px;">
+              <?= $total_flagged ?> item<?= $total_flagged > 1 ? 's' : '' ?> pending review.
+          </p>
+          <table class="admin-table">
+              <tr>
+                  <th>Type</th><th>ID</th><th>Flag</th>
+                  <th>Preview</th><th>IP</th><th>Actions</th>
+              </tr>
+  
+              <?php foreach ($flagged_threads as $ft): ?>
+              <tr style="border-left:3px solid var(--orange);">
+                  <td>Thread</td>
+                  <td><a href="../thread.php?id=<?= $ft['id'] ?>">#<?= $ft['id'] ?></a></td>
+                  <td><span style="color:#e6a817;font-size:11px;"><?= htmlspecialchars($ft['automod_flag']) ?></span></td>
+                  <td><?= htmlspecialchars(mb_substr($ft['body'], 0, 80)) ?>…</td>
+                  <td><span class="ip-tag"><?= htmlspecialchars($ft['ip'] ?? '—') ?></span></td>
+                  <td style="display:flex;gap:4px;flex-wrap:wrap;">
+                      <form method="post">
+                          <input type="hidden" name="act" value="approve_flagged">
+                          <input type="hidden" name="type" value="thread">
+                          <input type="hidden" name="tid" value="<?= $ft['id'] ?>">
+                          <button class="del-btn" style="border-color:#22aa22;color:#4f4;">
+                              Approve
+                          </button>
+                      </form>
+                      <form method="post" onsubmit="return confirm('Delete thread?')">
+                          <input type="hidden" name="act" value="delete_thread">
+                          <input type="hidden" name="tid" value="<?= $ft['id'] ?>">
+                          <button class="del-btn">Delete</button>
+                      </form>
+                      <form method="post">
+                          <input type="hidden" name="act" value="ban_ip">
+                          <input type="hidden" name="ip" value="<?= htmlspecialchars($ft['ip']) ?>">
+                          <input type="hidden" name="reason" value="Automod: <?= htmlspecialchars($ft['automod_flag']) ?>">
+                          <input type="hidden" name="expires" value="">
+                          <button class="del-btn" style="border-color:#e67e00;color:#e67e00;">
+                              Ban IP
+                          </button>
+                      </form>
+                  </td>
+              </tr>
+              <?php endforeach; ?>
+  
+              <?php foreach ($flagged_posts as $fp): ?>
+              <tr style="border-left:3px solid #555577;">
+                  <td>Post</td>
+                  <td><a href="../thread.php?id=<?= $fp['thread_id'] ?>#p<?= $fp['id'] ?>">#<?= $fp['id'] ?></a></td>
+                  <td><span style="color:#e6a817;font-size:11px;"><?= htmlspecialchars($fp['automod_flag']) ?></span></td>
+                  <td><?= htmlspecialchars(mb_substr($fp['body'], 0, 80)) ?>…</td>
+                  <td><span class="ip-tag"><?= htmlspecialchars($fp['ip'] ?? '—') ?></span></td>
+                  <td style="display:flex;gap:4px;flex-wrap:wrap;">
+                      <form method="post">
+                          <input type="hidden" name="act" value="approve_flagged">
+                          <input type="hidden" name="type" value="post">
+                          <input type="hidden" name="pid" value="<?= $fp['id'] ?>">
+                          <button class="del-btn" style="border-color:#22aa22;color:#4f4;">
+                              Approve
+                          </button>
+                      </form>
+                      <form method="post" onsubmit="return confirm('Delete post?')">
+                          <input type="hidden" name="act" value="delete_post">
+                          <input type="hidden" name="pid" value="<?= $fp['id'] ?>">
+                          <button class="del-btn">Delete</button>
+                      </form>
+                      <form method="post">
+                          <input type="hidden" name="act" value="ban_ip">
+                          <input type="hidden" name="ip" value="<?= htmlspecialchars($fp['ip']) ?>">
+                          <input type="hidden" name="reason" value="Automod: <?= htmlspecialchars($fp['automod_flag']) ?>">
+                          <input type="hidden" name="expires" value="">
+                          <button class="del-btn" style="border-color:#e67e00;color:#e67e00;">
+                              Ban IP
+                          </button>
+                      </form>
+                  </td>
+              </tr>
+              <?php endforeach; ?>
+          </table>
+      <?php endif; ?>
+  </div>
+
+  <div class="admin-section" id="reports">
+      <h2>Open Reports</h2>
+      <?php
+      $open_reports = $db->query(
+          "SELECT * FROM reports WHERE resolved = FALSE ORDER BY created_at DESC"
+      )->fetchAll(PDO::FETCH_ASSOC);
+      ?>
+      <?php if (!$open_reports): ?>
+          <p style="color:var(--grey);font-size:13px;">No open reports...</p>
+      <?php else: ?>
+      <table class="admin-table">
+          <tr>
+              <th>ID</th><th>Type</th><th>Target</th><th>Board</th>
+              <th>Reason</th><th>IP</th><th>Date</th><th>Action</th>
+          </tr>
+          <?php foreach ($open_reports as $r): ?>
+          <tr>
+              <td><?= $r['id'] ?></td>
+              <td><?= htmlspecialchars($r['post_type']) ?></td>
+              <td>
+                  <?php if ($r['thread_id']): ?>
+                      <a href="../thread.php?id<?= $r['thread_id'] ?>#p<?= $r['post_id'] ?>">
+                          #<?= $r['post_id'] ?>
+                      </a>
+                  <?php else: ?>
+                      #<?= $r['post_id'] ?>
+                  <?php endif; ?>
+              </td>
+              <td><?= htmlspecialchars($r['board_slug'] ?? '-') ?></td>
+              <td><?= htmlspecialchars($r['reason'] ?? '-') ?></td>
+              <td><span class="ip-tag"><?= htmlspecialchars($r['ip'] ?? '-') ?></span></td>
+              <td><?= date('m/d H:i', strtotime($r['created_at'])) ?></td>
+              <td>
+                  <form method="post" style="display:inline;">
+                      <input type="hidden" name="act" value="resolve_report">
+                      <input type="hidden" name="rid" value="<?= $r['id'] ?>">
+                      <button class="del-btn"
+                              style="border-color:#22aa22;color:#4f4;">Resolve</button>
+                  </form>
+              </td>
+          </tr>
+          <?php endforeach; ?>
+      </table>
+      <?php endif; ?>
   </div>
 
   <div class="admin-section" id="bans">
