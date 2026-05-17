@@ -27,7 +27,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 
   <div class="rules-block">
     <ol>
-      <li>Do not post, request, or link to ANY content that is illegal in your jurisdiction.</li>
+      <li>Do not post, request, or link to ANY content that is <b style="color:var(--red);">illegal</b> in your jurisdiction.</li>
       <li>No spam, flooding, or repeated <b>low-effort posts.</b></li>
       <li>Stay on topic for the board you are posting in.</li>
       <li>No doxxing — do not share personal information of others without consent.</li>

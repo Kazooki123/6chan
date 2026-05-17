@@ -54,6 +54,6 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <?php endforeach; ?>
         <div>
     </div>
-    <footer>@6chan v0.2 - aGPL v3.0 - All boards: <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="etc/license.php">[License]</a> <a href="support.php">[Support]</a> <a href="feed.php">[RSS]</a></footer>
+    <footer>@6chan v0.2 - MIT - All boards: <a href="index.php">Home</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.php">[License]</a> <a href="support.php">[Support]</a> <a href="feed.php">[RSS]</a></footer>
 </body>
 </html>

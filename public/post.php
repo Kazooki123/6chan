@@ -7,6 +7,7 @@ if (!file_exists($config_path)) {
 
 require_once '../config/db.php';
 require_once '../config/automod.php';
+require_once '../config/cache.php';
 
 $db = get_db();
 
@@ -26,7 +27,7 @@ if ($ban) {
     die("
         <link rel='stylesheet' href='style.css'>
         <div style='max-width:400px;margin:60px auto;background:#1e1e1e;
-                    border:1px solid #ff4444;padding:20px;font-family:MapleMono-Semibold;'>
+                    border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
             <div style='color:#ff4444;font-size:16px;font-weight:bold;margin-bottom:10px;'>
                 You are banned.
             </div>
@@ -58,7 +59,7 @@ $board_stmt->execute([$slug]);
 $board = $board_stmt->fetch(PDO::FETCH_ASSOC);
 if (!$board) die('Invalid board: ' . htmlspecialchars($slug));
 
-function handle_upload(): ?string {
+function handle_upload(bool $nsfw = false): ?string {
     if (empty($_FILES['image']['tmp_name']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
@@ -104,8 +105,24 @@ function handle_upload(): ?string {
     if (!move_uploaded_file($f['tmp_name'], $dest)) {
         die('Could not save file. Check that uploads/ exists and is writable (chmod 775).');
     }
-
     chmod($dest, 0644);
+
+    if ($nsfw && $mime !== 'video/mp4' && class_exists('Imagick')) {
+        try {
+            $preview_name = 'blur_' . $name;
+            $preview_dest = __DIR__ . '/upload/' . $preview_name;
+
+            $img = new Imagick($dest);
+            $img->blurImage(0, 18);
+            $img->thumbnailImage(300, 300, true);
+            $img->writeImage($preview_dest);
+            $img->destroy();
+            chmod($preview_dest, 0644);
+        } catch (ImagickException $e) {
+            error_log("Imagick blur failed! " . $e->getMessage());
+        }
+    }
+    
     return $name;
 }
 
@@ -137,7 +154,8 @@ if ($action === 'new_thread') {
 
     if ($body === '') die('Post body is required.');
 
-    $img = handle_upload();
+    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1';
+    $img = handle_upload($nsfw);
     $check = automod_check($body, $db);
 
     if ($check['action'] === 'block') {
@@ -145,7 +163,7 @@ if ($action === 'new_thread') {
         die("
             <link rel='stylesheet' href='style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
-                        border:1px solid #ff4444;padding:20px;font-family:MapleMono-Semibold;'>
+                        border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
                 <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
                     Post blocked by automod!!
                 </div>
@@ -163,8 +181,8 @@ if ($action === 'new_thread') {
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
     
     $s = $db->prepare(
-        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, automod_flag)
-         VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id"
+        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, automod_flag, nsfw)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
     );
     $s->execute([
         $board['id'],
@@ -173,10 +191,12 @@ if ($action === 'new_thread') {
         $img,
         $ip,
         $author,
-        $automod_flag
+        $automod_flag,
+        $nsfw
     ]);
     $tid = $s->fetchColumn();    
     notify_automod((int)$tid, 'thread', $body);
+    cache_delete("board:{$board['id']}:p1", $db);
     header("Location: thread.php?id=$tid");
     exit;
 
@@ -197,22 +217,24 @@ if ($action === 'new_thread') {
     $row = $tc->fetch();
     if (!$row)          die('Thread not found.');
     if ($row['locked']) die('This thread is locked! No new replies.');
-    
-    $img = handle_upload();
+
+    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1';
+    $img = handle_upload($nsfw);
 
     $s = $db->prepare(
-        "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag)
-         VALUES (?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag, nsfw)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $s->execute([$tid, $body, $img, $ip, $author, $is_sage ? 'sage' : null, $automod_flag]);
+    $s->execute([$tid, $body, $img, $ip, $author, $is_sage ? 'sage' : null, $automod_flag, $nsfw]);
 
     if (!$is_sage) {
         $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
            ->execute([$tid]);
     }
-    $new_post_id = (int)$db->lastInserId();
+    $new_post_id = (int)$db->lastInsertId();
     notify_automod($new_post_id, 'post', $body);
-       
+    cache_delete("board:{$board['id']}:p1", $db);
+
     header("Location: thread.php?id=$tid");
     exit;
 

@@ -1,5 +1,6 @@
 <?php
 require_once '../config/db.php';
+require_once '../config/cache.php';
 $db   = get_db();
 $slug = $_GET['b'] ?? '';
 
@@ -15,11 +16,6 @@ $page     = max(1, (int)($_GET['p'] ?? 1));
 $per_page = 10;
 $offset   = ($page - 1) * $per_page;
 
-$total_stmt = $db->prepare("SELECT COUNT(*) FROM threads WHERE board_id = ?");
-$total_stmt->execute([$board['id']]);
-$total_threads = (int)$total_stmt->fetchColumn();
-$total_pages   = max(1, (int)ceil($total_threads / $per_page));
-
 $threads = $db->prepare(
     "SELECT * FROM threads WHERE board_id = ?
      ORDER BY pinned, bumped_at DESC
@@ -27,6 +23,19 @@ $threads = $db->prepare(
 );
 $threads->execute([$board['id'], $per_page, $offset]);
 $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
+
+$cache_key = "board:{$board['id']}:p{$page}";
+$cached    = cache_get($cache_key, $db);
+
+if ($cached) {
+    $threads = $cached;
+} else {
+    $total_stmt = $db->prepare("SELECT COUNT(*) FROM threads WHERE board_id = ?");
+    $total_stmt->execute([$board['id']]);
+    $total_threads = (int)$total_stmt->fetchColumn();
+    $total_pages   = max(1, (int)ceil($total_threads / $per_page));
+    cache_set($cache_key, $threads, $db, 120);
+}
 
 foreach ($threads as &$t) {
     $r = $db->prepare(
@@ -58,6 +67,52 @@ function render_body(string $text, int $thread_id): string {
     }
     return implode("\n", $out);
 }
+
+function render_media(string $path, bool $nsfw, int $thread_id): string {
+    $is_video  = str_ends_with($path, '.mp4');
+    $blur_path = 'uploads/blur_' . $path;
+    $orig_path = 'uploads/' . $path;
+    $has_blur  = $nsfw && !$is_video && file_exists(__DIR__ . 'uploads/blur_' . $path);
+    $uid       = 'media_' . md5($path . $thread_id);
+
+    if ($is_video) {
+        $nsfw_wrap = $nsfw
+            ? 'class="nsfw-video" onclick="this.classList.remove(\'nsfw-video\')"
+               title="Click to show"'
+            : '';
+        return "
+            <div class='post-img'>
+                <video src='{$orig_path}' controls loop playsinline
+                       style='max-width:250px;max-height:250px;border:1px solid var(--border);'
+                       preload='none' loading='lazy' {$nsfw_wrap}>
+                </video>
+                " . ($nsfw ? "<div class='nsfw-label'>Nsfw - click to show</div>" : "") . "
+            </div>";
+    }
+
+    if ($has_blur) {
+        return "
+            <div class='post-img'>
+                <img id='{$uid}'
+                     src='{$blur_path}'
+                     data-orig='{$orig_path}'
+                     alt='nsfw image'
+                     loading='lazy'
+                     class='nsfw-blur'
+                     onclick='revealNsfw(this)'
+                     title='Nsfw - click to show'>
+                <div class='nsfw-label'>Nsfw - click to reveal</div>
+            </div>";
+    }
+
+    return "
+        <div class='post-img'>
+            <img src='{$orig_path}' alt='image' loading='lazy'"
+            . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
+            . ">
+        </div>";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -97,6 +152,16 @@ function render_body(string $text, int $thread_id): string {
                     <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
                     <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4"></td></tr>
                     <tr><td></td><td><button type="submit">Post</button></td></tr>
+                    <tr>
+                        <td>NSFW</td>
+                        <td>
+                            <label style="font-size:13px;color:var(--grey);cursor:pointer;">
+                                <input type="checkbox" name="nsfw" value="1"
+                                       style="accent-color:var(--orange);margin-right:4px;">
+                                Mark as NSFW
+                            </label>
+                        </td>
+                    </tr>
                 </table>
             </form>
         </div>
@@ -104,25 +169,17 @@ function render_body(string $text, int $thread_id): string {
         <?php foreach ($threads as $t): ?>
         <div class="thread">
             <div class="thread-op" id="p<?= $t['id'] ?>">
-                <?php $is_video = str_ends_with($t['img_path'] ?? '', '.mp4'); ?>
-                <?php if (!empty($t["img_path"])):
-                    $imgpath = "uploads/" . htmlspecialchars($t['img_path']); ?>
-                <div class="post-img">
-                    <?php if ($is_video): ?>
-                    <video src="uploads/<?= htmlspecialchars($t['img_path']) ?>"
-                           controls loop playsinline
-                           style="max-width:250px;max-height:250px;border:1px solid var(--border);">
-                    </video>
-                    <?php else: ?>
-                    <a href="thread.php?id=<?= $t['id'] ?>">
-                        <img src="<?= $imgpath ?>" alt="image">
-                    </a>
-                    <?php endif; ?>
+                    <?php if (!empty($t['img_path'])):
+                        $imgpath = "uploads/" . htmlspecialchars($t['img_path']); ?>
+                    <?= render_media($t['img_path'], (bool)$t['nsfw'], $t['id']) ?>
                     <a href="<?= $imgpath ?>">View original</a>
-                </div>
-                <?php
-                endif; ?>
+                    <?php endif; ?>
                 <div class="post-header">
+                    <?php if ($t['nsfw']): ?>
+                        <span class="thread-badge" style="background:#2a0010;color:#ff6688;border-color:#ff6688;">
+                            NSFW
+                        </span>
+                    <?php endif; ?>
                     <?php if ($t['subject']): ?>
                         <span class="subject"><?= htmlspecialchars($t['subject']) ?></span>
                     <?php endif; ?>
@@ -162,23 +219,14 @@ function render_body(string $text, int $thread_id): string {
                        <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
                        <span class="postnum"><?= $p['id'] ?></span>
                        <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
-                       <a href="report.php?type=thread&id=<?= $t['id'] ?>&b=<?= $t['slug'] ?? $slug ?>"
+                       <a href="report.php?type=thread&id=<?= $p['id'] ?>&b=<?= $p['slug'] ?? $slug ?>"
                           class="report-link">[Report]</a>
                    </div>
                    <?php if (!empty($p['img_path'])):
                        $imgpath =
                            "uploads/" . htmlspecialchars($p['img_path']); ?>
                    <div class="post-img">
-                       <?php if ($is_video): ?>
-                       <video src="uploads/<?= htmlspecialchars($p['img_path']) ?>"
-                              controls loop playsinline
-                              style="max-width:250px;max-height:250px;border:1px solid var(--border);">
-                       </video>
-                       <?php else: ?>
-                       <a href="thread.php?id=<?= $t['id'] ?>">
-                           <img src="<?= $imgpath ?>" alt="image">
-                       </a>
-                       <?php endif; ?>
+                       <?= render_media($p['img_path'], (bool)$p['nsfw'], $p['id']) ?>
                        <a href="<?= $imgpath ?>">View original</a>
                    </div>
                    <?php endif; ?>
@@ -210,5 +258,54 @@ function render_body(string $text, int $thread_id): string {
     </div>
 
     <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
+
+    <div id="quote-popup"></div>
+    
+    <script>
+    const popup = document.getElementById('quote-popup');
+    
+    document.querySelectorAll('.quotelink').forEach(link => {
+      link.addEventListener('mouseenter', function(e) {
+        const postId = this.dataset.post;
+        const target = document.getElementById('p' + postId);
+    
+        let html = '';
+        if (target) {
+          const header = target.querySelector('.post-header')?.innerHTML ?? '';
+          const body   = target.querySelector('.post-body')?.innerHTML ?? '';
+          html = `<div class="post-header">${header}</div><div class="post-body">${body}</div>`;
+        } else {
+          html = `<div class="post-header">No.${postId}</div><div class="post-body">[post not in thread]</div>`;
+        }
+    
+        popup.innerHTML = html;
+        popup.style.display = 'block';
+        movePopup(e);
+      });
+    
+      link.addEventListener('mousemove', movePopup);
+      link.addEventListener('mouseleave', () => popup.style.display = 'none');
+    });
+    
+    function movePopup(e) {
+      const pad = 14;
+      let x = e.clientX + pad;
+      let y = e.clientY + pad;
+      if (x + 440 > window.innerWidth)  x = e.clientX - 440 - pad;
+      if (y + 200 > window.innerHeight) y = e.clientY - 200 - pad;
+      popup.style.left = x + 'px';
+      popup.style.top  = y + 'px';
+    }
+
+    function revealNsfw(el) {
+      const orig = el.dataset.orig;
+      if (orig) el.src = orig;
+      el.classList.remove('nsfw-blur');
+      el.onclick = null;
+      el.title   = '';
+      const label = el.closest('.post-img')?.querySelector('.nsfw-label');
+      if (label) label.style.display = 'none'; 
+    }
+    </script>
 </body>
 </html>

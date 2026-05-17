@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email address.';
     } else {
+        // NOTE: Temporary for now, just a placeholder, 6chan will have its own email one day ^0^
         $to      = 'admin@6chan.org';
         $headers = "From: $name <$email>\r\nReply-To: $email\r\n";
         $body    = "Name: $name\nEmail: $email\nSubject: $subject\n\n$message";
@@ -44,6 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p>Get in touch with the @6chan team.</p>
     </div>
 
+    <div class="page-header">
+        <h1>Other Contacts (Owner of 6chan)</h1>
+        <p>
+            <b style="color:var(--link);">Gmail: markanthonygelito@gmail.com</b><br>
+            <b style="color:var(--pink);">Bluesky: starloexoliz123.bsky.social</b><br>
+        </p>
+    </div>
+
     <?php if ($sent): ?>
     <div class="rules-block">
         <p style="color:#6f6;">✔ Message sent. We'll get back to you at the email you provided.</p>
@@ -53,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="rules-block" style="margin-bottom:14px;">
         <h2>Before you write</h2>
         <p>
-            For ban appeals, include your IP and the board.
-            For bug reports, describe the steps to reproduce.
+            For ban appeals, include your IP and the board.<br>
+            For bug reports, describe the steps to reproduce.<br>
             For general inquiries, we'll try to respond within a few days.
         </p>
     </div>

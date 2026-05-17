@@ -1,5 +1,7 @@
 <?php
 require_once '../config/db.php';
+require_once '../config/cache.php';
+
 $db = get_db();
 $id = (int)($_GET['id'] ?? 0);
 
@@ -11,9 +13,17 @@ if (!$thread) { http_response_code(404); header('Location: /404.php'); }
 $is_locked = (bool)$thread['locked'];
 $is_pinned = (bool)$thread['pinned'];
 
-$posts = $db->prepare("SELECT * FROM posts WHERE thread_id = ? ORDER BY created_at ASC");
-$posts->execute([$id]);
-$posts = $posts->fetchAll(PDO::FETCH_ASSOC);
+$cached_key = "thread:{$id}";
+$cached     = cache_get($cached_key, $db);
+
+if ($cached) {
+    $posts = $cached['posts'];
+} else {
+    $posts_stmt = $db->prepare("SELECT * FROM posts WHERE thread_id = ? ORDER BY created_at ASC");
+    $posts_stmt->execute([$id]);
+    $posts = $posts_stmt->fetchAll(PDO::FETCH_ASSOC);
+    cache_set($cached_key, ['posts' => $posts], $db, 60);
+}
 
 function render_body(string $text, int $thread_id): string {
   $lines = explode("\n", htmlspecialchars($text, ENT_QUOTES));
@@ -32,12 +42,57 @@ function render_body(string $text, int $thread_id): string {
   }
   return implode("\n", $out);
 }
+
+function render_media(string $path, bool $nsfw, int $thread_id): string {
+    $is_video  = str_ends_with($path, '.mp4');
+    $blur_path = 'uploads/blur_' . $path;
+    $orig_path = 'uploads/' . $path;
+    $has_blur  = $nsfw && !$is_video && file_exists(__DIR__ . 'uploads/blur_' . $path);
+    $uid       = 'media_' . md5($path . $thread_id);
+
+    if ($is_video) {
+        $nsfw_wrap = $nsfw
+            ? 'class="nsfw-video" onclick="this.classList.remove(\'nsfw-video\')"
+               title="Click to show"'
+            : '';
+        return "
+            <div class='post-img'>
+                <video src='{$orig_path}' controls loop playsinline
+                       preload='none' loading='lazy' {$nsfw_wrap}>
+                </video>
+                " . ($nsfw ? "<div class='nsfw-label'>Nsfw - click to show</div>" : "") . "
+            </div>";
+    }
+
+    if ($has_blur) {
+        return "
+            <div class='post-img'>
+                <img id='{$uid}'
+                     src='{$blur_path}'
+                     data-orig='{$orig_path}'
+                     alt='nsfw image'
+                     loading='lazy'
+                     class='nsfw-blur'
+                     onclick='revealNsfw(this)'
+                     title='Nsfw - click to show'>
+                <div class='nsfw-label'>Nsfw - click to reveal</div>
+            </div>";
+    }
+
+    return "
+        <div class='post-img'>
+            <img src='{$orig_path}' alt='image' loading='lazy'"
+            . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
+            . ">
+        </div>";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title><?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
+<title>6chan - <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -67,19 +122,8 @@ function render_body(string $text, int $thread_id): string {
 
   <div class="thread">
     <div class="thread-op" id="p<?= $thread['id'] ?>">
-      <?php $is_video = str_ends_with($thread['img_path'] ?? '', '.mp4'); ?>
-      <?php if (!empty($thread['img_path'])): ?>
-      <div class="post-img">
-        <?php if ($is_video): ?>
-        <video src="uploads/<?= htmlspecialchars($thread['img_path']) ?>"
-               controls loop playsinline
-               style="max-width:250px;max-height:250px;border:1px solid var(--border);">
-        </video>
-        <?php else: ?>
-        <img src="uploads/<?= htmlspecialchars($thread['img_path']) ?>" alt="image">
-        <?php endif; ?>
+      <?= render_media($thread['img_path'], (bool)$thread['nsfw'], $thread['id']) ?>
       </div>
-      <?php endif; ?>
       <div class="post-header">
         <?php if ($thread['subject']): ?>
           <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
@@ -104,19 +148,8 @@ function render_body(string $text, int $thread_id): string {
           <a href="report.php?type=thread&id=<?= $thread['id'] ?>&b=<?= $thread['slug'] ?? $slug ?>"
              class="report-link">[Report]</a>
         </div>
-        <?php $is_video = str_ends_with($p['img_path'] ?? '', '.mp4'); ?>
-        <?php if (!empty($p['img_path'])): ?>
-        <div class="post-img">
-          <?php if ($is_video): ?>
-          <video src="uploads/<?= htmlspecialchars($p['img_path']) ?>"
-                 controls loop playsinline
-                 style="max-width:250px;max-height:250px;border:1px solid var(--border);">
-          </video>
-          <?php else: ?>
-          <img src="uploads/<?= htmlspecialchars($p['img_path']) ?>" alt="image">
-          <?php endif; ?>
+        <?= render_media($p['img_path'], (bool)$p['nsfw'], $id) ?>
         </div>
-        <?php endif; ?>
         <div class="post-body"><?= render_body($p['body'], $id) ?></div>
       </div>
       <?php endforeach; ?>
@@ -188,6 +221,16 @@ function movePopup(e) {
   if (y + 200 > window.innerHeight) y = e.clientY - 200 - pad;
   popup.style.left = x + 'px';
   popup.style.top  = y + 'px';
+}
+
+function revealNsfw(el) {
+  const orig = el.dataset.orig;
+  if (orig) el.src = orig;
+  el.classList.remove('nsfw-blur');
+  el.onclick = null;
+  el.title   = '';
+  const label = el.closest('.post-img')?.querySelector('.nsfw-label');
+  if (label) label.style.display = 'none'; 
 }
 </script>
 

@@ -1,4 +1,6 @@
-<?php require_once '../config/db.php'; $db = get_db();
+<?php 
+require_once '../config/db.php';
+$db = get_db();
 $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>

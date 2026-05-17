@@ -80,16 +80,16 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
 .admin-table tr:hover td { background:#1f1f1f; }
 .del-btn {
   background:none; border:1px solid #aa2222; color:#ff4444;
-  font:11px 'MapleMono-Semibold',monospace; padding:2px 7px; cursor:pointer;
+  font:11px 'MapleMono',monospace; padding:2px 7px; cursor:pointer;
 }
 .del-btn:hover { background:#aa2222; color:#fff; }
 .ban-form input[type=text], .ban-form input[type=datetime-local] {
   background:#111; border:1px solid var(--border); color:var(--white);
-  font:12px 'MapleMono-Semibold',monospace; padding:3px 6px; width:100%;
+  font:12px 'MapleMono',monospace; padding:3px 6px; width:100%;
 }
 .ban-form button {
   background:var(--orange); border:none; color:#000;
-  font:bold 12px 'MapleMono-Semibold',monospace; padding:4px 12px; cursor:pointer; margin-top:4px;
+  font:bold 12px 'MapleMono',monospace; padding:4px 12px; cursor:pointer; margin-top:4px;
 }
 .msg { background:#1a3a1a; border:1px solid #3a6a3a; color:#6f6; padding:6px 12px; margin-bottom:12px; font-size:12px; }
 .logout { float:right; font-size:12px; color:var(--grey); }
@@ -343,7 +343,7 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
                       #<?= $r['post_id'] ?>
                   <?php endif; ?>
               </td>
-              <td><?= htmlspecialchars($r['board_slug'] ?? '-') ?></td>
+              <td>/<?= htmlspecialchars($r['board_slug'] ?? '-') ?>/</td>
               <td><?= htmlspecialchars($r['reason'] ?? '-') ?></td>
               <td><span class="ip-tag"><?= htmlspecialchars($r['ip'] ?? '-') ?></span></td>
               <td><?= date('m/d H:i', strtotime($r['created_at'])) ?></td>

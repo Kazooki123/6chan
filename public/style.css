@@ -20,16 +20,14 @@
 }
 
 @font-face {
-    font-family: 'MapleMono-Semibold';
-    src: url('font/MapleMono-SemiBold.ttf') format('truetype');
-    font-weight: 600;
-    font-style: normal;
+    font-family: 'MapleMono';
+    src: url('/font/MapleMono-SemiBold.ttf') format('truetype');
 }
 
 body {
   background: var(--bg);
   color: var(--white);
-  font: 'MapleMono-Semibold', monospace;
+  font-family: 'MapleMono', monospace;
 }
 
 a            { color: var(--link); text-decoration: none; }
@@ -109,7 +107,7 @@ a:hover      { text-decoration: underline; }
   background: #111;
   border: 1px solid var(--border);
   color: var(--white);
-  font: 13px/1.4 'MapleMono-Semibold', monospace;
+  font: 13px/1.4 'MapleMono', monospace;
   padding: 4px 6px;
   width: 100%;
 }
@@ -120,7 +118,7 @@ a:hover      { text-decoration: underline; }
   border: none;
   color: #000;
   cursor: pointer;
-  font: bold 13px 'MapleMono-Semibold', monospace;
+  font: bold 13px 'MapleMono', monospace;
   padding: 5px 18px;
   margin-top: 4px;
 }
@@ -258,7 +256,7 @@ footer {
 .ip-tag {
     font-size: 11px;
     color: var(--grey);
-    font-family: 'MapleMono-Semibold', monospace;
+    font-family: 'MapleMono', monospace;
     margin-right: 6px;
 }
 
@@ -270,6 +268,7 @@ footer {
 }
 
 .catalog-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     background: var(--surface);
@@ -341,3 +340,43 @@ footer {
     margin-left: 6px;
 }
 .report-link:hover { color: var(--red); }
+
+.staff-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.8;
+}
+.staff-block ol { padding-left: 20px; margin-bottom: 14px; }
+.staff-block li { margin-bottom: 6px; color: var(--pink); }
+.staff-block h1 {
+    color: var(--orange);
+    font-size: 16px;
+    margin: 14px 0 6px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+    letter-spacing: 1px;
+}
+
+.nsfw-blur {
+    filter: blur(18px);
+    cursor: pointer;
+    transition: filter 0.3s ease;
+}
+.nsfw-blur:hover {
+    filter: blur(14px);
+}
+.nsfw-label {
+    font-size: 11px;
+    color: #ff6688;
+    text-align: center;
+    margin-top: 3px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.nsfw-video {
+    filter: blur(18px);
+    cursor: pointer;
+}

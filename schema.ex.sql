@@ -29,6 +29,7 @@ CREATE TABLE threads (
     body         TEXT NOT NULL,
     img_path     VARCHAR(300),
     automod_flag VARCHAR(50),
+    nsfw         BOOLEAN NOT NULL DEFAULT FALSE,
     created_at   TIMESTAMPTZ DEFAULT NOW(),
     bumped_at    TIMESTAMPTZ DEFAULT NOW()
 );
@@ -41,6 +42,7 @@ CREATE TABLE posts (
     body         TEXT NOT NULL,
     img_path     VARCHAR(300),
     automod_flag VARCHAR(50),
+    nsfw         BOOLEAN NOT NULL DEFAULT FALSE,
     options      VARCHAR(64),
     created_at   TIMESTAMPTZ DEFAULT NOW()
 );
@@ -48,7 +50,7 @@ CREATE TABLE posts (
 INSERT INTO boards (slug, name, descript) VALUES
   ('qa', 'Q/A', 'Question & Answers'),
   ('r', 'Random', 'Anything goes.'),
-  ('t', 'Tech', 'Kwompwutwers'),
+  ('t', 'Tech', 'Technology Board'),
   ('a', 'Anime', 'Japs & Manga'),
   ('g', 'Games', 'Vidyoe Gaemes'),
   ('m', 'Music', 'Music topics and discussions'),
@@ -56,8 +58,8 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('d', 'Dev', 'Developer/Coder discussions'),
   ('rs', 'Rust', 'Rust Programming Language'),
   ('p', 'Python', 'Python Language'),
-  ('go', 'Go', 'GoLang Programming Language'),
-  ('cl', 'C-Lang', 'C Programming Language'),
+  ('go', 'Go', 'Go Programming Language'),
+  ('cl', 'Clang', 'C Programming Language'),
   ('dn', '.NET', 'DotNET discussions'),
   ('cs', 'Computer Science', 'Computer Science stuffs and topics.'),
   ('wd', 'Web Dev', 'Web Development discussions'),
@@ -75,7 +77,7 @@ CREATE TABLE automod_rules (
 
 CREATE TABLE reports (
     id          SERIAL PRIMARY KEY,
-    post_type   VARCHAR(10) NOT NULL CHECK (post_type IN ('thread', 'post')),
+    post_type   VARCHAR(10) NOT NULL CHECK (post_type IN ('threads', 'posts')),
     post_id     INT NOT NULL,
     thread_id   INT,
     board_slug  VARCHAR(10),
@@ -84,6 +86,16 @@ CREATE TABLE reports (
     created_at  TIMESTAMPTZ DEFAULT NOW(),
     resolved    BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE TABLE cache (
+    key        TEXT PRIMARY KEY,
+    value      JSONB NOT NULL,
+    expires_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX cache_expires_idx ON cache (expires_at)
+    WHERE expires_at IS NOT NULL;
 
 INSERT INTO automod_rules (pattern, rule_type, is_regex) VALUES
     ('spam',          'flag',  false),

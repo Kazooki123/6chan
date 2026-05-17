@@ -46,9 +46,15 @@ $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
       <?php $is_video = str_ends_with($t['img_path'] ?? '', '.mp4'); ?>
       <?php if (!empty($t['img_path'])): ?>
         <?php if ($is_video): ?>
-        <video src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt=""></video>
+        <video src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt="" preload="none" loading="lazy"></video>
         <?php else: ?>
-        <img src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt="">
+            <?php if ($t['nsfw']): ?>
+                <div style="position:absolute;top:4px;right:4px;background:#ff6688;color:#000;
+                            font-size:10px;font-weight:bold;padding:1px 5px;border-radius:2px;">
+                    NSFW
+                </div>
+            <?php endif; ?>
+        <img src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt="" loading="lazy">
         <?php endif; ?>
       <?php else: ?>
         <div class="catalog-noimg">No Image</div>
