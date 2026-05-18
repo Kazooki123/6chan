@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 
 function captcha_generate(): array {

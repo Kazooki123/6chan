@@ -153,6 +153,8 @@ if ($action === 'new_thread') {
     $subject = trim($_POST['subject'] ?? '');
     $author  = trim($_POST['author'] ?? '');
     $author  = ($author === '') ? 'Anon' : $author;
+    $captcha_token  = $_POST['captcha_token']  ?? '';
+    $captcha_answer = $_POST['captcha_answer'] ?? '';
 
     if ($body === '') die('Post body is required.');
 
@@ -182,26 +184,6 @@ if ($action === 'new_thread') {
 
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
     
-    $captcha_token  = $_POST['captcha_token']  ?? '';
-    $captcha_answer = $_POST['captcha_answer'] ?? '';
-
-    if (!captcha_verify($captcha_token, $captcha_answer)) {
-        http_response_code(400);
-        die("
-            <link rel='stylesheet' href='style.css'>
-            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
-                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
-                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
-                    Wrong Captcha Answer.
-                </div>
-                <div style='color:#aaa;font-size:13px;margin-bottom:12px;'>
-                    Hit back and try again.
-                </div>
-                <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
-            </div>
-        ");
-    }
-
     $s = $db->prepare(
         "INSERT INTO threads (board_id, subject, body, img_path, ip, author, automod_flag, nsfw)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
@@ -219,32 +201,6 @@ if ($action === 'new_thread') {
     $tid = $s->fetchColumn();    
     notify_automod((int)$tid, 'thread', $body);
     cache_delete("board:{$board['id']}:p1", $db);
-    header("Location: thread.php?id=$tid");
-    exit;
-
-} elseif ($action === 'reply') {
-
-    $tid  = (int)($_POST['thread_id'] ?? 0);
-    $body = trim($_POST['body'] ?? '');
-    $author  = trim($_POST['author'] ?? '');
-    $author  = ($author === '') ? 'Anon' : $author;
-    $options = strtolower(trim($_POST['options'] ?? ''));
-    $is_sage = ($options === 'sage');
-    
-    if ($tid <= 0)    die('Invalid thread ID.');
-    if ($body === '') die('Reply body is required.');
-
-    $tc = $db->prepare("SELECT id, locked FROM threads WHERE id = ?");
-    $tc->execute([$tid]);
-    $row = $tc->fetch();
-    if (!$row)          die('Thread not found.');
-    if ($row['locked']) die('This thread is locked! No new replies.');
-
-    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1';
-    $img = handle_upload($nsfw);
-    
-    $captcha_token  = $_POST['captcha_token']  ?? '';
-    $captcha_answer = $_POST['captcha_answer'] ?? '';
 
     if (!captcha_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
@@ -262,7 +218,33 @@ if ($action === 'new_thread') {
             </div>
         ");
     }
+    
+    header("Location: thread.php?id=$tid");
+    exit;
 
+} elseif ($action === 'reply') {
+
+    $tid  = (int)($_POST['thread_id'] ?? 0);
+    $body = trim($_POST['body'] ?? '');
+    $author  = trim($_POST['author'] ?? '');
+    $author  = ($author === '') ? 'Anon' : $author;
+    $options = strtolower(trim($_POST['options'] ?? ''));
+    $is_sage = ($options === 'sage');
+    $captcha_token  = $_POST['captcha_token']  ?? '';
+    $captcha_answer = $_POST['captcha_answer'] ?? '';
+    
+    if ($tid <= 0)    die('Invalid thread ID.');
+    if ($body === '') die('Reply body is required.');
+
+    $tc = $db->prepare("SELECT id, locked FROM threads WHERE id = ?");
+    $tc->execute([$tid]);
+    $row = $tc->fetch();
+    if (!$row)          die('Thread not found.');
+    if ($row['locked']) die('This thread is locked! No new replies.');
+
+    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1';
+    $img = handle_upload($nsfw);
+    
     $s = $db->prepare(
         "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag, nsfw)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
@@ -276,6 +258,23 @@ if ($action === 'new_thread') {
     $new_post_id = (int)$db->lastInsertId();
     notify_automod($new_post_id, 'post', $body);
     cache_delete("board:{$board['id']}:p1", $db);
+
+    if (!captcha_verify($captcha_token, $captcha_answer)) {
+        http_response_code(400);
+        die("
+            <link rel='stylesheet' href='style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
+                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    Wrong Captcha Answer.
+                </div>
+                <div style='color:#aaa;font-size:13px;margin-bottom:12px;'>
+                    Hit back and try again.
+                </div>
+                <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+            </div>
+        ");
+    }
 
     header("Location: thread.php?id=$tid");
     exit;
