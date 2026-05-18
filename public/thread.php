@@ -1,6 +1,7 @@
 <?php
 require_once '../config/db.php';
 require_once '../config/cache.php';
+require_once '../config/captcha.php';
 
 $db = get_db();
 $id = (int)($_GET['id'] ?? 0);
@@ -24,6 +25,8 @@ if ($cached) {
     $posts = $posts_stmt->fetchAll(PDO::FETCH_ASSOC);
     cache_set($cached_key, ['posts' => $posts], $db, 60);
 }
+
+$captcha = captcha_generate();
 
 function render_body(string $text, int $thread_id): string {
   $lines = explode("\n", htmlspecialchars($text, ENT_QUOTES));
@@ -58,6 +61,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         return "
             <div class='post-img'>
                 <video src='{$orig_path}' controls loop playsinline
+                       style='max-width:250px;max-height:250px;border:1px solid var(--border);'
                        preload='none' loading='lazy' {$nsfw_wrap}>
                 </video>
                 " . ($nsfw ? "<div class='nsfw-label'>Nsfw - click to show</div>" : "") . "
@@ -74,6 +78,8 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                      loading='lazy'
                      class='nsfw-blur'
                      onclick='revealNsfw(this)'
+                     width='300'
+                     height='200'
                      title='Nsfw - click to show'>
                 <div class='nsfw-label'>Nsfw - click to reveal</div>
             </div>";
@@ -81,7 +87,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
 
     return "
         <div class='post-img'>
-            <img src='{$orig_path}' alt='image' loading='lazy'"
+            <img src='{$orig_path}' alt='image' width='300' height='200' loading='lazy'"
             . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
             . ">
         </div>";
@@ -92,9 +98,11 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>6chan - <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
+<script src="settingsloader.js"></script>
 </head>
 <body>
 
@@ -144,12 +152,14 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
           <?php endif; ?>
           <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
           <span class="postnum"><?= $p['id'] ?></span>
-          <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
+          <span class="postdate"
+                data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">
+              <?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>
+          </span>
           <a href="report.php?type=thread&id=<?= $thread['id'] ?>&b=<?= $thread['slug'] ?? $slug ?>"
              class="report-link">[Report]</a>
         </div>
         <?= render_media($p['img_path'], (bool)$p['nsfw'], $id) ?>
-        </div>
         <div class="post-body"><?= render_body($p['body'], $id) ?></div>
       </div>
       <?php endforeach; ?>

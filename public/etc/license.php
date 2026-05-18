@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>License — @6chan</title>
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
     <link rel="stylesheet" href="../style.css">        
 </head>
 <body>
     <p>
-        MIT License<br><br>
+        <b style="color:var(--orange);">MIT License</b><br><br>
         
-        <b>Copyright (c) 2026 Mark Anthony G.</b><br>
+        <b>Copyright (c) 2026 Mark Anthony G.</b><br><br>
         
         Permission is hereby granted, free of charge, to any person obtaining a copy
         of this software and associated documentation files (the "Software"), to deal

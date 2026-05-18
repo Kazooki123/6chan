@@ -1,6 +1,8 @@
 <?php
 require_once '../config/db.php';
 require_once '../config/cache.php';
+require_once '../config/captcha.php';
+
 $db   = get_db();
 $slug = $_GET['b'] ?? '';
 
@@ -36,6 +38,8 @@ if ($cached) {
     $total_pages   = max(1, (int)ceil($total_threads / $per_page));
     cache_set($cache_key, $threads, $db, 120);
 }
+
+$captcha = captcha_generate();
 
 foreach ($threads as &$t) {
     $r = $db->prepare(
@@ -100,6 +104,8 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                      loading='lazy'
                      class='nsfw-blur'
                      onclick='revealNsfw(this)'
+                     width='300'
+                     height='200'
                      title='Nsfw - click to show'>
                 <div class='nsfw-label'>Nsfw - click to reveal</div>
             </div>";
@@ -107,7 +113,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
 
     return "
         <div class='post-img'>
-            <img src='{$orig_path}' alt='image' loading='lazy'"
+            <img src='{$orig_path}' alt='image' width='300' height='200' loading='lazy'"
             . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
             . ">
         </div>";
@@ -118,9 +124,11 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>/<?= htmlspecialchars($board['slug']) ?>/ - <?= htmlspecialchars($board['name']) ?></title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css">
+    <script src="settingsloader.js"></script>
 </head>
 <body>
     <div id="topbar">
@@ -150,6 +158,20 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                     <tr><td>Name</td><td><input type="text" name="author" maxlength="64" placeholder="Anon"></td></tr>
                     <tr><td>Subject</td><td><input type="text" name="subject" maxlength="200"></td></tr>
                     <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
+                    <tr>
+                        <td>Verify</td>
+                        <td>
+                            <span class="captcha-question">
+                                <?= $captcha['question']?>
+                            </span>
+                            <input type="hidden" name="captcha_token"
+                                   value="<?= htmlspecialchars($captcha['token']) ?>">
+                            <input type="text" name="captcha_answer"
+                                   maxlength="30"
+                                   placeholder="Your Answer"
+                                   autocomplete="off">
+                        </td>
+                    </tr>
                     <tr><td>Image</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4"></td></tr>
                     <tr><td></td><td><button type="submit">Post</button></td></tr>
                     <tr>
@@ -218,7 +240,10 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                        <?php endif; ?>
                        <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
                        <span class="postnum"><?= $p['id'] ?></span>
-                       <span class="postdate"><?= date('Y-m-d H:i', strtotime($p['created_at'])) ?></span>
+                       <span class="postdate"
+                             data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">
+                           <?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>
+                       </span>
                        <a href="report.php?type=thread&id=<?= $p['id'] ?>&b=<?= $p['slug'] ?? $slug ?>"
                           class="report-link">[Report]</a>
                    </div>

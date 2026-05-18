@@ -3,9 +3,10 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Rules — @6chan</title>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Rules — @6chan</title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-<link rel="stylesheet" href="style.css"></head>
+<link rel="stylesheet" href="style.css">
+<script src="settingsloader.js"></script></head>
 <body>
 <div id="topbar">
   <span class="site-name">@6chan</span>

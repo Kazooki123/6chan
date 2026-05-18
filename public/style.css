@@ -22,6 +22,9 @@
 @font-face {
     font-family: 'MapleMono';
     src: url('/font/MapleMono-SemiBold.ttf') format('truetype');
+    /* src: url('/font/Minecraft.ttf') format('truetype'); */
+    /* src: url('/font/SuperMario256.ttf') format('truetype'); */
+    font-variant: swap;
 }
 
 body {
@@ -240,6 +243,8 @@ footer {
     margin-bottom: 16px;
     font-size: 13px;
     line-height: 1.7;
+    position: relative;
+    overflow: hidden;
 }
 
 .welcome-title {
@@ -248,10 +253,20 @@ footer {
     font-size: 15px;
     margin-bottom: 6px;
     letter-spacing: 1px;
+    animation: slide-left 8s linear infinite;
 }
 
 .welcome-links { margin-top: 8px; }
 .welcome-links a { margin-right: 10px; color: var(--link); }
+
+@keyframes slide-left {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+       transform: translateX(-100%); 
+    }
+}
 
 .ip-tag {
     font-size: 11px;
@@ -379,4 +394,31 @@ footer {
 .nsfw-video {
     filter: blur(18px);
     cursor: pointer;
+}
+
+.captcha-question {
+    display: block;
+    font-size: 13px;
+    color: var(--orange);
+    background: #111;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    user-select: none;
+}
+
+body.compact .thread-op,
+body.compact .post {
+    padding: 3px 6px;
+}
+body.compact .thread {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+}
+body.compact .post-img img,
+body.compact .post-img video {
+    max-width: 120px;
+    max-height: 120px;
 }

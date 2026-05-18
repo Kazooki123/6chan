@@ -7,9 +7,11 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>6chan - Home</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css"/>
+    <script src="settingsloader.js"></script>
 </head>
 <body>
     <div id="topbar">
@@ -54,6 +56,6 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <?php endforeach; ?>
         <div>
     </div>
-    <footer>@6chan v0.2 - MIT - All boards: <a href="index.php">Home</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.php">[License]</a> <a href="support.php">[Support]</a> <a href="feed.php">[RSS]</a></footer>
+    <footer>@6chan v0.2 - MIT - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.php">[License]</a> <a href="support.php">[Support]</a> <a href="feed.php">[RSS]</a></footer>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <?php
+session_start();
 $config_path = __DIR__ . '/../config/db.php';
 if (!file_exists($config_path)) {
     die("FATAL: config/db.php not found at: $config_path
@@ -6,6 +7,7 @@ if (!file_exists($config_path)) {
 }
 
 require_once '../config/db.php';
+require_once '../config/captcha.php';
 require_once '../config/automod.php';
 require_once '../config/cache.php';
 
@@ -180,6 +182,26 @@ if ($action === 'new_thread') {
 
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
     
+    $captcha_token  = $_POST['captcha_token']  ?? '';
+    $captcha_answer = $_POST['captcha_answer'] ?? '';
+
+    if (!captcha_verify($captcha_token, $captcha_answer)) {
+        http_response_code(400);
+        die("
+            <link rel='stylesheet' href='style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
+                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    Wrong Captcha Answer.
+                </div>
+                <div style='color:#aaa;font-size:13px;margin-bottom:12px;'>
+                    Hit back and try again.
+                </div>
+                <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+            </div>
+        ");
+    }
+
     $s = $db->prepare(
         "INSERT INTO threads (board_id, subject, body, img_path, ip, author, automod_flag, nsfw)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
@@ -220,6 +242,26 @@ if ($action === 'new_thread') {
 
     $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1';
     $img = handle_upload($nsfw);
+    
+    $captcha_token  = $_POST['captcha_token']  ?? '';
+    $captcha_answer = $_POST['captcha_answer'] ?? '';
+
+    if (!captcha_verify($captcha_token, $captcha_answer)) {
+        http_response_code(400);
+        die("
+            <link rel='stylesheet' href='style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
+                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    Wrong Captcha Answer.
+                </div>
+                <div style='color:#aaa;font-size:13px;margin-bottom:12px;'>
+                    Hit back and try again.
+                </div>
+                <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+            </div>
+        ");
+    }
 
     $s = $db->prepare(
         "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag, nsfw)
