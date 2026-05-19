@@ -2,8 +2,7 @@
 session_start();
 $config_path = __DIR__ . '/../config/db.php';
 if (!file_exists($config_path)) {
-    die("FATAL: config/db.php not found at: $config_path
-         <br>__DIR__ is: " . __DIR__);
+    die("FATAL: config/db.php not found at: $config_path <br>__DIR__ is: " . __DIR__);
 }
 
 require_once '../config/db.php';
@@ -12,13 +11,11 @@ require_once '../config/automod.php';
 require_once '../config/cache.php';
 
 $db = get_db();
-
 $ip = $_SERVER['REMOTE_ADDR'];
 
 $ban_check = $db->prepare(
     "SELECT * FROM bans WHERE ip = ? AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1"
 );
-
 $ban_check->execute([$ip]);
 $ban = $ban_check->fetch(PDO::FETCH_ASSOC);
 
@@ -48,7 +45,6 @@ $action = trim($_POST['action'] ?? '');
 $slug   = trim($_POST['board_slug'] ?? '');
 
 if (!$action || !$slug) {
-    // Debug dump so you can see exactly what arrived
     http_response_code(400);
     die('Missing action or board. Received POST keys: '
         . implode(', ', array_keys($_POST))
@@ -84,10 +80,10 @@ function handle_upload(bool $nsfw = false): ?string {
     $finfo   = new finfo(FILEINFO_MIME_TYPE);
     $mime    = $finfo->file($f['tmp_name']);
     $allowed = [
-        'image/jpeg' => ['ext' => 'jpg',  'max' => 4 * 1024 * 1024],
-        'image/png'  => ['ext' => 'png',  'max' => 4 * 1024 * 1024],
-        'image/gif'  => ['ext' => 'gif',  'max' => 8 * 1024 * 1024],   // 8MB (for hq gifs)
-        'image/webp' => ['ext' => 'webp', 'max' => 4 * 1024 * 1024],
+        'image/jpeg' => ['ext' => 'jpg',  'max' => 4  * 1024 * 1024],
+        'image/png'  => ['ext' => 'png',  'max' => 4  * 1024 * 1024],
+        'image/gif'  => ['ext' => 'gif',  'max' => 8  * 1024 * 1024],  // 8MB (for hq gifs)
+        'image/webp' => ['ext' => 'webp', 'max' => 4  * 1024 * 1024],
         'video/mp4'  => ['ext' => 'mp4',  'max' => 10 * 1024 * 1024],  // 10MB
     ];
 
@@ -97,7 +93,7 @@ function handle_upload(bool $nsfw = false): ?string {
 
     if ($f['size'] > $allowed[$mime]['max']) {
         $cap = $allowed[$mime]['max'] / (1024 * 1024);
-        die("Image too large (max {$cap}MB for this type).");
+        die("File too large (max {$cap}MB for this type).");
     }
 
     $ext  = $allowed[$mime]['ext'];
@@ -112,7 +108,7 @@ function handle_upload(bool $nsfw = false): ?string {
     if ($nsfw && $mime !== 'video/mp4' && class_exists('Imagick')) {
         try {
             $preview_name = 'blur_' . $name;
-            $preview_dest = __DIR__ . '/upload/' . $preview_name;
+            $preview_dest = __DIR__ . '/uploads/' . $preview_name;
 
             $img = new Imagick($dest);
             $img->blurImage(0, 18);
@@ -124,7 +120,7 @@ function handle_upload(bool $nsfw = false): ?string {
             error_log("Imagick blur failed! " . $e->getMessage());
         }
     }
-    
+
     return $name;
 }
 
@@ -144,22 +140,41 @@ function notify_automod(int $post_id, string $type, string $text): void {
         ]
     ]);
 
-    @file_get_contents('http:/127.0.0.1:9000/analyze', false, $ctx);
+    @file_get_contents('http://127.0.0.1:9000/analyze', false, $ctx);
 }
 
 if ($action === 'new_thread') {
 
-    $body    = trim($_POST['body'] ?? '');
+    $body    = trim($_POST['body']    ?? '');
     $subject = trim($_POST['subject'] ?? '');
-    $author  = trim($_POST['author'] ?? '');
+    $author  = trim($_POST['author']  ?? '');
     $author  = ($author === '') ? 'Anon' : $author;
+
     $captcha_token  = $_POST['captcha_token']  ?? '';
     $captcha_answer = $_POST['captcha_answer'] ?? '';
 
+    if (!captcha_verify($captcha_token, $captcha_answer)) {
+        http_response_code(400);
+        die("
+            <link rel='stylesheet' href='style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
+                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    Wrong Captcha Answer.
+                </div>
+                <div style='color:#aaa;font-size:13px;margin-bottom:12px;'>
+                    Hit back and try again.
+                </div>
+                <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+            </div>
+        ");
+    }
+
     if ($body === '') die('Post body is required.');
 
-    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1';
-    $img = handle_upload($nsfw);
+    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1' ? 1 : 0;
+    $img  = handle_upload((bool)$nsfw);
+
     $check = automod_check($body, $db);
 
     if ($check['action'] === 'block') {
@@ -173,7 +188,7 @@ if ($action === 'new_thread') {
                 </div>
                 <div style='color:#aaa;font-size:13px;'>
                     Your post contains content that violates 6chan's rules.<br>
-                    If you believe this is a mistake, use the contact page <3
+                    If you believe this is a mistake, use the contact page &lt;3
                 </div>
                 <div style='margin-top:12px;'>
                     <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
@@ -183,7 +198,7 @@ if ($action === 'new_thread') {
     }
 
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
-    
+
     $s = $db->prepare(
         "INSERT INTO threads (board_id, subject, body, img_path, ip, author, automod_flag, nsfw)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
@@ -196,11 +211,27 @@ if ($action === 'new_thread') {
         $ip,
         $author,
         $automod_flag,
-        $nsfw
+        $nsfw,
     ]);
-    $tid = $s->fetchColumn();    
+
+    $tid = $s->fetchColumn();
     notify_automod((int)$tid, 'thread', $body);
     cache_delete("board:{$board['id']}:p1", $db);
+
+    header("Location: thread.php?id=$tid");
+    exit;
+
+} elseif ($action === 'reply') {
+
+    $tid    = (int)($_POST['thread_id'] ?? 0);
+    $body   = trim($_POST['body']       ?? '');
+    $author = trim($_POST['author']     ?? '');
+    $author = ($author === '') ? 'Anon' : $author;
+    $options = strtolower(trim($_POST['options'] ?? ''));
+    $is_sage = ($options === 'sage');
+
+    $captcha_token  = $_POST['captcha_token']  ?? '';
+    $captcha_answer = $_POST['captcha_answer'] ?? '';
 
     if (!captcha_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
@@ -218,21 +249,7 @@ if ($action === 'new_thread') {
             </div>
         ");
     }
-    
-    header("Location: thread.php?id=$tid");
-    exit;
 
-} elseif ($action === 'reply') {
-
-    $tid  = (int)($_POST['thread_id'] ?? 0);
-    $body = trim($_POST['body'] ?? '');
-    $author  = trim($_POST['author'] ?? '');
-    $author  = ($author === '') ? 'Anon' : $author;
-    $options = strtolower(trim($_POST['options'] ?? ''));
-    $is_sage = ($options === 'sage');
-    $captcha_token  = $_POST['captcha_token']  ?? '';
-    $captcha_answer = $_POST['captcha_answer'] ?? '';
-    
     if ($tid <= 0)    die('Invalid thread ID.');
     if ($body === '') die('Reply body is required.');
 
@@ -242,39 +259,56 @@ if ($action === 'new_thread') {
     if (!$row)          die('Thread not found.');
     if ($row['locked']) die('This thread is locked! No new replies.');
 
-    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1';
-    $img = handle_upload($nsfw);
-    
+    $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1' ? 1 : 0;
+    $img  = handle_upload((bool)$nsfw);
+
+    $check        = automod_check($body, $db);
+    $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
+
+    if ($check['action'] === 'block') {
+        http_response_code(403);
+        die("
+            <link rel='stylesheet' href='style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
+                <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    Post blocked by automod!!
+                </div>
+                <div style='color:#aaa;font-size:13px;'>
+                    Your post contains content that violates 6chan's rules.<br>
+                    If you believe this is a mistake, use the contact page &lt;3
+                </div>
+                <div style='margin-top:12px;'>
+                    <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+                </div>
+            </div>
+        ");
+    }
+
     $s = $db->prepare(
         "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag, nsfw)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $s->execute([$tid, $body, $img, $ip, $author, $is_sage ? 'sage' : null, $automod_flag, $nsfw]);
+    $s->execute([
+        $tid,
+        $body,
+        $img,
+        $ip,
+        $author,
+        $is_sage ? 'sage' : null,
+        $automod_flag,
+        $nsfw,
+    ]);
 
     if (!$is_sage) {
         $db->prepare("UPDATE threads SET bumped_at = NOW() WHERE id = ?")
            ->execute([$tid]);
     }
-    $new_post_id = (int)$db->lastInsertId();
+
+    $new_post_id = (int)$db->query("SELECT lastval()")->fetchColumn();
     notify_automod($new_post_id, 'post', $body);
     cache_delete("board:{$board['id']}:p1", $db);
-
-    if (!captcha_verify($captcha_token, $captcha_answer)) {
-        http_response_code(400);
-        die("
-            <link rel='stylesheet' href='style.css'>
-            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
-                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
-                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
-                    Wrong Captcha Answer.
-                </div>
-                <div style='color:#aaa;font-size:13px;margin-bottom:12px;'>
-                    Hit back and try again.
-                </div>
-                <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
-            </div>
-        ");
-    }
+    cache_delete("thread:{$tid}", $db);
 
     header("Location: thread.php?id=$tid");
     exit;
