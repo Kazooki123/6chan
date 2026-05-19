@@ -156,7 +156,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                 data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">
               <?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>
           </span>
-          <a href="report.php?type=thread&id=<?= $thread['id'] ?>&b=<?= $thread['slug'] ?? $slug ?>"
+          <a href="report.php?type=thread&id=<?= $p['id'] ?>&b=<?= $p['slug'] ?? $slug ?>"
              class="report-link">[Report]</a>
         </div>
         <?= render_media($p['img_path'], (bool)$p['nsfw'], $id) ?>

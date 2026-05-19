@@ -2,25 +2,30 @@
 
 ![Logo](6chan.png)
 
-Welcome to **6chan**! Unlike imageboards like **Soyjack.party** & **4chan** where racist, homophobic, and other
-discrimination bullshit happens, we're making this website as friendly and welcoming as possible!
+Welcome to **6chan**! Unlike imageboards like **Soyjack.party**, **4chan**, and other imageboards where racist, homophobic, and other discrimination happens, we're making this website as friendly and welcoming as possible!
 
 Read the **/rules/**, don't be an idiot.
+
+> [!IMPORTANT]
+> 
 
 ## Setup
 
 **Prerequisites:**
 
+> [!NOTE]
+> If you want to contribute to the automod system, you might want to have **Python** installed.
+
 - PostgreSQL
 - PHP (8.5+)
 - Composer (just in case of new updates)
 
-0. Creating tables
+### 0. Creating tables
 
 Please copy the schema code in [schema.ex.sql](schema.ex.sql) and paste it in **pgAdmin4** or your
 preferred way to use postgresql. Hit run or execute and it should create the tables and columns.
 
-1. Running
+### 1. Running
 
 > [!WARNING]
 > Make sure you have **PDO** and **pdo_pgsql** extension enabled! Check it with `php -m`!!

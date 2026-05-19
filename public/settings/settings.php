@@ -8,6 +8,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 <head>
 <meta charset="UTF-8">
 <title>Settings — @6chan</title>
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
 <link rel="stylesheet" href="../style.css">
 <style>
 .settings-wrap  { max-width: 600px; margin: 0 auto; padding: 12px; }
