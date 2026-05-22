@@ -265,9 +265,11 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
     </div>
 
   <div class="thread">
+      <?php if (!empty($thread['img_path'])): ?>
     <div class="thread-op" id="p<?= $thread['id'] ?>">
       <?= render_media($thread['img_path'], (bool)$thread['nsfw'], $thread['id']) ?>
       </div>
+      <?php endif; ?>
       <div class="post-header">
         <?php if ($thread['subject']): ?>
           <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
