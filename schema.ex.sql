@@ -79,7 +79,7 @@ CREATE TABLE automod_rules (
 
 CREATE TABLE reports (
     id          SERIAL PRIMARY KEY,
-    post_type   VARCHAR(10) NOT NULL CHECK (post_type IN ('threads', 'posts')),
+    post_type   VARCHAR(10) NOT NULL CHECK (post_type IN ('thread', 'post')),
     post_id     INT NOT NULL,
     thread_id   INT,
     board_slug  VARCHAR(10),
