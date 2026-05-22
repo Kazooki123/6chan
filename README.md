@@ -7,7 +7,7 @@ Welcome to **6chan**! Unlike imageboards like **Soyjack.party**, **4chan**, and 
 Read the **/rules/**, don't be an idiot.
 
 > [!IMPORTANT]
-> 
+> This project is still in it's early development stage, updates and patches are ongoing, thank you!
 
 ## Setup
 
