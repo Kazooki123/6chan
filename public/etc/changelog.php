@@ -7,6 +7,26 @@
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
     <link rel="stylesheet" href="../style.css">
     <script src="../settingsloader.js"></script>
+<style>
+.changelog-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.8;
+}
+.changelog-block ol { padding-left: 20px; margin-bottom: 14px; }
+.changelog-block li { margin-bottom: 6px; }
+.changelog-block h2 {
+    color: var(--orange);
+    font-size: 15px;
+    margin: 14px 0 6px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+</style>
 </head>
 <body>
     <div id="topbar">
@@ -22,6 +42,11 @@
             <h1>Whats New on 6chan?</h1>
             <p>Changelog to keep up whats going on.</p>
         </div>
-    </div>
+
+        <div class="changelog-block">
+            <h2>Changelog v0.03</h2>
+            <p>Added markdown with a guide, better searching with fuzzy search + autocompletion</p>
+        </div>
+    </div>    
 </body>
 </html>

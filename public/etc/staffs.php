@@ -7,6 +7,25 @@
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
     <link rel="stylesheet" href="../style.css">
     <script src="../settingsloader.js"></script>
+<style>
+.staff-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.8;
+}
+.staff-block ol { padding-left: 20px; margin-bottom: 14px; }
+.staff-block li { margin-bottom: 6px; color: var(--pink); }
+.staff-block h1 {
+    color: var(--orange);
+    font-size: 16px;
+    margin: 14px 0 6px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+    letter-spacing: 1px;
+}
+</style>
 </head>
 <body>
     <div id="topbar">

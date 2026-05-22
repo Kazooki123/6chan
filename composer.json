@@ -4,6 +4,8 @@
         "xemlock/php-latex": "^0.1.0",
         "loilo/fuse": "^7.1",
         "league/commonmark": "^2.8",
-        "nesbot/carbon": "^3.11"
+        "nesbot/carbon": "^3.11",
+        "ezyang/htmlpurifier": "^4.19",
+        "james-heinrich/getid3": "^1.9"
     }
 }

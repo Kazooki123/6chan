@@ -85,6 +85,10 @@ function handle_upload(bool $nsfw = false): ?string {
         'image/gif'  => ['ext' => 'gif',  'max' => 8  * 1024 * 1024],  // 8MB (for hq gifs)
         'image/webp' => ['ext' => 'webp', 'max' => 4  * 1024 * 1024],
         'video/mp4'  => ['ext' => 'mp4',  'max' => 10 * 1024 * 1024],  // 10MB
+        'audio/mpeg' => ['ext' => 'mp3',  'max' => 10 * 1024 * 1024],
+        'audio/flac' => ['ext' => 'flac', 'max' => 20 * 1024 * 1024],
+        'audio/ogg'  => ['ext' => 'ogg',  'max' => 10 * 1024 * 1024],
+        'audio/wav'  => ['ext' => 'wav',  'max' => 30 * 1024 * 1024],
     ];
 
     if (!isset($allowed[$mime])) {
@@ -105,6 +109,30 @@ function handle_upload(bool $nsfw = false): ?string {
     }
     chmod($dest, 0644);
 
+    $is_audio = str_starts_with($mime, 'audio/');
+
+    if ($is_audio) {
+        require_once '../config/audio.php';
+        $audio_meta = extract_audio_meta($dest, $name);
+
+        $meta_path = $dest . '.json';
+
+        file_put_contents($meta_path, json_encode($audio_meta, JSON_UNESCAPED_UNICODE));
+        chmod($meta_path, 0644);
+    }
+
+    if ($is_audio && isset($_FILES['lrc']) && $_FILES['lrc']['error'] === UPLOAD_ERR_OK) {
+        $lrc_raw  = file_get_contents();
+        $lrc_data = parse_lrc($lrc_raw);
+
+        if ($lrc_data) {
+            $sidecar = json_decode(file_get_contents($meta_path), true);
+            $sidecar['lrc'] = $lrc_data;
+            $sidecar['lyrics'] = null;
+            file_put_contents($meta_path, json_encode($sidecar, JSON_UNESCAPED_UNICODE));
+        }
+    }
+    
     if ($nsfw && $mime !== 'video/mp4' && class_exists('Imagick')) {
         try {
             $preview_name = 'blur_' . $name;

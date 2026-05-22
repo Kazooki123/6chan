@@ -2,6 +2,8 @@
 require_once '../config/db.php';
 require_once '../config/cache.php';
 require_once '../config/captcha.php';
+require_once '../config/markdown.php';
+// require_once '../config/audio.php';
 
 $db = get_db();
 $id = (int)($_GET['id'] ?? 0);
@@ -29,30 +31,44 @@ if ($cached) {
 $captcha = captcha_generate();
 
 function render_body(string $text, int $thread_id): string {
-    $lines = explode("\n", htmlspecialchars($text, ENT_QUOTES));
-    $out   = [];
-    foreach ($lines as $line) {
-        $line = preg_replace_callback('/&gt;&gt;(\d+)/', function($m) use ($thread_id) {
-            $num = $m[1];
-            return '<a class="quotelink" href="thread.php?id=' . $thread_id . '#p' . $num . '" '
-                 . 'data-post="' . $num . '">&gt;&gt;' . $num . '</a>';
-        }, $line);
+    $lines = explode("\n", $text);
+    $processed = [];
 
-        if (preg_match('/^(\s*)&gt;(?!&gt;)/', $line))
-            $out[] = '<span class="gt">' . $line . '</span>';
-        else
-            $out[] = $line;
+    foreach ($lines as $line) {
+        $trimmed = ltrim($line);
+        
+        if (preg_match('/^>>(\d+)/', $trimmed)) {
+            $line = preg_replace('/^>>(\d+)/', '`%%QUOTE:$1%%`', $line);
+        }
+
+        $processed[] = $line;
     }
-    return implode("\n", $out);
+
+    $markdown_input = implode("\n", $processed);
+
+    $html = render_markdown($markdown_input);
+
+    $html = preg_replace_callback(
+        '/<code>%%QUOTE:(\d+)%%<\/code>/',
+        function($m) use ($thread_id) {
+            $num = $m[1];
+            return '<a class="quotelink" href="thread.php?id=' . $thread_id
+                 . '#p' . $num . '" data-post="' . $num . '">&gt;&gt;' . $num . '</a>';
+        },
+        $html
+    );
+    
+    return $html;
 }
 
 function render_media(string $path, bool $nsfw, int $thread_id): string {
     $is_video  = str_ends_with($path, '.mp4');
-    $orig_path = 'uploads/' . $path;
-    $has_blur  = $nsfw && !$is_video && file_exists(__DIR__ . '/uploads/blur_' . $path);
+    $is_audio  = preg_match('/\.(mp3|flac|ogg|wav)$/i', $path);
     $blur_path = 'uploads/blur_' . $path;
+    $orig_path = 'uploads/' . $path;
+    $has_blur  = $nsfw && !$is_video && file_exists(__DIR__ . 'uploads/blur_' . $path);
     $uid       = 'media_' . md5($path . $thread_id);
-
+    
     if ($is_video) {
         $nsfw_wrap = $nsfw
             ? 'class="nsfw-video" onclick="this.classList.remove(\'nsfw-video\')"
@@ -62,34 +78,157 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
             <div class='post-img'>
                 <video src='{$orig_path}' controls loop playsinline
                        style='max-width:250px;max-height:250px;border:1px solid var(--border);'
-                       preload='none' {$nsfw_wrap}>
+                       preload='none' loading='lazy' {$nsfw_wrap}>
                 </video>
-                " . ($nsfw ? "<div class='nsfw-label'>NSFW — click to show</div>" : "") . "
+                " . ($nsfw ? "<div class='nsfw-label'>Nsfw - click to show</div>" : "") . "
             </div>";
     }
 
+    if ($is_audio) {
+        $meta_path = __DIR__ . '/uploads/' . $path . '.json';
+        $meta      = file_exists($meta_path)
+                       ? json_decode(file_get_contents($meta_path), true)
+                       : [];
+                       
+        $title    = htmlspecialchars($meta['title']    ?? 'Unknown');
+        $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
+        $duration = htmlspecialchars($meta['duration'] ?? '-');
+        $cover    = !empty($meta['cover_file'])
+                        ? 'uploads/' . htmlspecialchars($meta['cover_file'])
+                        : 'assets/no-cover.png';
+
+        $pid = 'ap_' . md5($path);
+
+        $lyrics_html = '';
+        if (!empty($meta['lrc'])) {
+            foreach ($meta['lrc'] as $i => $entry) {
+                $t    = round($entry['time'], 2);
+                $line = htmlspecialchars($entry['line']);
+                $lyrics_html .= "<div class='lrc-line' data-time='{$t}' data-i='{$i}'>{$line}</div>"; 
+            }
+        } elseif (!empty($meta['lyrics'])) {
+            $lyrics_html = '<div class="plain-lyrics">'
+                         . nl2br(htmlspecialchars($meta['lyrics']))
+                         . '</div>';
+        } else {
+            $lyrics_html = '<div class="no-lyrics">No lyrics available!</div>';
+        }
+
+        $has_lrc = !empty($meta['lrc']) ? 'true' : 'false';
+
+        return "
+        <div class='audio-post' id='{$pid}'>
+            <div class='audio-left'>
+                <img class='audio-cover' src='{$cover}' alt='Cover art'>
+                <div class='audio-info'>
+                    <div class='audio-title'>{$title}</div>
+                    <div class='audio-artist'>{$artist}</div>
+                    <div class='audio-duration' id='{$pid}-dur'>{$duration}</div>
+                </div>
+                <div class='audio-controls'>
+                    <audio id='{$pid}-audio' preload='metadata' loop>
+                        <source src='{$orig_path}'>
+                    </audio>
+                    <button class='audio-btn' onclick='apToggle(\"{$pid}\")'>▶</button>
+                    <div class='audio-progress-wrap'
+                         onclick='apSeek(event, \"{$pid}\")'>
+                        <div class='audio-progress-bar' id='{$pid}-bar'></div>
+                    </div>
+                    <span class='audio-time' id='{$pid}-time'>0:00</span>
+                </div>
+            </div>
+            <div class='audio-lyrics' id='{$pid}-lyrics'>
+                {$lyrics_html}
+            </div>
+        </div>
+        <script>
+        (function(){
+            const pid     = '{$pid}';
+            const audio   = document.getElementById(pid+'-audio');
+            const bar     = document.getElementById(pid+'-bar');
+            const timeEl  = document.getElementById(pid+'-time');
+            const btn     = document.querySelector('#'+pid+' .audio-btn');
+            const hasLrc  = {$has_lrc};
+            let   lastIdx = -1;
+        
+            audio.addEventListener('timeupdate', () => {
+            // Progress bar
+            const pct = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
+            bar.style.width = pct + '%';
+        
+            // Elapsed time
+            const s = Math.floor(audio.currentTime);
+            timeEl.textContent = Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+        
+            // LRC sync
+            if (!hasLrc) return;
+                const lines  = document.querySelectorAll('#'+pid+'-lyrics .lrc-line');
+                const ct     = audio.currentTime;
+                let   active = -1;
+                lines.forEach((el, i) => {
+                    if (parseFloat(el.dataset.time) <= ct) active = i;
+                });
+                if (active !== lastIdx) {
+                    lines.forEach(el => el.classList.remove('lrc-active'));
+                    if (active >= 0) {
+                        const el = lines[active];
+                        el.classList.add('lrc-active');
+                        el.scrollIntoView({block:'center', behavior:'smooth'});
+                    }
+                    lastIdx = active;
+                }
+            });
+        
+            audio.addEventListener('ended', () => {
+                btn.textContent = '▶';
+                bar.style.width = '0%';
+                lastIdx = -1;
+            });
+        })();
+        
+        function apToggle(pid) {
+            const audio = document.getElementById(pid+'-audio');
+            const btn   = document.querySelector('#'+pid+' .audio-btn');
+            if (audio.paused) { audio.play(); btn.textContent = '⏸'; }
+            else              { audio.pause(); btn.textContent = '▶'; }
+        }
+        
+        function apSeek(e, pid) {
+            const audio = document.getElementById(pid+'-audio');
+            const wrap  = e.currentTarget;
+            const rect  = wrap.getBoundingClientRect();
+            const pct   = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pct * audio.duration;
+        }
+        </script>
+        ";
+    }
+    
     if ($has_blur) {
         return "
             <div class='post-img'>
                 <img id='{$uid}'
                      src='{$blur_path}'
                      data-orig='{$orig_path}'
-                     alt='NSFW image'
+                     alt='nsfw image'
                      loading='lazy'
                      class='nsfw-blur'
                      onclick='revealNsfw(this)'
-                     title='NSFW — click to reveal'>
-                <div class='nsfw-label'>NSFW — click to reveal</div>
+                     width='300'
+                     height='200'
+                     title='Nsfw - click to show'>
+                <div class='nsfw-label'>Nsfw - click to reveal</div>
             </div>";
     }
 
     return "
         <div class='post-img'>
-            <img src='{$orig_path}' alt='image' loading='lazy'"
-            . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='NSFW — click to reveal'" : "")
+            <img src='{$orig_path}' alt='image' width='300' height='200' loading='lazy'"
+            . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
             . ">
         </div>";
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -198,9 +337,17 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                     <td><textarea name="body" required></textarea></td>
                 </tr>
                 <tr>
-                    <td>Image</td>
+                    <td>Verify</td>
+                    <td>
+                        <span class="captcha-question"><?= $captcha['question'] ?></span>
+                        <input type="text" name="captcha_answer" maxlength="30"
+                               placeholder="Your answer" autocomplete="off">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Media</td>
                     <td><input type="file" name="image"
-                               accept="image/jpeg,image/png,image/gif,image/webp,video/mp4"></td>
+                               accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,audio/mpeg,audio/flac,audio/ogg,audio/wav"></td>
                 </tr>
                 <tr>
                     <td>NSFW</td>
@@ -210,14 +357,6 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                                    style="accent-color:var(--orange);margin-right:4px;">
                             Mark as NSFW
                         </label>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Verify</td>
-                    <td>
-                        <span class="captcha-question"><?= $captcha['question'] ?></span>
-                        <input type="text" name="captcha_answer" maxlength="30"
-                               placeholder="Your answer" autocomplete="off">
                     </td>
                 </tr>
                 <tr><td></td><td><button type="submit">Reply</button></td></tr>
@@ -262,6 +401,13 @@ document.querySelectorAll('.quotelink').forEach(link => {
     link.addEventListener('mousemove',  movePopup);
     link.addEventListener('mouseleave', () => popup.style.display = 'none');
 });
+
+// document.querySelector('input[name="image"]').addEventListener('change', function() {
+//   const f   = this.files[0];
+//   const row = document.getElementById('lrc-row');
+//   const isAudio = f && f.type.startsWith('audio/');
+//   row.style.display = isAudio ? '';
+ // });
 
 function movePopup(e) {
     const pad = 14;

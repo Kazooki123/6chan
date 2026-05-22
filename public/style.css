@@ -154,7 +154,86 @@ a:hover      { text-decoration: underline; }
 .post-header .postdate { color: var(--grey); font-size: 11px; }
 .post-header .reply-link { color: var(--orange); font-size: 12px; }
 .post-header .postnum::before { content: "No."; }
-.post-body { font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+.post-body { font-size: 13px; white-space: normal; /* word-break: break-word; */ }
+
+.post-body p          { margin: 0 0 4px 0; }
+.post-body h1,
+.post-body h2,
+.post-body h3         { color: var(--orange); font-size: 14px;
+                         margin: 6px 0 3px; border-bottom: 1px solid var(--border);
+                         padding-bottom: 2px; }
+.post-body h4,
+.post-body h5,
+.post-body h6         { color: var(--orange); font-size: 13px; margin: 4px 0 2px; }
+.post-body strong,
+.post-body b          { color: var(--white); font-weight: bold; }
+.post-body em,
+.post-body i          { font-style: italic; color: #ccc; }
+.post-body del        { color: var(--grey); }
+.post-body hr         { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+
+/* Inline code */
+.post-body code {
+    background: #111;
+    border: 1px solid var(--border);
+    color: #e6a817;
+    font: 12px 'Courier New', monospace;
+    padding: 1px 5px;
+    border-radius: 2px;
+}
+
+/* Code blocks */
+.post-body pre {
+    background: #111;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    overflow-x: auto;
+    margin: 6px 0;
+}
+.post-body pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #e6a817;
+    font-size: 12px;
+}
+
+/* Tables */
+.post-body table {
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 6px 0;
+    width: 100%;
+}
+.post-body th,
+.post-body td {
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    text-align: left;
+}
+.post-body th { background: var(--surface); color: var(--orange); }
+
+/* Lists */
+.post-body ul,
+.post-body ol { padding-left: 20px; margin: 4px 0; }
+.post-body li { margin-bottom: 2px; }
+
+/* Links inside posts */
+.post-body a:not(.quotelink) {
+    color: var(--link);
+    word-break: break-all;
+}
+
+.post-body blockquote {
+    color: var(--quote);
+    border-left: none;
+    margin: 0;
+    padding: 0;
+}
+
+.post-body blockquote p {
+    margin: 0;
+}
 
 /* greentext */
 .post-body .gt { color: var(--quote); }
@@ -356,24 +435,6 @@ footer {
 }
 .report-link:hover { color: var(--red); }
 
-.staff-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 16px 20px;
-    font-size: 14px;
-    line-height: 1.8;
-}
-.staff-block ol { padding-left: 20px; margin-bottom: 14px; }
-.staff-block li { margin-bottom: 6px; color: var(--pink); }
-.staff-block h1 {
-    color: var(--orange);
-    font-size: 16px;
-    margin: 14px 0 6px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 3px;
-    letter-spacing: 1px;
-}
-
 .nsfw-blur {
     filter: blur(18px);
     cursor: pointer;
@@ -421,4 +482,170 @@ body.compact .post-img img,
 body.compact .post-img video {
     max-width: 120px;
     max-height: 120px;
+}
+
+.markdown-hint {
+    font-size: 11px;
+    color: var(--grey);
+    margin-bottom: 6px;
+    line-height: 1.8;
+}
+
+.markdown-hint code {
+    background: #111;
+    border: 1px solid var(--border);
+    padding: 1px 4px;
+    color: #e6a817;
+    font-size: 11px;
+    margin-right: 3px;
+}
+
+.audio-post {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin: 6px 0;
+    max-width: 520px;
+    overflow: hidden;
+}
+
+.audio-left {
+    display: flex;
+    flex-direction: column;
+    width: 160px;
+    min-width: 160px;
+    border-right: 1px solid var(--border);
+    background: #111;
+}
+
+.audio-cover {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+    background: #0a0a0a;
+}
+
+.audio-info {
+    padding: 7px 9px 4px;
+    border-bottom: 1px solid var(--border);
+}
+
+.audio-title {
+    color: var(--white);
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.audio-artist {
+    color: var(--orange);
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.audio-duration {
+    color: var(--grey);
+    font-size: 10px;
+    margin-top: 3px;
+}
+
+.audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 8px;
+    background: #111;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+}
+
+.audio-btn {
+    background: var(--orange);
+    border: none;
+    color: #000;
+    font-size: 12px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.audio-btn:hover { background: var(--orange2); }
+
+.audio-progress-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    cursor: pointer;
+    position: relative;
+}
+
+.audio-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--orange);
+    transition: width 0.25s linear;
+    pointer-events: none;
+}
+
+.audio-time {
+    color: var(--grey);
+    font-size: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: 'Courier New', monospace;
+}
+
+.audio-lyrics {
+    flex: 1;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.9;
+    scroll-behavior: smooth;
+
+    /* Custom scrollbar — subtle */
+    scrollbar-width: thin;
+    scrollbar-color: var(--pink) transparent;
+}
+.audio-lyrics::-webkit-scrollbar       { width: 4px; }
+.audio-lyrics::-webkit-scrollbar-track { background: transparent; }
+.audio-lyrics::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.lrc-line {
+    color: var(--grey);
+    padding: 1px 0;
+    transition: color 0.2s, transform 0.2s;
+    cursor: default;
+}
+
+.lrc-line.lrc-active {
+    color: var(--orange);
+    font-weight: bold;
+    transform: translateX(4px);
+}
+
+.plain-lyrics {
+    color: var(--grey);
+    font-size: 12px;
+    line-height: 2;
+    white-space: pre-wrap;
+}
+
+.no-lyrics {
+    color: var(--border);
+    font-size: 11px;
+    font-style: italic;
+    padding-top: 4px;
 }

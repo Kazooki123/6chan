@@ -1,0 +1,309 @@
+<?php
+require_once '../../config/db.php';
+$db     = get_db();
+$boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Guide — @6chan</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../settingsloader.js"></script>
+<style>
+.guide-wrap  { max-width: 720px; margin: 0 auto; padding: 12px; }
+.guide-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+}
+.guide-block h2 {
+    color: var(--orange);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    margin: 0;
+}
+.guide-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+.guide-row:last-child { border-bottom: none; }
+.guide-syntax,
+.guide-preview {
+    padding: 8px 14px;
+}
+.guide-syntax {
+    border-right: 1px solid var(--border);
+    background: #111;
+}
+.guide-syntax code {
+    color: #e6a817;
+    font: 12px 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.guide-preview { background: var(--postbg); }
+.guide-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.guide-header span { padding: 5px 14px; }
+.guide-header span:first-child { border-right: 1px solid var(--border); }
+
+.guide-preview strong { color: var(--white); font-weight: bold; }
+.guide-preview em     { font-style: italic; color: #ccc; }
+.guide-preview del    { color: var(--grey); }
+.guide-preview code {
+    background: #111; border: 1px solid var(--border);
+    color: #e6a817; font: 12px 'Courier New',monospace;
+    padding: 1px 5px; border-radius: 2px;
+}
+.guide-preview pre {
+    background: #111; border: 1px solid var(--border);
+    padding: 8px 10px; margin: 0; overflow-x: auto;
+}
+.guide-preview pre code {
+    background: none; border: none; padding: 0; color: #e6a817;
+}
+.guide-preview blockquote {
+    color: #789922; margin: 0; padding: 0; border: none;
+}
+.guide-preview blockquote p { margin: 0; }
+.guide-preview .quotelink { color: var(--orange); }
+.guide-preview a { color: var(--link); }
+.guide-preview table {
+    border-collapse: collapse; font-size: 12px; width: 100%;
+}
+.guide-preview th,
+.guide-preview td {
+    border: 1px solid var(--border); padding: 3px 7px;
+}
+.guide-preview th { background: var(--surface); color: var(--orange); }
+.guide-preview h1,
+.guide-preview h2,
+.guide-preview h3 {
+    color: var(--orange); font-size: 14px;
+    margin: 0 0 3px; border-bottom: 1px solid var(--border); padding-bottom: 2px;
+}
+.guide-preview ul,
+.guide-preview ol { padding-left: 18px; margin: 0; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+    <span class="site-name">@6chan</span>
+    <a href="../index.php">Home</a>
+    <a href="../rules.php">[Rules]</a>
+    <a href="../search.php">[Search]</a>
+    <a href="../support.php">[Support]</a>
+    <a href="../contact.php">[Contact]</a>
+    <a href="../feed.php">[RSS]</a>
+</div>
+
+<div class="guide-wrap">
+    <div class="page-header">
+        <h1>Markdown Guide</h1>
+        <p>Everything you can use when writing posts on @6chan.</p>
+    </div>
+
+    <div class="guide-block">
+        <h2>6chan Syntax</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>&gt;this is greentext</code></div>
+            <div class="guide-preview">
+                <blockquote><p>&gt;this is greentext</p></blockquote>
+            </div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>&gt;&gt;42</code></div>
+            <div class="guide-preview">
+                <a class="quotelink" href="#">&gt;&gt;42</a>
+                <span style="color:var(--grey);font-size:11px;margin-left:6px;">
+                    (links to post #42 in thread)
+                </span>
+            </div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>sage</code> in the Options field</div>
+            <div class="guide-preview">
+                <span style="color:var(--grey);font-size:12px;">[sage]</span>
+                <span style="color:var(--grey);font-size:11px;margin-left:6px;">
+                    Post without bumping thread
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="guide-block">
+        <h2>Text Formatting</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>**bold text**</code></div>
+            <div class="guide-preview"><strong>bold text</strong></div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>*italic text*</code></div>
+            <div class="guide-preview"><em>italic text</em></div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>***bold and italic***</code></div>
+            <div class="guide-preview"><strong><em>bold and italic</em></strong></div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>~~strikethrough~~</code></div>
+            <div class="guide-preview"><del>strikethrough</del></div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>`inline code`</code></div>
+            <div class="guide-preview"><code>inline code</code></div>
+        </div>
+    </div>
+
+    <div class="guide-block">
+        <h2>Code Blocks</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>```&#10;your code here&#10;```</code></div>
+            <div class="guide-preview">
+                <pre><code>your code here</code></pre>
+            </div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>```python&#10;print("hello")&#10;```</code></div>
+            <div class="guide-preview">
+                <pre><code>print("hello")</code></pre>
+                <span style="font-size:11px;color:var(--grey);">
+                    (language hint accepted, no syntax highlighting yet)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="guide-block">
+        <h2>Headings</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code># Heading 1</code></div>
+            <div class="guide-preview"><h1>Heading 1</h1></div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>## Heading 2</code></div>
+            <div class="guide-preview"><h2>Heading 2</h2></div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>### Heading 3</code></div>
+            <div class="guide-preview"><h3>Heading 3</h3></div>
+        </div>
+    </div>
+
+    <div class="guide-block">
+        <h2>Lists</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>- item one&#10;- item two&#10;- item three</code></div>
+            <div class="guide-preview">
+                <ul><li>item one</li><li>item two</li><li>item three</li></ul>
+            </div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>1. first&#10;2. second&#10;3. third</code></div>
+            <div class="guide-preview">
+                <ol><li>first</li><li>second</li><li>third</li></ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="guide-block">
+        <h2>Links</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>[link text](https://youtube.com)</code></div>
+            <div class="guide-preview"><a href="#">link text</a></div>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>https://youtube.com</code></div>
+            <div class="guide-preview">
+                <a href="#">https://youtube.com</a>
+                <span style="font-size:11px;color:var(--grey);margin-left:6px;">
+                    (bare URLs auto-linked)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="guide-block">
+        <h2>Tables</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>| Head A | Head B |&#10;|--------|--------|&#10;| cell 1 | cell 2 |&#10;| cell 3 | cell 4 |</code></div>
+            <div class="guide-preview">
+                <table>
+                    <thead><tr><th>Head A</th><th>Head B</th></tr></thead>
+                    <tbody>
+                        <tr><td>cell 1</td><td>cell 2</td></tr>
+                        <tr><td>cell 3</td><td>cell 4</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="guide-block">
+        <h2>Divider</h2>
+        <div class="guide-header">
+            <span>You type</span><span>You get</span>
+        </div>
+        <div class="guide-row">
+            <div class="guide-syntax"><code>---</code></div>
+            <div class="guide-preview"><hr style="border-top:1px solid var(--border);margin:6px 0;"></div>
+        </div>
+    </div>
+
+    <div class="guide-block" style="border-color:var(--orange);">
+        <h2>What's not allowed</h2>
+        <div style="padding:10px 14px;font-size:13px;color:var(--grey);line-height:1.8;">
+            Raw HTML is stripped — you can't inject <code>&lt;script&gt;</code>,
+            <code>&lt;iframe&gt;</code>, or inline styles.<br>
+            External images are blocked to prevent tracking pixels.<br>
+            Links must use <code>http://</code> or <code>https://</code> —
+            <code>javascript:</code> and <code>data:</code> URIs are stripped.<br>
+            Deeply nested lists beyond 10 levels are cut off.
+        </div>
+    </div>
+</div>
+
+<footer>
+    @6chan — <a href="../index.php">Home</a> —
+    <a href="../rules.php">Rules</a> —
+    <a href="../search.php">Search</a>
+</footer>
+</body>
+</html>

@@ -122,3 +122,22 @@ ALTER TABLE posts   ADD COLUMN ip VARCHAR(45);
 
 -- ADD OPTIONS (for Sage-ing)
 ALTER TABLE posts ADD COLUMN options VARCHAR(64);
+
+-- FOR SEARCHES
+ALTER TABLE threads ADD COLUMN search_vec tsvector
+	GENERATED ALWAYS AS (
+		to_tsvector('english',
+		    coalesce(subject, '') || ' ' || coalesce(body, ''))
+	) STORED;
+	
+ALTER TABLE posts ADD COLUMN search_vec tsvector
+	GENERATED ALWAYS AS (
+		to_tsvector('english', coalesce(body, ''))
+	) STORED;
+	
+CREATE INDEX threads_fts_idx ON threads USING GIN(search_vec);
+CREATE INDEX posts_fts_idx ON posts USING GIN(search_vec);
+
+CREATE EXTENSION pg_trgm;
+CREATE INDEX threads_trgm_idx ON threads USING GIN(body gin_trgm_ops);
+CREATE INDEX posts_trgm_idx ON posts USING GIN(body gin_trgm_ops);

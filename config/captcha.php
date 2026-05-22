@@ -11,7 +11,9 @@ function captcha_generate(): array {
         $answer   = (string)($a + $b);
     } elseif ($type === 1) {
         $words    = ['apple', 'river', 'cloud', 'stone', 'flame',
-                      'grace', 'light', 'north', 'quiet', 'spark'];
+                      'grace', 'light', 'north', 'quiet', 'spark',
+                      'duck', 'spoon', 'pirate', 'anime', 'quad',
+                      'hydro', 'fork', 'blast', 'rhythm', 'typo'];
         shuffle($words);
         $picked   = array_slice($words, 0, 4);
         $pos      = rand(1, 4);
@@ -20,7 +22,9 @@ function captcha_generate(): array {
         $answer   = strtolower($picked[$pos-1]);
     } else {
         $words    = ['board', 'image', 'chan', 'posts', 'reply',
-                    'thread', 'pixels', 'forum', 'digital', 'orange'];
+                    'thread', 'pixels', 'forum', 'digital', 'orange',
+                    'beast', 'water', 'solid', 'plasma', 'plants', 'book',
+                    'think', 'play', 'journal', 'vicious', 'artificial'];
         $word     = $words[array_rand($words)];
         $question = "Type <strong>" . htmlspecialchars($word) . "</strong> backwards";
         $answer   = strrev($word);
