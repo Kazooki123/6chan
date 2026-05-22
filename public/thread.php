@@ -264,26 +264,20 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         <p>/<?= htmlspecialchars($thread['slug']) ?>/ — <?= htmlspecialchars($thread['bname']) ?></p>
     </div>
 
-    <div class="thread">
-        <div class="thread-op" id="p<?= $thread['id'] ?>">
-            <?php if (!empty($thread['img_path'])): ?>
-                <?= render_media($thread['img_path'], (bool)$thread['nsfw'], $thread['id']) ?>
-            <?php endif; ?>
-            <div class="post-header">
-                <?php if ($thread['subject']): ?>
-                    <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
-                <?php endif; ?>
-                <span class="author"><?= htmlspecialchars($thread['author'] ?? 'Anon') ?></span>
-                <span class="postnum">No.<?= $thread['id'] ?></span>
-                <span class="postdate"
-                      data-ts="<?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?>">
-                    <?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?>
-                </span>
-                <a href="report.php?type=thread&id=<?= $thread['id'] ?>&b=<?= htmlspecialchars($thread['slug']) ?>"
-                   class="report-link">[Report]</a>
-            </div>
-            <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
-        </div>
+  <div class="thread">
+    <div class="thread-op" id="p<?= $thread['id'] ?>">
+      <?= render_media($thread['img_path'], (bool)$thread['nsfw'], $thread['id']) ?>
+      </div>
+      <div class="post-header">
+        <?php if ($thread['subject']): ?>
+          <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
+        <?php endif; ?>
+        <span class="author"><?= htmlspecialchars($t['author'] ?? 'Anon') ?></span>
+        <span class="postnum"><?= $thread['id'] ?></span>
+        <span class="postdate"><?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?></span>
+      </div>
+      <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
+    </div>
 
         <div class="replies">
             <?php foreach ($posts as $p): ?>
