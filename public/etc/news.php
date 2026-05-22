@@ -21,6 +21,10 @@
             <h1>News</h1>
             <p>Get the latest News of 6chan!</p>
         </div>
+
+        <div style="align-items:center;display:flex;justify-content:center;color:var(--orange);">
+            <h1>🚧 PAGE UNDER CONSTRUCTION!! 🚧</h1>
+        </div>
     </div>
 </body>
 </html>

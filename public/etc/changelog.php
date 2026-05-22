@@ -44,8 +44,13 @@
         </div>
 
         <div class="changelog-block">
-            <h2>Changelog v0.03</h2>
+            <h2>Changelog v0.3</h2>
             <p>Added markdown with a guide, better searching with fuzzy search + autocompletion</p>
+        </div>
+
+        <div class="changelog-block">
+            <h2>Changelog v0.4</h2>
+            <p>Added a music player with embedded lyrics support (via <code>id3v2</code>)</p>
         </div>
     </div>    
 </body>

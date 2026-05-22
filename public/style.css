@@ -153,7 +153,6 @@ a:hover      { text-decoration: underline; }
 .post-header .postnum:hover { color: var(--orange); }
 .post-header .postdate { color: var(--grey); font-size: 11px; }
 .post-header .reply-link { color: var(--orange); font-size: 12px; }
-.post-header .postnum::before { content: "No."; }
 .post-body { font-size: 13px; white-space: normal; /* word-break: break-word; */ }
 
 .post-body p          { margin: 0 0 4px 0; }

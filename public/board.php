@@ -66,7 +66,7 @@ function render_body(string $text, int $thread_id): string {
         $trimmed = ltrim($line);
         
         if (preg_match('/^>>(\d+)/', $trimmed)) {
-            $line = preg_replace('/^>>(\d+)/', '`%%QUOTE:$1%%`', $line);
+            $line = preg_replace('/>>(\d+)/', '`%%QUOTE:$1%%`', $line);
         }
 
         $processed[] = $line;
@@ -365,7 +365,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                         <span class="subject"><?= htmlspecialchars($t['subject']) ?></span>
                     <?php endif; ?>
                     <span class="author"><?= htmlspecialchars($t['author'] ?? 'Anon') ?></span>
-                    <span class="postnum"><?= $t['id'] ?></span>
+                    <span class="postnum">No.<?= $t['id'] ?></span>
                     <span class="postdate"><?= date('Y-m-d H:i', strtotime($t['created_at'])) ?></span>
                     <a href="thread.php?id=<?= $t['id'] ?>" class="reply-link">[Reply]</a>
                     <a href="report.php?type=thread&id=<?= $t['id'] ?>&b=<?= $t['slug'] ?? $slug ?>"
@@ -398,7 +398,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                          <span style="color:var(--grey);font-size:11px;margin-left:4px;">[sage]</span>
                        <?php endif; ?>
                        <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
-                       <span class="postnum"><?= $p['id'] ?></span>
+                       <span class="postnum">No.<?= $p['id'] ?></span>
                        <span class="postdate"
                              data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">
                            <?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>
