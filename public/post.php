@@ -102,7 +102,15 @@ function handle_upload(bool $nsfw = false): ?string {
 
     $ext  = $allowed[$mime]['ext'];
     $name = uniqid('img_', true) . '.' . $ext;
-    $dest = __DIR__ . '/uploads/' . $name;
+
+    $target_dir = __DIR__ . '/uploads';
+    if (!is_dir($target_dir)) {
+        if (!mkdir($target_dir, 0755, true)) {
+            die('FATAL: Could not create the uploads directory.');
+        }
+    }
+
+    $dest = $target_dir. '/' . $name;
 
     if (!move_uploaded_file($f['tmp_name'], $dest)) {
         die('Could not save file. Check that uploads/ exists and is writable (chmod 775).');
