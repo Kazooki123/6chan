@@ -277,6 +277,8 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         <span class="author"><?= htmlspecialchars($t['author'] ?? 'Anon') ?></span>
         <span class="postnum"><?= $thread['id'] ?></span>
         <span class="postdate"><?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?></span>
+        <a href="report.php?type=thread&id=<?= $thread['id'] ?>&tid=<?= $id ?>&b=<?= htmlspecialchars($thread['slug']) ?>"
+            class="report-link">[Report]</a>
       </div>
       <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
     </div>
