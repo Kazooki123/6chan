@@ -102,7 +102,15 @@ function handle_upload(bool $nsfw = false): ?string {
 
     $ext  = $allowed[$mime]['ext'];
     $name = uniqid('img_', true) . '.' . $ext;
-    $dest = __DIR__ . '/uploads/' . $name;
+
+    $target_dir = __DIR__ . '/uploads';
+    if (!is_dir($target_dir)) {
+        if (!mkdir($target_dir, 0755, true)) {
+            die('FATAL: Could not create the uploads directory.');
+        }
+    }
+
+    $dest = $target_dir. '/' . $name;
 
     if (!move_uploaded_file($f['tmp_name'], $dest)) {
         die('Could not save file. Check that uploads/ exists and is writable (chmod 775).');
@@ -312,6 +320,30 @@ if ($action === 'new_thread') {
             </div>
         ");
     }
+
+    $check = automod_check($body, $db);
+
+    if ($check['action'] === 'block') {
+        http_response_code(403);
+        die("
+            <link rel='stylesheet' href='style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
+                <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    Post blocked by automod!!
+                </div>
+                <div style='color:#aaa;font-size:13px;'>
+                    Your post contains content that violates 6chan's rules.<br>
+                    If you believe this is a mistake, use the contact page <3
+                </div>
+                <div style='margin-top:12px;'>
+                    <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+                </div>
+            </div>
+        ");
+    }
+
+    $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
 
     $s = $db->prepare(
         "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag, nsfw)

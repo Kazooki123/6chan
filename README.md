@@ -4,7 +4,7 @@
 
 Welcome to **6chan**! Unlike imageboards like **Soyjack.party**, **4chan**, and other imageboards where racist, homophobic, and other discrimination happens, we're making this website as friendly and welcoming as possible!
 
-Read the **/rules/**, don't be an idiot.
+Read the **/rules**, don't be an idiot.
 
 > [!IMPORTANT]
 > This project is still in it's early development stage, updates and patches are ongoing, thank you!
@@ -16,44 +16,57 @@ Read the **/rules/**, don't be an idiot.
 > [!NOTE]
 > If you want to contribute to the automod system, you might want to have **Python** installed.
 
-- PostgreSQL
+- PostgreSQL **OR** Docker
 - PHP (8.5+)
-- Composer (just in case of new updates)
+- Composer
 
-### 0. Creating tables
+## 1. Database setup
 
-Please copy the schema code in [schema.ex.sql](schema.ex.sql) and paste it in **pgAdmin4** or your
-preferred way to use postgresql. Hit run or execute and it should create the tables and columns.
+### WITH DOCKER
 
-### 1. Running
+Run the command below to create a containerised database with the schema already applied:
 
-> [!WARNING]
-> Make sure you have **PDO** and **pdo_pgsql** extension enabled! Check it with `php -m`!!
-> Also run `composer install` since it uses composer packages.
+```bash
+docker compose up -d
+```
+
+### WITHOUT DOCKER
+
+Run the commands below to create the database and apply the schema:
+
+```bash
+createdb -U postgres 6chan
+psql -U postgres -d 6chan < schema.sql
+```
+
+## 2. Environment variables
+
+Rename [.env.example](.env.example) to `.env` and change the `DB_PASS` variable to a secure password
+
+## 3. Installing packages/extensions
+
+Ensure that the `PDO` and `pdo_pgsql` extensions are active in your PHP environment. You can quickly verify this by running:
+
+```bash
+php -m
+```
+
+If these extensions are missing from the terminal output, open your `php.ini` configuration file, look for the lines matching these extension names, and uncomment them by removing the leading semicolon (;).
+
+Install the required packages:
+
+```bash
+compose install
+```
+
+## 4. Starting the server
 
 ```bash
 cd public
-php -S localhost:8080
+php -S localhost:8080 # Start the server
 ```
 
-> [!NOTE]
-> If you're encountering errors, drop `NOT NULL` for `img_path`:
-
-```sql
-ALTER TABLE threads ALTER COLUMN img_path DROP NOT NULL;
-ALTER TABLE posts   ALTER COLUMN img_path DROP NOT NULL;
-```
-
-If you're having problems with PHP extensions, go to `php.ini` (OS may vary) and search for:
-
-```ini
-;extension='fileinfo'
-;extension='openssl'
-;extension='pdo_pgsql'
-;extension='pgsql'
-```
-
-And just remove the **semicolon** (;).
+You can now visit [https://localhost:8080](https://localhost:8080) and begin using 6chan!!
 
 ## Contribution
 

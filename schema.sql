@@ -30,6 +30,8 @@ CREATE TABLE threads (
     img_path     VARCHAR(300),
     automod_flag VARCHAR(50),
     nsfw         BOOLEAN NOT NULL DEFAULT FALSE,
+    pinned       BOOLEAN NOT NULL DEFAULT FALSE,
+    locked       BOOLEAN NOT NULL DEFAULT FALSE,
     created_at   TIMESTAMPTZ DEFAULT NOW(),
     bumped_at    TIMESTAMPTZ DEFAULT NOW()
 );
@@ -77,7 +79,7 @@ CREATE TABLE automod_rules (
 
 CREATE TABLE reports (
     id          SERIAL PRIMARY KEY,
-    post_type   VARCHAR(10) NOT NULL CHECK (post_type IN ('threads', 'posts')),
+    post_type   VARCHAR(10) NOT NULL CHECK (post_type IN ('thread', 'post')),
     post_id     INT NOT NULL,
     thread_id   INT,
     board_slug  VARCHAR(10),

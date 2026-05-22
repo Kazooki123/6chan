@@ -264,26 +264,24 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         <p>/<?= htmlspecialchars($thread['slug']) ?>/ — <?= htmlspecialchars($thread['bname']) ?></p>
     </div>
 
-    <div class="thread">
-        <div class="thread-op" id="p<?= $thread['id'] ?>">
-            <?php if (!empty($thread['img_path'])): ?>
-                <?= render_media($thread['img_path'], (bool)$thread['nsfw'], $thread['id']) ?>
-            <?php endif; ?>
-            <div class="post-header">
-                <?php if ($thread['subject']): ?>
-                    <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
-                <?php endif; ?>
-                <span class="author"><?= htmlspecialchars($thread['author'] ?? 'Anon') ?></span>
-                <span class="postnum">No.<?= $thread['id'] ?></span>
-                <span class="postdate"
-                      data-ts="<?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?>">
-                    <?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?>
-                </span>
-                <a href="report.php?type=thread&id=<?= $thread['id'] ?>&b=<?= htmlspecialchars($thread['slug']) ?>"
-                   class="report-link">[Report]</a>
-            </div>
-            <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
-        </div>
+  <div class="thread">
+      <?php if (!empty($thread['img_path'])): ?>
+    <div class="thread-op" id="p<?= $thread['id'] ?>">
+      <?= render_media($thread['img_path'], (bool)$thread['nsfw'], $thread['id']) ?>
+      </div>
+      <?php endif; ?>
+      <div class="post-header">
+        <?php if ($thread['subject']): ?>
+          <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
+        <?php endif; ?>
+        <span class="author"><?= htmlspecialchars($t['author'] ?? 'Anon') ?></span>
+        <span class="postnum"><?= $thread['id'] ?></span>
+        <span class="postdate"><?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?></span>
+        <a href="report.php?type=thread&id=<?= $thread['id'] ?>&tid=<?= $id ?>&b=<?= htmlspecialchars($thread['slug']) ?>"
+            class="report-link">[Report]</a>
+      </div>
+      <div class="post-body"><?= render_body($thread['body'], $thread['id']) ?></div>
+    </div>
 
         <div class="replies">
             <?php foreach ($posts as $p): ?>
@@ -293,7 +291,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                         <span style="color:var(--grey);font-size:11px;">[sage]</span>
                     <?php endif; ?>
                     <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
-                    <span class="postnum">No.<?= $p['id'] ?></span>
+                    <span class="postnum"><?= $p['id'] ?></span>
                     <span class="postdate"
                           data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">
                         <?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>
@@ -335,6 +333,18 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                 <tr>
                     <td>Comment</td>
                     <td><textarea name="body" required></textarea></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <div class="markdown-hint">
+                            <strong>Markdown Supported:</strong>
+                            <code>**bold**</code> <code>*italic*</code>
+                            <code>`code`</code> <code>~~strike~~</code>
+                            <code>&gt;greentext</code> <code>&gt;&gt;123</code> |
+                            <a href="docs/markdownguide.php" style="color:var(--orange);font-size:11px;">[Guide]</a>
+                        </div>
+                    </td>
                 </tr>
                 <tr>
                     <td>Verify</td>
