@@ -291,7 +291,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                         <span style="color:var(--grey);font-size:11px;">[sage]</span>
                     <?php endif; ?>
                     <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
-                    <span class="postnum">No.<?= $p['id'] ?></span>
+                    <span class="postnum"><?= $p['id'] ?></span>
                     <span class="postdate"
                           data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">
                         <?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>
