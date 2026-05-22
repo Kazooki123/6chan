@@ -5,8 +5,8 @@ import psycopg2
 import os
 
 DB = psycopg2.connect(
-    dbname="imageboard",
-    user="postgres",
+    dbname=os.getenv("DB_NAME"),
+    user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASS"),
     host="localhost"
 )
