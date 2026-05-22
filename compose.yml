@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: 6chan
+      POSTGRES_USER: 6chan
+      POSTGRES_PASSWORD: supersecret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql
+      - ./schema.ex.sql:/docker-entrypoint-initdb.d/schema.sql
+
+volumes:
+  postgres:
