@@ -333,6 +333,18 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                     <td><textarea name="body" required></textarea></td>
                 </tr>
                 <tr>
+                    <td></td>
+                    <td>
+                        <div class="markdown-hint">
+                            <strong>Markdown Supported:</strong>
+                            <code>**bold**</code> <code>*italic*</code>
+                            <code>`code`</code> <code>~~strike~~</code>
+                            <code>&gt;greentext</code> <code>&gt;&gt;123</code> |
+                            <a href="docs/markdownguide.php" style="color:var(--orange);font-size:11px;">[Guide]</a>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
                     <td>Verify</td>
                     <td>
                         <span class="captcha-question"><?= $captcha['question'] ?></span>
