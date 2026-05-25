@@ -43,6 +43,8 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                 <a href="board.php?b=t">[/t/ - tech]</a>
                 <a href="etc/copyright.html">[copyright]</a>
                 <a href="etc/privacy.html">[privacy]</a>
+                <a href="etc/fos.html">[freedom]</a>
+                <a href="etc/tsnclf.html">[logics]</a>
             </div>
         </div>
         
@@ -59,6 +61,6 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <?php endforeach; ?>
         <div>
     </div>
-    <footer>@6chan v0.4 - MIT - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.php">[Support]</a> <a href="etc/news.php">[News]</a> <a href="feed.php">[RSS]</a> </footer>
+    <footer>@6chan v0.5 - MIT - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.php">[Support]</a> <a href="etc/news.php">[News]</a> <a href="feed.php">[RSS]</a> </footer>
 </body>
 </html>

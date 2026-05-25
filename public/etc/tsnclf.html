@@ -1,0 +1,857 @@
+<!-- THOU SHALT NOT COMMIT LOGICAL FALLACIES / TSNCLF -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@6chan - Fallacies</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../settingsloader.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap');
+
+:root {
+    --fallacy-orange: var(--orange, #ff6600);
+    --fallacy-dim:    #2a1a00;
+    --fallacy-gold:   #e6a817;
+    --fallacy-red:    #cc2200;
+    --fallacy-green:  #22aa44;
+    --fallacy-blue:   #4a9eff;
+    --fallacy-purple: #9b59b6;
+}
+
+.tsnclf-hero {
+    text-align: center;
+    padding: 40px 12px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    position: relative;
+}
+.tsnclf-title {
+    font-family: 'IM Fell English SC', 'Georgia', serif;
+    font-size: clamp(18px, 3.5vw, 32px);
+    color: var(--fallacy-orange);
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+.tsnclf-subtitle {
+    font-family: 'IM Fell English', 'Georgia', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--grey, #888);
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+}
+.tsnclf-banner {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid;
+    padding: 12px 24px;
+    font-family: 'MapleMono', monospace;
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 6px;
+    margin: 8px 0 16px;
+}
+.tsnclf-intro {
+    max-width: 600px;
+    margin: 0 auto;
+    font-size: 13px;
+    color: var(--grey, #888);
+    line-height: 1.8;
+    font-family: 'IM Fell English', 'Georgia', serif;
+    font-style: italic;
+}
+.tsnclf-intro strong { color: var(--fallacy-orange); font-style: normal; }
+
+.tsnclf-section-head {
+    font-family: 'IM Fell English SC', 'Georgia', serif;
+    font-size: 11px;
+    color: var(--fallacy-orange);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin: 28px 0 14px;
+}
+
+.fallacy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.fallacy-card {
+    background: var(--surface, #242424);
+    border: 1px solid var(--border, #3a3a3a);
+    border-left: 3px solid var(--card-accent, #ff6600);
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.7;
+    transition: border-color .15s, background .15s;
+    cursor: default;
+}
+.fallacy-card:hover {
+    background: #1f1f1f;
+    border-color: var(--card-accent, #ff6600);
+}
+.fallacy-name {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 3px;
+    color: var(--fallacy-orange);
+    font-family: 'IM Fell English SC', 'Georgia', serif;
+    letter-spacing: 0.3px;
+}
+.fallacy-latin {
+    font-size: 10px;
+    color: var(--grey, #888);
+    font-style: italic;
+    margin-bottom: 6px;
+    font-family: 'IM Fell English', 'Georgia', serif;
+}
+.fallacy-desc {
+    color: #bbb;
+    font-size: 12px;
+    line-height: 1.65;
+    margin-bottom: 6px;
+}
+.fallacy-example {
+    background: #111;
+    border-left: 2px solid var(--card-accent, #ff6600);
+    padding: 5px 8px;
+    font-size: 11px;
+    color: var(--grey, #888);
+    font-style: italic;
+    line-height: 1.5;
+}
+.fallacy-example strong { color: var(--fallacy-orange); font-style: normal; }
+
+/* Category accent colors :3 */
+.cat-logic    { --card-accent: #ff6600; }   /* orange —> logical fallacies */
+.cat-appeal   { --card-accent: #e6a817; }   /* gold   —> appeals */
+.cat-bias     { --card-accent: #4a9eff; }   /* blue   —> cognitive biases */
+.cat-language { --card-accent: #9b59b6; }   /* purple —> language tricks */
+.cat-social   { --card-accent: #22aa44; }   /* green  —> social fallacies */
+
+.tsnclf-callout {
+    background: transparent;
+    border: 1px solid var(--fallacy-orange);
+    padding: 16px 20px;
+    margin: 24px 0;
+    font-size: 13px;
+    line-height: 1.8;
+    text-align: center;
+}
+.tsnclf-callout .big {
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--fallacy-orange);
+    letter-spacing: 4px;
+    display: block;
+    margin-bottom: 8px;
+}
+.tsnclf-callout p { color: #bbb; margin: 0; }
+
+.ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 8px 0 16px;
+}
+.ref-table th {
+    background: #111;
+    color: var(--fallacy-orange);
+    padding: 6px 10px;
+    text-align: left;
+    border: 1px solid var(--border);
+    font-family: 'IM Fell English SC', 'Georgia', serif;
+    letter-spacing: 0.5px;
+}
+.ref-table td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    color: #bbb;
+    vertical-align: top;
+    line-height: 1.6;
+}
+.ref-table tr:hover td { background: #1f1f1f; }
+.ref-table .name-col { color: var(--fallacy-orange); font-weight: bold; white-space: nowrap; }
+
+.filter-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    align-items: center;
+}
+.filter-btn {
+    background: #111;
+    border: 1px solid var(--border);
+    color: var(--grey);
+    font: 11px 'Courier New', monospace;
+    padding: 3px 10px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: border-color .15s, color .15s;
+}
+.filter-btn:hover,
+.filter-btn.active { border-color: var(--fallacy-orange); color: var(--fallacy-orange); }
+.filter-search {
+    background: #111;
+    border: 1px solid var(--border);
+    color: var(--white, #e8e8e8);
+    font: 12px 'Courier New', monospace;
+    padding: 3px 10px;
+    flex: 1;
+    min-width: 140px;
+}
+.filter-search:focus { outline: none; border-color: var(--fallacy-orange); }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+    <span class="site-name">@6chan</span>
+    <a href="../index.php">Home</a>
+    <a href="../rules.php">[Rules]</a>
+    <a href="../search.php">[Search]</a>
+    <a href="fos.html">[FoS]</a>
+    <a href="privacy.html">[Privacy]</a>
+    <a href="../contact.php">[Contact]</a>
+</div>
+
+<div class="wrap">
+    <div class="tsnclf-hero">
+        <div class="tsnclf-title">
+            Thou Shalt Not Commit Logical Fallacies<br>
+            &amp; Suffer From Cognitive Biases.
+        </div>
+        <div class="tsnclf-subtitle">
+            Know Thyself before Typing Thy Keyboard.<br>
+            A Rulebook to NOT Embarrass Thyself.
+        </div>
+        <div class="tsnclf-banner">
+            <img src="../assets/logicalfallacy.png" width="600" height="300">
+        </div>
+        <div class="tsnclf-banner">
+            <img src="../assets/cognitivebias.jpg" width="600" height="300">
+        </div>
+        <div class="tsnclf-intro">
+            Every post on @6chan is a fair game for a
+            <strong>TSNCLF!</strong> callout if it commits any of the
+            <b style="color:var(--fallacy-red);">sins</b> listed below. This is not a personal attack —
+            it is a gift. Study this page. Refer back often.
+            The internet does not forget, but it WILL forgive
+            if you learn.
+        </div>
+    </div>
+
+    <div class="tsnclf-callout">
+        <span class="big">TSNCLF!</span>
+        <p>
+            When someone on @6chan drops this, they're pointing to this page.
+            Find your fallacy. Acknowledge it. Rebuild your argument.
+            That's how this works.
+        </p>
+    </div>
+
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterCards('all', this)">All</button>
+        <button class="filter-btn" onclick="filterCards('cat-logic', this)">Logic</button>
+        <button class="filter-btn" onclick="filterCards('cat-appeal', this)">Appeals</button>
+        <button class="filter-btn" onclick="filterCards('cat-bias', this)">Biases</button>
+        <button class="filter-btn" onclick="filterCards('cat-language', this)">Language</button>
+        <button class="filter-btn" onclick="filterCards('cat-social', this)">Social</button>
+        <input class="filter-search" type="text"
+               placeholder="Search fallacies..."
+               oninput="searchCards(this.value)">
+    </div>
+
+    <div class="tsnclf-section-head">Logical Fallacies</div>
+    <div class="fallacy-grid" id="cards">
+
+        <div class="fallacy-card cat-logic" data-name="ad hominem">
+            <div class="fallacy-name">Ad Hominem</div>
+            <div class="fallacy-latin">argumentum ad hominem</div>
+            <div class="fallacy-desc">
+                Attacking the person making the argument rather than the argument itself.
+                Their character, appearance, or past is irrelevant to whether they're right.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Why should I listen to your take on economics?
+                You failed maths in school."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="straw man">
+            <div class="fallacy-name">Straw Man</div>
+            <div class="fallacy-latin">homo stramineus</div>
+            <div class="fallacy-desc">
+                Misrepresenting someone's argument into a weaker or more extreme version,
+                then attacking that version instead of what they actually said.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "You said we should reduce military spending —
+                so you want us completely defenceless?"
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="false dichotomy">
+            <div class="fallacy-name">False Dichotomy</div>
+            <div class="fallacy-latin">bifurcatio</div>
+            <div class="fallacy-desc">
+                Presenting only two options when more exist. Also called black-and-white
+                thinking or false dilemma. Reality almost always has more than two positions.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "You're either with us or against us."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="slippery slope">
+            <div class="fallacy-name">Slippery Slope</div>
+            <div class="fallacy-latin">in infinitum</div>
+            <div class="fallacy-desc">
+                Claiming one small step will inevitably lead to extreme consequences,
+                without demonstrating why each step would necessarily follow.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "If we allow X, the next thing you know
+                we'll have Y, then Z, then total collapse."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="circular reasoning">
+            <div class="fallacy-name">Circular Reasoning</div>
+            <div class="fallacy-latin">circulus in probando</div>
+            <div class="fallacy-desc">
+                Using your conclusion as a premise of your own argument.
+                The proof just restates the claim in different words.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "This book is true because it says so in the book."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="hasty generalization">
+            <div class="fallacy-name">Hasty Generalization</div>
+            <div class="fallacy-latin">secundum quid</div>
+            <div class="fallacy-desc">
+                Drawing a broad conclusion from a sample that is too small,
+                unrepresentative, or cherry-picked. Anecdotes are not data.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "I met two people from that city and they were
+                rude. Everyone from there is rude."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="post hoc">
+            <div class="fallacy-name">Post Hoc</div>
+            <div class="fallacy-latin">post hoc ergo propter hoc</div>
+            <div class="fallacy-desc">
+                Assuming that because B happened after A, A caused B.
+                Correlation is not causation. Sequence is not consequence.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "I wore my lucky socks and we won —
+                the socks made us win."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="no true scotsman">
+            <div class="fallacy-name">No True Scotsman</div>
+            <div class="fallacy-latin">no true scotsman</div>
+            <div class="fallacy-desc">
+                Dismissing counterexamples by redefining the category to exclude them.
+                Moving the goalposts after the fact to protect a generalization.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "No real fan of X would ever do Y —
+                so anyone who did Y wasn't a real fan."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="false cause">
+            <div class="fallacy-name">False Cause</div>
+            <div class="fallacy-latin">non causa pro causa</div>
+            <div class="fallacy-desc">
+                Incorrectly identifying the cause of something. Related to post hoc
+                but broader — any assumption of causation without sufficient evidence.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Ice cream sales and drowning rates both rise
+                in summer. Ice cream causes drowning."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="composition division">
+            <div class="fallacy-name">Composition / Division</div>
+            <div class="fallacy-latin">fallacia compositionis</div>
+            <div class="fallacy-desc">
+                Assuming what's true of the parts must be true of the whole (composition),
+                or vice versa (division). The whole and its parts have different properties.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Every player on this team is excellent,
+                therefore this is an excellent team."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="middle ground">
+            <div class="fallacy-name">Middle Ground</div>
+            <div class="fallacy-latin">argumentum ad temperantiam</div>
+            <div class="fallacy-desc">
+                Assuming the truth must lie somewhere between two extremes.
+                Sometimes it does. But if one position is simply wrong,
+                the midpoint is also wrong.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Some say vaccines are safe, some say dangerous.
+                The truth is probably somewhere in the middle."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-logic" data-name="burden of proof">
+            <div class="fallacy-name">Burden of Proof</div>
+            <div class="fallacy-latin">onus probandi</div>
+            <div class="fallacy-desc">
+                Shifting the burden of proof to the person who doubts your claim.
+                The person making a positive claim bears the burden of proving it.
+                Absence of disproof is not proof.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Prove I'm wrong." — when they made the claim.
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tsnclf-section-head">Fallacious Appeals</div>
+    <div class="fallacy-grid">
+
+        <div class="fallacy-card cat-appeal" data-name="appeal to authority">
+            <div class="fallacy-name">Appeal to Authority</div>
+            <div class="fallacy-latin">argumentum ad verecundiam</div>
+            <div class="fallacy-desc">
+                Citing an authority as proof, without evaluating the actual argument.
+                Experts can be wrong. An appeal to authority is evidence, not proof.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "A professor said it, therefore it's true."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-appeal" data-name="appeal to popularity">
+            <div class="fallacy-name">Appeal to Popularity</div>
+            <div class="fallacy-latin">argumentum ad populum</div>
+            <div class="fallacy-desc">
+                Claiming something is true because many people believe it.
+                Majorities have been spectacularly wrong throughout history.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Millions of people can't be wrong."
+                (They can. They have been.)
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-appeal" data-name="appeal to emotion">
+            <div class="fallacy-name">Appeal to Emotion</div>
+            <div class="fallacy-latin">argumentum ad passiones</div>
+            <div class="fallacy-desc">
+                Manipulating emotions instead of making a logical case.
+                Feelings are real. They are not evidence of factual claims.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Think of the children!" — without addressing
+                the actual argument.
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-appeal" data-name="appeal to nature">
+            <div class="fallacy-name">Appeal to Nature</div>
+            <div class="fallacy-latin">argumentum ad naturam</div>
+            <div class="fallacy-desc">
+                Claiming something is good because it's natural, or bad because
+                it's unnatural. Nature contains both arsenic and blueberries.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "It's completely natural, so it must be safe."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-appeal" data-name="appeal to tradition">
+            <div class="fallacy-name">Appeal to Tradition</div>
+            <div class="fallacy-latin">argumentum ad antiquitatem</div>
+            <div class="fallacy-desc">
+                Arguing something is better or right because it's older or traditional.
+                Age does not validate. Many traditions were wrong.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "We've always done it this way."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-appeal" data-name="appeal to ignorance">
+            <div class="fallacy-name">Appeal to Ignorance</div>
+            <div class="fallacy-latin">argumentum ad ignorantiam</div>
+            <div class="fallacy-desc">
+                Claiming something must be true because it hasn't been proven false,
+                or false because it hasn't been proven true.
+                Lack of evidence is not evidence.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Nobody has proven it doesn't exist,
+                therefore it exists."
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tsnclf-section-head">Cognitive Biases</div>
+    <div class="fallacy-grid">
+
+        <div class="fallacy-card cat-bias" data-name="confirmation bias">
+            <div class="fallacy-name">Confirmation Bias</div>
+            <div class="fallacy-latin">myside bias</div>
+            <div class="fallacy-desc">
+                Seeking, interpreting, and remembering information in a way that
+                confirms what you already believe. The most common bias. Everyone has it.
+                The question is whether you fight it.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> Only reading news sources that agree with you,
+                then concluding everyone agrees with you.
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-bias" data-name="dunning kruger">
+            <div class="fallacy-name">Dunning-Kruger Effect</div>
+            <div class="fallacy-latin">illusory superiority</div>
+            <div class="fallacy-desc">
+                Those with limited knowledge in a domain overestimate their competence.
+                The less you know, the less you know you don't know.
+                Expertise breeds humility.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> Confidently explaining how vaccines work
+                after reading three forum posts.
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-bias" data-name="survivorship bias">
+            <div class="fallacy-name">Survivorship Bias</div>
+            <div class="fallacy-latin">survivorship bias</div>
+            <div class="fallacy-desc">
+                Focusing on things that "survived" a process and overlooking those that
+                didn't, because the failures aren't visible. This distorts reality.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "All those old buildings are so well-made!" —
+                ignoring that the badly built ones collapsed centuries ago.
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-bias" data-name="availability heuristic">
+            <div class="fallacy-name">Availability Heuristic</div>
+            <div class="fallacy-latin">availability bias</div>
+            <div class="fallacy-desc">
+                Overestimating the likelihood of events that come easily to mind,
+                usually because they're recent, dramatic, or emotionally charged.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> Fearing plane crashes more than car crashes
+                after seeing a news story, despite the statistics being reversed.
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-bias" data-name="sunk cost">
+            <div class="fallacy-name">Sunk Cost Fallacy</div>
+            <div class="fallacy-latin">concorde fallacy</div>
+            <div class="fallacy-desc">
+                Continuing with something because of previously invested resources
+                (time, money, effort) rather than its future merit.
+                Past costs are gone. Only future value matters.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "I've argued this position for two hours —
+                I can't back down now."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-bias" data-name="in-group bias">
+            <div class="fallacy-name">In-Group Bias</div>
+            <div class="fallacy-latin">in-group favoritism</div>
+            <div class="fallacy-desc">
+                Favouring members of your own group and judging them by different
+                standards than outsiders. Applies to nationality, ideology, fandom,
+                and any other identity marker.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> Excusing the same behaviour in your group
+                that you condemn in another.
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-bias" data-name="anchoring bias">
+            <div class="fallacy-name">Anchoring Bias</div>
+            <div class="fallacy-latin">focalism</div>
+            <div class="fallacy-desc">
+                Over-relying on the first piece of information encountered when
+                making decisions. The initial anchor shapes all subsequent judgements,
+                even when it's arbitrary.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> A product "on sale" from $200 to $120 feels
+                cheap — even if $120 was always the real price.
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-bias" data-name="bandwagon effect">
+            <div class="fallacy-name">Bandwagon Effect</div>
+            <div class="fallacy-latin">appeal to the masses</div>
+            <div class="fallacy-desc">
+                Adopting beliefs or behaviours because many others do,
+                regardless of the underlying evidence.
+                Popularity is not correctness.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> Changing your opinion the moment you notice
+                it's the minority view in a thread.
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tsnclf-section-head">Language &amp; Rhetoric Tricks</div>
+    <div class="fallacy-grid">
+
+        <div class="fallacy-card cat-language" data-name="equivocation">
+            <div class="fallacy-name">Equivocation</div>
+            <div class="fallacy-latin">fallacia aequivocationis</div>
+            <div class="fallacy-desc">
+                Using a word with two different meanings in the same argument
+                as if they mean the same thing. Watch for terms that shift meaning mid-argument.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Laws of nature are laws. Laws require a lawmaker.
+                Therefore nature has a lawmaker." (Two different meanings of "law.")
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-language" data-name="loaded question">
+            <div class="fallacy-name">Loaded Question</div>
+            <div class="fallacy-latin">complex question fallacy</div>
+            <div class="fallacy-desc">
+                Asking a question that presupposes something not established,
+                forcing acceptance of an embedded assumption to answer at all.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Have you stopped being wrong about this?"
+                (Either answer accepts that you were wrong.)
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-language" data-name="moving goalposts">
+            <div class="fallacy-name">Moving the Goalposts</div>
+            <div class="fallacy-latin">raising the bar</div>
+            <div class="fallacy-desc">
+                Changing the criteria for proof after evidence has been provided.
+                Each time the standard is met, a new standard appears.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Show me one study." → "Show me ten studies."
+                → "Show me a meta-analysis." → "Show me..."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-language" data-name="gish gallop">
+            <div class="fallacy-name">Gish Gallop</div>
+            <div class="fallacy-latin">spreading</div>
+            <div class="fallacy-desc">
+                Overwhelming an opponent with a large volume of weak arguments,
+                so they can't address all of them. The quantity of claims
+                is weaponized against quality of response.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> Posting 15 rapid-fire claims in one message,
+                then saying "You haven't refuted any of them."
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tsnclf-section-head">Social &amp; Discussion Fallacies</div>
+    <div class="fallacy-grid">
+
+        <div class="fallacy-card cat-social" data-name="tu quoque">
+            <div class="fallacy-name">Tu Quoque</div>
+            <div class="fallacy-latin">appeal to hypocrisy</div>
+            <div class="fallacy-desc">
+                Deflecting criticism by pointing out that the critic also does
+                the same thing. Hypocrisy is worth noting — but it doesn't
+                make the original criticism wrong.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "You can't criticize my argument —
+                you've made the same mistake before."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-social" data-name="whataboutism">
+            <div class="fallacy-name">Whataboutism</div>
+            <div class="fallacy-latin">tu quoque variant</div>
+            <div class="fallacy-desc">
+                Deflecting criticism by pointing to someone else's unrelated fault.
+                A political favorite. The existence of other problems
+                doesn't negate the problem being discussed.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Why are you criticizing us?
+                What about what they did?"
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-social" data-name="genetic fallacy">
+            <div class="fallacy-name">Genetic Fallacy</div>
+            <div class="fallacy-latin">fallacia originis</div>
+            <div class="fallacy-desc">
+                Judging an argument as true or false based on its source or origin
+                rather than its content. Where an idea comes from doesn't determine
+                whether it's correct.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "Of course you think that —
+                you were raised to think that."
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-social" data-name="tone policing">
+            <div class="fallacy-name">Tone Policing</div>
+            <div class="fallacy-latin">tone argument</div>
+            <div class="fallacy-desc">
+                Dismissing an argument because of how it's delivered —
+                too angry, too emotional, too blunt — without addressing
+                whether the point itself is valid.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "I might take you seriously if you weren't
+                so worked up about it." (Addressing the tone, not the argument.)
+            </div>
+        </div>
+
+        <div class="fallacy-card cat-social" data-name="special pleading">
+            <div class="fallacy-name">Special Pleading</div>
+            <div class="fallacy-latin">ad hoc rescue</div>
+            <div class="fallacy-desc">
+                Applying a special exemption to your own position when it would
+                otherwise be refuted, without justifying why the exemption applies.
+            </div>
+            <div class="fallacy-example">
+                <strong>Example:</strong> "That rule applies to everyone except in
+                this specific case, which is different, because... it just is."
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tsnclf-section-head">⚖️ Quick Reference</div>
+    <table class="ref-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>One-line definition</th>
+                <th>Giveaway phrase</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td class="name-col">Ad Hominem</td><td>Attack the person, not the argument</td><td>"You're just a..."</td></tr>
+            <tr><td class="name-col">Straw Man</td><td>Misrepresent, then attack</td><td>"So you're saying..."</td></tr>
+            <tr><td class="name-col">False Dichotomy</td><td>Only two choices when more exist</td><td>"Either X or Y"</td></tr>
+            <tr><td class="name-col">Slippery Slope</td><td>Small step → inevitable disaster</td><td>"Next thing you know..."</td></tr>
+            <tr><td class="name-col">Circular Reasoning</td><td>Conclusion proves itself</td><td>"It's true because it's true"</td></tr>
+            <tr><td class="name-col">Post Hoc</td><td>After = caused by</td><td>"Ever since X, Y happened"</td></tr>
+            <tr><td class="name-col">No True Scotsman</td><td>Redefine to exclude counterexamples</td><td>"A real X would never..."</td></tr>
+            <tr><td class="name-col">Appeal to Authority</td><td>Expert said it = true</td><td>"Studies show..." (no citation)</td></tr>
+            <tr><td class="name-col">Appeal to Popularity</td><td>Many believe it = true</td><td>"Everyone knows..."</td></tr>
+            <tr><td class="name-col">Confirmation Bias</td><td>See only what you already believe</td><td>(no phrase — it's invisible)</td></tr>
+            <tr><td class="name-col">Dunning-Kruger</td><td>The less you know, the more you think you do</td><td>"It's actually pretty simple..."</td></tr>
+            <tr><td class="name-col">Gish Gallop</td><td>Flood with weak arguments</td><td>(15 claims, rapid fire)</td></tr>
+            <tr><td class="name-col">Whataboutism</td><td>Deflect with someone else's fault</td><td>"What about when they..."</td></tr>
+            <tr><td class="name-col">Moving Goalposts</td><td>Shift standard after it's met</td><td>"Yes but now show me..."</td></tr>
+            <tr><td class="name-col">Sunk Cost</td><td>Persist because of past investment</td><td>"I've put too much into this"</td></tr>
+            <tr><td class="name-col">Tu Quoque</td><td>You do it too</td><td>"You're one to talk"</td></tr>
+        </tbody>
+    </table>
+
+    <div class="tsnclf-callout" style="margin-top:24px;">
+        <span class="big" style="font-size:15px;letter-spacing:2px;">
+            The goal is not to "win." The goal is to be right.
+        </span>
+        <p>
+            Calling out a fallacy is not a personal attack — it's a request to
+            rebuild the argument on solid ground. If someone drops a
+            <strong style="color:var(--fallacy-orange);">TSNCLF!</strong> on you,
+            take it seriously. Find the fallacy. Fix the argument.
+            Then come back stronger.
+        </p>
+    </div>
+
+</div>
+
+<footer>
+    @6chan —
+    <a href="../index.php">Home</a> |
+    <a href="https://yourlogicalfallacyis.com">Banner Credits</a> |
+    <a href="../rules.php">Rules</a> —
+    <a href="fos.html">FoS</a> —
+    <a href="privacy.html">Privacy</a>
+</footer>
+
+<script>
+function filterCards(cat, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.fallacy-card').forEach(card => {
+        if (cat === 'all') {
+            card.style.display = '';
+        } else {
+            card.style.display = card.classList.contains(cat) ? '' : 'none';
+        }
+    });
+
+    // Hide empty section heads
+    document.querySelectorAll('.tsnclf-section-head').forEach(head => {
+        const grid = head.nextElementSibling;
+        if (!grid || !grid.classList.contains('fallacy-grid')) return;
+        const visible = grid.querySelectorAll('.fallacy-card:not([style*="none"])').length;
+        head.style.display = visible ? '' : 'none';
+    });
+}
+
+function searchCards(q) {
+    q = q.toLowerCase().trim();
+
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn').classList.add('active');
+
+    document.querySelectorAll('.fallacy-card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = (!q || text.includes(q)) ? '' : 'none';
+    });
+
+    document.querySelectorAll('.tsnclf-section-head').forEach(head => {
+        const grid = head.nextElementSibling;
+        if (!grid || !grid.classList.contains('fallacy-grid')) return;
+        const visible = grid.querySelectorAll('.fallacy-card:not([style*="none"])').length;
+        head.style.display = visible ? '' : 'none';
+    });
+}
+</script>
+
+</body>
+</html>

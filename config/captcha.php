@@ -5,10 +5,10 @@ function captcha_generate(): array {
     $type = rand(0, 2);
 
     if ($type === 0) {
-        $a        = rand(1, 12);
-        $b        = rand(1, 12);
-        $question = "What is {$a} + {$b}?";
-        $answer   = (string)($a + $b);
+        $a        = rand(1, 30);
+        $b        = rand(1, 40);
+        $question = "What is {$a} x {$b}?";
+        $answer   = (string)($a * $b);
     } elseif ($type === 1) {
         $words    = ['apple', 'river', 'cloud', 'stone', 'flame',
                       'grace', 'light', 'north', 'quiet', 'spark',

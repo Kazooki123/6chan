@@ -18,6 +18,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
   -->
   <a href="contact.php">[Contact]</a>
   <a href="support.php">[Support]</a>
+  <a href="etc/tsnclf.html">[Fallacies]</a>
 </div>
 
 <div class="wrap">

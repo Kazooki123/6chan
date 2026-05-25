@@ -29,6 +29,7 @@ CREATE TABLE threads (
     body         TEXT NOT NULL,
     img_path     VARCHAR(300),
     automod_flag VARCHAR(50),
+    bgm_post_id  INT REFERENCES posts(id) ON DELETE SET NULL,
     nsfw         BOOLEAN NOT NULL DEFAULT FALSE,
     pinned       BOOLEAN NOT NULL DEFAULT FALSE,
     locked       BOOLEAN NOT NULL DEFAULT FALSE,
@@ -54,20 +55,25 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('r', 'Random', 'Anything goes.'),
   ('t', 'Tech', 'Technology Board'),
   ('a', 'Anime', 'Japs & Manga'),
-  ('g', 'Games', 'Vidyoe Gaemes'),
+  ('g', 'Games', 'Video Games (General)'),
   ('m', 'Music', 'Music topics and discussions'),
-  ('pl', 'Politics', 'International Politics'),
+  ('pg', 'Photography', 'Photos and Views'),
+  ('art', 'Artwork', 'Arts and Paintings'),
+  ('pol', 'Politics', 'International Politics'),
   ('d', 'Dev', 'Developer/Coder discussions'),
   ('rs', 'Rust', 'Rust Programming Language'),
-  ('p', 'Python', 'Python Language'),
+  ('py', 'Python', 'Python Language'),
   ('go', 'Go', 'Go Programming Language'),
   ('cl', 'Clang', 'C Programming Language'),
   ('dn', '.NET', 'DotNET discussions'),
   ('cs', 'Computer Science', 'Computer Science stuffs and topics.'),
+  ('sm', 'S&M', 'Science & Math'),
+  ('h', 'History', 'History learning and Discussions'),
   ('wd', 'Web Dev', 'Web Development discussions'),
   ('f', 'FaceDev', 'Peak YouTuber, Face'),
   ('tu', 'Turtles', 'About Turtles'),
-  ('l', 'LGBTQ', 'LGBTQ+ Topics');
+  ('lgb', 'LGBTQ', 'LGBTQ+ Topics'),
+  ('y', 'Yuri', 'Yuri (NSFW)'),
 
 CREATE TABLE automod_rules (
     id         SERIAL PRIMARY KEY,
@@ -143,3 +149,41 @@ CREATE INDEX posts_fts_idx ON posts USING GIN(search_vec);
 CREATE EXTENSION pg_trgm;
 CREATE INDEX threads_trgm_idx ON threads USING GIN(body gin_trgm_ops);
 CREATE INDEX posts_trgm_idx ON posts USING GIN(body gin_trgm_ops);
+
+-- FOR REACTIONS
+CREATE TABLE reactions (
+	id		   SERIAL PRIMARY KEY,
+	post_type  VARCHAR(10) NOT NULL CHECK(post_type IN ('thread', 'post')),
+	post_id    INT NOT NULL,
+	emoji      VARCHAR(10) NOT NULL,
+	ip_hash    VARCHAR(64) NOT NULL,
+	created_at TIMESTAMPTZ DEFAULT NOW(),
+	
+	UNIQUE (post_type, post_id, emoji, ip_hash)
+);
+
+CREATE INDEX reactions_lookup_idx ON reactions (post_type, post_id);
+
+CREATE TABLE polls (
+	id		   SERIAL PRIMARY KEY,
+	thread_id  INT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
+	post_id    INT REFERENCES posts(id) ON DELETE CASCADE,
+	question   VARCHAR(300) NOT NULL,
+	closes_at  TIMESTAMPTZ,
+	created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE poll_options (
+	id		 SERIAL PRIMARY KEY,
+	poll_id	 INT NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
+	label    VARCHAR(200) NOT NULL,
+	position INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE poll_votes (
+	id		  SERIAL PRIMARY KEY,
+	option_id INT NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
+	ip_hash	  VARCHAR(64) NOT NULL,
+	voted_at  TIMESTAMPTZ DEFAULT NOW(),
+	UNIQUE (option_id, ip_hash)
+);

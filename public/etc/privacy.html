@@ -1,20 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6chan - Privacy</title>
-    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
-    <link rel="stylesheet" href="../style.css">
-    <script src="../settingsloader.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — @6chan</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../settingsloader.js"></script>
+<style>
+.policy-wrap  { max-width: 720px; margin: 0 auto; padding: 12px; }
+.policy-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    line-height: 1.85;
+}
+.policy-block h2 {
+    color: var(--orange);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 5px;
+    margin: 0 0 12px 0;
+}
+.policy-block p  { margin: 0 0 10px 0; color: var(--white); }
+.policy-block p:last-child { margin-bottom: 0; }
+.policy-block ul {
+    padding-left: 20px;
+    margin: 6px 0 10px;
+    color: var(--white);
+}
+.policy-block li { margin-bottom: 5px; }
+.policy-block .note {
+    background: #1a1a00;
+    border-left: 3px solid var(--orange);
+    padding: 8px 12px;
+    color: #ccc;
+    font-size: 12px;
+    margin-top: 10px;
+}
+.policy-block .good {
+    background: #001a00;
+    border-left: 3px solid #22aa22;
+    padding: 8px 12px;
+    color: #ccc;
+    font-size: 12px;
+    margin-top: 10px;
+}
+.policy-block .good strong { color: #4f4; }
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 10px 0;
+}
+.data-table th {
+    background: #111;
+    color: var(--orange);
+    padding: 6px 10px;
+    text-align: left;
+    border: 1px solid var(--border);
+    font-weight: bold;
+}
+.data-table td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    color: var(--white);
+    vertical-align: top;
+}
+.data-table tr:hover td { background: #1f1f1f; }
+.tag-yes  { color: #4f4;    font-weight: bold; }
+.tag-no   { color: #f44;    font-weight: bold; }
+.tag-hash { color: #e6a817; font-weight: bold; }
+.policy-intro {
+    background: var(--surface);
+    border: 1px solid var(--orange);
+    border-left: 4px solid var(--orange);
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--white);
+}
+.policy-intro strong { color: var(--orange); }
+.updated {
+    color: var(--grey);
+    font-size: 11px;
+    margin-bottom: 14px;
+}
+</style>
 </head>
 <body>
-    <div id="topbar">
-        <span class="site-name">@6chan</span>
-        <a href="../index.php">Home</a>
-        <a href="../rules.php">[Rules]</a>
-        <a href="copyright.html">[Copyright]</a>
-        <a href="staffs.html">[Staffs]</a>
+
+<div id="topbar">
+    <span class="site-name">@6chan</span>
+    <a href="../index.php">Home</a>
+    <a href="../rules.php">[Rules]</a>
+    <a href="copyright.php">[Copyright]</a>
+    <a href="staffs.php">[Staffs]</a>
+</div>
+
+<div class="policy-wrap">
+    <div class="page-header">
+        <h1>Privacy Policy</h1>
+        <p>What @6chan collects, stores, and never touches.</p>
     </div>
+
+    <div class="updated">Last updated: May 2026</div>
+
+    <div class="policy-intro">
+        <strong>@6chan is anonymous by default and by design.</strong>
+        We collect the minimum data necessary to run the site safely.
+        We do not sell data, run ads, build profiles, or share information
+        with third parties except where required by law. This document
+        explains exactly what exists and why.
+    </div>
+
+    <div class="policy-block">
+        <h2>What we collect and why</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Stored as</th>
+                    <th>Why</th>
+                    <th>Retention</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>IP address (posts)</td>
+                    <td><span class="tag-hash">SHA-256 hash + salt</span></td>
+                    <td>Ban enforcement, spam prevention</td>
+                    <td>With the post</td>
+                </tr>
+                <tr>
+                    <td>IP address (reports)</td>
+                    <td><span class="tag-hash">SHA-256 hash + salt</span></td>
+                    <td>Prevent report spam</td>
+                    <td>30 days</td>
+                </tr>
+                <tr>
+                    <td>IP address (bans)</td>
+                    <td><span class="tag-no">Raw IP</span></td>
+                    <td>Ban matching requires exact IP</td>
+                    <td>Until ban expires</td>
+                </tr>
+                <tr>
+                    <td>IP address (reactions)</td>
+                    <td><span class="tag-hash">SHA-256 hash + salt</span></td>
+                    <td>One reaction per user per post</td>
+                    <td>With the reaction</td>
+                </tr>
+                <tr>
+                    <td>Post content</td>
+                    <td><span class="tag-yes">Plaintext</span></td>
+                    <td>This is the site</td>
+                    <td>Until deleted or pruned</td>
+                </tr>
+                <tr>
+                    <td>Uploaded files</td>
+                    <td><span class="tag-yes">On disk</span></td>
+                    <td>This is the site</td>
+                    <td>Until thread pruned</td>
+                </tr>
+                <tr>
+                    <td>Author name</td>
+                    <td><span class="tag-yes">Plaintext</span></td>
+                    <td>Display only — defaults to Anon</td>
+                    <td>With the post</td>
+                </tr>
+                <tr>
+                    <td>Settings (theme, font)</td>
+                    <td><span class="tag-yes">localStorage only</span></td>
+                    <td>Browser-side preferences</td>
+                    <td>Never leaves your device</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="note">
+            Raw IPs stored for bans are the only plaintext IPs on the system.
+            Everything else is hashed with a secret salt — even if the database
+            were compromised, individual IPs could not be recovered.
+        </div>
+    </div>
+
+    <div class="policy-block">
+        <h2>What we never collect</h2>
+        <ul>
+            <li>Email addresses — there are no accounts and no registration</li>
+            <li>Real names — the name field is optional and anonymous by default</li>
+            <li>Browser fingerprints — we don't run fingerprinting scripts</li>
+            <li>Tracking cookies — no persistent cookies beyond your session</li>
+            <li>Location data — beyond what your IP naturally implies</li>
+            <li>Device identifiers — we have no interest in who your device is</li>
+            <li>Behavioural analytics — no tracking pixels, no third-party analytics</li>
+        </ul>
+        <div class="good">
+            <strong>🩷 @6chan is AD-FREE.</strong> No advertisers, no tracking,
+            no revenue model that depends on knowing who you are.
+        </div>
+    </div>
+
+    <div class="policy-block">
+        <h2>Cookies and sessions</h2>
+        <p>
+            @6chan uses a single session cookie to maintain your captcha state
+            during posting. This cookie is session-scoped — it expires when you
+            close your browser and contains no personally identifying information,
+            only a random session ID.
+        </p>
+        <p>
+            No persistent tracking cookies are set. Your theme and font preferences
+            are stored entirely in your browser's <code>localStorage</code> and never
+            transmitted to our servers.
+        </p>
+    </div>
+
+    <div class="policy-block">
+        <h2>Uploaded content</h2>
+        <p>
+            Images, videos, and audio files you upload are stored on our servers
+            and served publicly as part of the thread. Do not upload files containing
+            personal metadata you want kept private — EXIF data in images and ID3
+            tags in audio files may be readable by other users.
+        </p>
+        <p>
+            We strip no metadata automatically. This is intentional — audio metadata
+            (artist, title, lyrics) is part of the listening experience on @6chan.
+            If you are concerned about EXIF data in photos, strip it before uploading
+            using a tool like ExifTool or your phone's built-in editor.
+        </p>
+        <div class="note">
+            Files are deleted when their thread is pruned from the board.
+            There is no guarantee of persistence — @6chan is a discussion platform,
+            not an image host.
+        </div>
+    </div>
+
+    <div class="policy-block">
+        <h2>Moderation and data access</h2>
+        <p>
+            Moderators and administrators can see:
+        </p>
+        <ul>
+            <li>The hashed IP associated with any post (for ban/spam decisions)</li>
+            <li>Raw IPs stored in the ban table</li>
+            <li>Report content and the hashed IP of the reporter</li>
+            <li>Automod flags on posts (category of flagged content)</li>
+        </ul>
+        <p>
+            Moderators cannot see: your real IP from hashed records, your identity,
+            your other posts (there is no account to link them), or anything
+            beyond what is publicly visible plus the hashed IP.
+        </p>
+    </div>
+
+    <div class="policy-block">
+        <h2>Data sharing and third parties</h2>
+        <p>
+            @6chan does not share, sell, license, or transfer your data to any
+            third party for any commercial purpose, ever.
+        </p>
+        <p>
+            The only circumstances under which data may be disclosed:
+        </p>
+        <ul>
+            <li>
+                <strong>Legal requirement</strong> — a valid court order, subpoena,
+                or equivalent legal process from a jurisdiction with authority over
+                @6chan's hosting. In this case we would disclose only what is legally
+                required and nothing more.
+            </li>
+            <li>
+                <strong>CSAM reports</strong> — child sexual abuse material is reported
+                to the relevant authorities as required by law. The IP associated with
+                such a post (if recoverable from hashed records) may be included.
+            </li>
+        </ul>
+        <div class="note">
+            We will publish a transparency notice on the news page if we receive
+            legal demands for user data, to the extent we are legally permitted to do so.
+        </div>
+    </div>
+
+    <div class="policy-block">
+        <h2>Anonymity in practice</h2>
+        <p>
+            @6chan cannot identify you by name or account because we have neither.
+            Your post history is not linked — two posts from the same person look
+            identical to two posts from two different people, unless you choose
+            to identify yourself through your writing.
+        </p>
+        <p>
+            This is not an accident. Anonymity is a feature, not a limitation.
+            It produces more honest discussion, protects vulnerable people speaking
+            on sensitive topics, and prevents the social performance that ruins
+            most social platforms.
+        </p>
+        <p>
+            The only thread connecting your posts is your IP hash — used solely
+            for moderation, never surfaced publicly, and non-reversible by design.
+        </p>
+    </div>
+
+    <div class="policy-block">
+        <h2>Your rights</h2>
+        <p>
+            Because @6chan holds no accounts and no personally identifying information
+            beyond hashed IPs, many data rights (access, correction, portability)
+            don't apply in the traditional sense — we cannot locate "your" data
+            without an IP address to search against.
+        </p>
+        <p>
+            If you have a specific concern — for example, a post containing your
+            real personal information that you want removed — contact us via the
+            <a href="../contact.php">contact page</a>. We review these individually
+            and remove doxxing content promptly.
+        </p>
+    </div>
+
+    <div class="policy-block">
+        <h2>Changes to this policy</h2>
+        <p>
+            If this policy changes materially — for example, if we begin storing
+            additional data or change how data is retained — we will post a notice
+            on the news page with the date and summary of the change. The updated
+            date at the top of this page reflects the last modification.
+        </p>
+        <p>
+            Questions about this policy can be directed to the
+            <a href="../contact.php">contact page</a>.
+        </p>
+    </div>
+</div>
+
+<footer>
+    @6chan —
+    <a href="../index.php">Home</a> —
+    <a href="../rules.php">Rules</a> —
+    <a href="fos.html">Freedom of Speech</a> —
+    <a href="../contact.php">Contact</a>
+</footer>
+
 </body>
 </html>

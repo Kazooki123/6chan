@@ -6,7 +6,7 @@ if (!file_exists($config_path)) {
 }
 
 require_once '../config/db.php';
-require_once '../config/captcha.php';
+require_once '../config/captchav2.php';
 require_once '../config/automod.php';
 require_once '../config/cache.php';
 
@@ -189,7 +189,7 @@ if ($action === 'new_thread') {
     $captcha_token  = $_POST['captcha_token']  ?? '';
     $captcha_answer = $_POST['captcha_answer'] ?? '';
 
-    if (!captcha_verify($captcha_token, $captcha_answer)) {
+    if (!captchav2_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
         die("
             <link rel='stylesheet' href='style.css'>
@@ -252,6 +252,35 @@ if ($action === 'new_thread') {
 
     $tid = $s->fetchColumn();
     notify_automod((int)$tid, 'thread', $body);
+
+    if (!empty($_POST['add_poll']) && !empty($_POST['poll_question'])) {
+        $question = trim($_POST['poll_question']);
+        $options  = array_filter(
+            array_map('trim', $_POST['poll_options'] ?? []),
+            fn($o) => $o !== ''
+        );
+        $closes   = !empty($_POST['poll_closes']) ? $_POST['poll_closes'] : null;
+
+        if ($question && count($options) >= 2 && count($options) <= 10) {
+            $is_thread = ($action === 'new_thread');
+            $t_id      = $is_thread ? $tid : $tid;
+            $p_id      = $is_thread ? null : $new_post_id;
+
+            $ps = $db->prepare(
+                "INSERT INTO polls (thread_id, post_id, question, closes_at)
+                 VALUES (?,?,?,?) RETURNING id"
+            );
+            $ps->execute([$t_id, $p_id, $question, $closes]);
+            $poll_id = $ps->fetchColumn();
+
+            foreach (array_values($options) as $i => $label) {
+                $db->prepare(
+                    "INSERT INTO poll_options (poll_id, label, position) VALUES (?,?,?)"
+                )->execute([$poll_id, $label, $i]);
+            }  
+        }
+    }
+    
     cache_delete("board:{$board['id']}:p1", $db);
 
     header("Location: thread.php?id=$tid");
@@ -269,7 +298,7 @@ if ($action === 'new_thread') {
     $captcha_token  = $_POST['captcha_token']  ?? '';
     $captcha_answer = $_POST['captcha_answer'] ?? '';
 
-    if (!captcha_verify($captcha_token, $captcha_answer)) {
+    if (!captchav2_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
         die("
             <link rel='stylesheet' href='style.css'>
@@ -366,6 +395,9 @@ if ($action === 'new_thread') {
     }
 
     $new_post_id = (int)$db->query("SELECT lastval()")->fetchColumn();
+
+    
+    
     notify_automod($new_post_id, 'post', $body);
     cache_delete("board:{$board['id']}:p1", $db);
     cache_delete("thread:{$tid}", $db);

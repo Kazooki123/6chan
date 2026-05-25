@@ -52,6 +52,11 @@
             <h2>Changelog v0.4</h2>
             <p>Added a music player with embedded lyrics support (via <code>id3v2</code>)</p>
         </div>
+
+        <div class="changelog-block">
+            <h2>Changelog 0.5</h2>
+            <p>Added reactions, Background Music (BGM) for music threads, Poll vote posts, Captcha v2, and a new rulebook for logics & cognitives, another page for Freedom of Speech & Privacies, and an API endpoint w/ ratelimits.</p>
+        </div>
     </div>    
 </body>
 </html>

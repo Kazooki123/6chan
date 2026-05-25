@@ -1,13 +1,16 @@
 <?php
 // require_once __DIR__ . '/../vendor/autoload.php';
+// session_start();
 
 require_once '../config/db.php';
 require_once '../config/cache.php';
-require_once '../config/captcha.php';
+require_once '../config/captchav2.php';
 require_once '../config/markdown.php';
+require_once '../config/reactions.php';
 
 $db   = get_db();
 $slug = $_GET['b'] ?? '';
+$id = (int)($_GET['id'] ?? 0);
 
 $board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
 $board->execute([$slug]);
@@ -43,7 +46,13 @@ if ($cached) {
     cache_set($cache_key, $threads, $db, 120);
 }
 
-$captcha = captcha_generate();
+$captcha = captchav2_generate();
+
+$reaction_targets = [['type' => 'thread', 'id' => $threads['id']]];
+foreach ($threads as $t) {
+    $reaction_targets[] = ['type' => 'thread', 'id' => $t['id']];
+}
+$reactions = get_reactions($reaction_targets, $_SERVER['REMOTE_ADDR'], $db);
 
 foreach ($threads as &$t) {
     $r = $db->prepare(
@@ -257,6 +266,100 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         </div>";
 }
 
+function render_reactions(string $post_type, int $post_id, array $reactions): string {
+    $key      = $post_type . ':' . $post_id;
+    $existing = $reactions[$key] ?? [];
+    $allowed  = ALLOWED_REACTIONS;
+
+    $out = '<div class="reactions" data-type="' . $post_type
+         . '" data-id="' . $post_id . '">';
+
+    foreach ($existing as $emoji => $mine) {
+        $cls  = 'reaction-btn' . ($mine ?  ' reacted' : '');
+        $out .= '<button class="' . $cls . '" data-emoji="' . htmlspecialchars($emoji) . '">'
+              . $emoji . '</button>';
+    }
+
+    $out .= '<div class="reaction-picker-wrap">';
+    $out .= '<button class="reaction-add-btn" title="Add reaction">+</button>';
+    $out .= '<div class="reaction-picker">';
+    foreach ($allowed as $emoji) {
+        if (!isset($existing[$emoji])) {
+            $out .= '<button class="reaction-pick" data-emoji="'
+                  . htmlspecialchars($emoji) . '">' . $emoji . '</button>';
+        }
+    }
+    $out .= '</div></div>';
+    $out .= '</div>';
+
+    return $out;
+}
+
+function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db): string {
+    if ($post_id !== null) {
+        $stmt = $db->prepare("SELECT * FROM polls WHERE post_id=?");
+        $stmt->execute([$post_id]);
+    } else {
+        $stmt = $db->prepare("SELECT * FROM polls WHERE thread_id=? AND post_id IS NULL");
+        $stmt->execute([$thread_id]);
+    }
+    $poll = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$poll) return '';
+
+    $ip_hash = hash_ip($viewer_ip);
+    $closed  = $poll['closes_at'] && strtotime($poll['closes_at']) < time();
+
+    $opts = $db->prepare(
+        "SELECT po.id, po.label,
+                COUNT(pv.id) AS votes,
+                MAX(CASE WHEN pv.ip_hash=? THEN 1 ELSE 0 END) AS my_vote
+         FROM poll_options po
+         LEFT JOIN poll_votes pv ON pv.option_id=po.id
+         WHERE po.poll_id=?
+         GROUP BY po.id, po.label, po.position
+         ORDER BY po.position"
+    );
+    $opts->execute([$ip_hash, $poll['id']]);
+    $options = $opts->fetchAll(PDO::FETCH_ASSOC);
+    $total   = max(1, array_sum(array_column($options, 'votes')));
+    $voted   = in_array(1, array_column($options, 'my_vote'));
+
+    $out  = '<div class="poll" id="poll-' . $poll['id'] . '" '
+          . 'data-poll="' . $poll['id'] . '">';
+    $out .= '<div class="poll-question">' . htmlspecialchars($poll['question']) . '</div>';
+
+    if ($closed) {
+        $out .= '<div class="poll-status closed">🔒 Poll closed</div>';
+    } elseif ($poll['closes_at']) {
+        $out .= '<div class="poll-status">'
+              . 'Closes ' . date('Y-m-d H:i', strtotime($poll['closes_at']))
+              . '</div>';
+    }
+
+    $out .= '<div class="poll-options">';
+    foreach ($options as $opt) {
+        $pct    = $total > 0 ? round($opt['votes'] / $total * 100) : 0;
+        $mine   = (bool)$opt['my_vote'];
+        $optcls = 'poll-option' . ($mine ? ' my-vote' : '') . ($closed ? ' closed' : '');
+
+        $out .= '<div class="' . $optcls . '" '
+              . ($closed ? '' : 'onclick="castVote(' . $poll['id'] . ',' . $opt['id'] . ')"')
+              . '>';
+        $out .= '<div class="poll-bar" style="width:' . $pct . '%"></div>';
+        $out .= '<div class="poll-option-inner">';
+        $out .= '<span class="poll-label">'
+              . htmlspecialchars($opt['label'])
+              . ($mine ? ' ✔' : '') . '</span>';
+        $out .= '<span class="poll-pct">' . $pct . '% (' . $opt['votes'] . ')</span>';
+        $out .= '</div>';
+        $out .= '</div>';
+    }
+    $out .= '</div>';
+    $out .= '<div class="poll-total">' . $total . ' vote' . ($total==1?'':'s') . '</div>';
+    $out .= '</div>';
+    return $out;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -309,17 +412,74 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                     </tr>
                     <tr><td>Comment</td><td><textarea name="body" required></textarea></td></tr>
                     <tr>
+                        <td>Polls</td>
+                        <td>
+                            <label style="font-size:12px;color:var(--grey);cursor:pointer;">
+                                <input type="checkbox" id="poll-toggle" name="add_poll" value="1"
+                                       style="accent-color:var(--orange);margin-right:4px;"
+                                       onchange="document.getElementById('poll-fields')
+                                                 .style.display=this.checked?'block':'none'">
+                                Add a poll to this post
+                            </label>
+                            <div id="poll-fields" style="display:none;margin-top:8px;">
+                                <input type="text" name="poll_question"
+                                       placeholder="Poll question..."
+                                       maxlength="200"
+                                       style="width:100%;margin-bottom:6px;">
+                                <div id="poll-options">
+                                    <input type="text" name="poll_options[]"
+                                           placeholder="Option 1" maxlength="100"
+                                           style="width:100%;margin-bottom:4px;">
+                                    <input type="text" name="poll_options[]"
+                                           placeholder="Option 2" maxlength="100"
+                                           style="width:100%;margin-bottom:4px;">
+                                </div>
+                                <button type="button" onclick="addPollOption()"
+                                        style="background:none;border:1px dashed var(--border);
+                                               color:var(--grey);font:12px 'MapleMono',monospace;
+                                               padding:3px 10px;cursor:pointer;margin-bottom:6px;">
+                                    + Add Option
+                                </button>
+                                <div style="font-size:11px;color:var(--grey);">
+                                    Closes:
+                                    <input type="datetime-local" name="poll_closes"
+                                           style="background:#111;border:1px solid var(--border);
+                                                  color:var(--white);font:12px 'MapleMono',monospace;
+                                                  padding:3px 6px;">
+                                    (leave blank = permanent)
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
                         <td>Verify</td>
                         <td>
-                            <span class="captcha-question">
-                                <?= $captcha['question']?>
-                            </span>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                <img src="captcha_img.php?token=<?= htmlspecialchars($captcha['token']) ?>"
+                                     alt="captcha"
+                                     style="border:1px solid var(--border);height:60px;width:180px;
+                                            image-rendering:pixelated;"
+                                     id="captcha-img">
+                                <button type="button"
+                                        onclick="refreshCaptcha(this)"
+                                        data-token="<?= htmlspecialchars($captcha['token']) ?>"
+                                        style="background:none;border:1px solid var(--border);
+                                               color:var(--grey);font:12px 'Courier New',monospace;
+                                               padding:4px 8px;cursor:pointer;">
+                                    ↻ New
+                                </button>
+                            </div>
                             <input type="hidden" name="captcha_token"
-                                   value="<?= htmlspecialchars($captcha['token']) ?>">
+                                   value="<?= htmlspecialchars($captcha['token']) ?>"
+                                   id="captcha-token-input">
                             <input type="text" name="captcha_answer"
-                                   maxlength="30"
-                                   placeholder="Your Answer"
-                                   autocomplete="off">
+                                   maxlength="6" placeholder="Enter the 6 characters"
+                                   autocomplete="off"
+                                   style="margin-top:6px;text-transform:uppercase;
+                                          letter-spacing:4px;">
+                            <div style="font-size:11px;color:var(--grey);margin-top:3px;">
+                                Case insensitive — letters and numbers only.
+                            </div>
                         </td>
                     </tr>
                     <tr><td>Media</td><td><input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,audio/mpeg,audio/flac,audio/ogg,audio/wav"></td></tr>
@@ -378,6 +538,8 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                     <?php endif; ?>
                 </div>
                 <div class="post-body"><?= render_body($t['body'], $t['id']) ?></div>
+                <?= render_poll($t['id'], null, $_SERVER['REMOTE_ADDR'], $db) ?>
+                <?= render_reactions('thread', $t['id'], $reactions) ?>
             </div>
 
             <?php
@@ -415,6 +577,8 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                    </div>
                    <?php endif; ?>
                    <div class="post-body"><?= render_body($p['body'], $t['id']) ?></div>
+                   <?= render_poll($id, $p['id'], $_SERVER['REMOTE_ADDR'], $db) ?>
+                   <?= render_reactions('post', $p['id'], $reactions) ?>
                </div>
                <?php endforeach; ?>
             </div>
@@ -441,7 +605,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         </div>
     </div>
 
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
 
     <div id="quote-popup"></div>
     
@@ -489,6 +653,134 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
       el.title   = '';
       const label = el.closest('.post-img')?.querySelector('.nsfw-label');
       if (label) label.style.display = 'none'; 
+    }
+
+    document.addEventListener('click', async e => {
+        if (e.target.matches('.reaction-btn')) {
+            await doReact(e.target);
+            return;
+        }
+    
+        if (e.target.matches('.reaction-pick')) {
+            await doReact(e.target);
+            return;
+        }
+    
+        if (e.target.matches('.reaction-add-btn')) {
+            const picker = e.target.nextElementSibling;
+            const isOpen = picker.classList.contains('open');
+            // Close all open pickers first
+            document.querySelectorAll('.reaction-picker.open')
+                    .forEach(p => p.classList.remove('open'));
+            if (!isOpen) picker.classList.add('open');
+            return;
+        }
+    
+        if (!e.target.closest('.reaction-picker-wrap')) {
+            document.querySelectorAll('.reaction-picker.open')
+                    .forEach(p => p.classList.remove('open'));
+        }
+    });
+    
+    async function doReact(btn) {
+        const wrap     = btn.closest('.reactions');
+        const postType = wrap.dataset.type;
+        const postId   = wrap.dataset.id;
+        const emoji    = btn.dataset.emoji;
+    
+        const form = new FormData();
+        form.append('post_type', postType);
+        form.append('post_id',   postId);
+        form.append('emoji',     emoji);
+    
+        try {
+            const res  = await fetch('react.php', { method: 'POST', body: form });
+            const data = await res.json();
+    
+            if (!data.ok) {
+                console.warn('Reaction error:', data.error);
+                return;
+            }
+    
+            // Update UI without page reload
+            if (data.action === 'added') {
+                const existing = wrap.querySelector(
+                    `.reaction-btn[data-emoji="${emoji}"]`
+                );
+                if (existing) {
+                    existing.classList.add('reacted');
+                } else {
+                    const newBtn = document.createElement('button');
+                    newBtn.className    = 'reaction-btn reacted';
+                    newBtn.dataset.emoji = emoji;
+                    newBtn.textContent  = emoji;
+                    wrap.insertBefore(newBtn, wrap.querySelector('.reaction-picker-wrap'));
+                }
+                btn.closest('.reaction-pick') && btn.remove();
+    
+            } else if (data.action === 'removed') {
+                btn.classList.remove('reacted');
+            }
+    
+            document.querySelectorAll('.reaction-picker.open')
+                    .forEach(p => p.classList.remove('open'));
+    
+        } catch(err) {
+            console.error('Reaction fetch failed:', err);
+        }
+    }
+
+    async function refreshCaptcha(btn) {
+      const res  = await fetch('captcha_new.php');
+      const data = await res.json();
+      if (!data.token) return;
+
+      document.getElementById('captcha-img').src =
+          'captcha_img.php?token=' + data.token + '&t=' + Date.now();
+      document.getElementById('captcha-token-input').value = data.token;
+    }
+
+    function addPollOption() {
+      const wrap = document.getElementById('poll-options');
+      const n    = wrap.querySelectorAll('input').length + 1;
+      if (n > 10) return;
+      const inp  = document.createElement('input');
+      inp.type        = 'text';
+      inp.name        = 'poll_options[]';
+      inp.placeholder = 'Option ' + n;
+      inp.maxLength   = 100;
+      inp.style.cssText = 'width:100%;margin-bottom:4px;';
+      wrap.appendChild(inp);
+    }
+
+    async function castVote(pollId, optionId) {
+      const form = new FormData();
+      form.append('option_id', optionId);
+
+      try {
+        const res  = await fetch('vote.php', { method: 'POST', body: form });
+        const data = await res.json();
+        if (!data.ok) { console.warn(data.error); return; }
+        updatePollUI(pollId, data.results, data.total);
+      } catch(e) { console.error(e); }
+    }
+    
+    function updatePollUI(pollId, results, total) {
+      const wrap = document.getElementById('poll-' + pollId);
+      if (!wrap) return;
+
+      results.forEach(opt => {
+        const pct = total > 0 ? Math.round(opt.votes / total * 100) : 0;
+        wrap.querySelectorAll('.poll-option').forEach((el, i) => {
+          if (results[i]) {
+            el.querySelector('.poll-bar').style.width = pct + '%';
+            el.querySelector('.poll-pct').textContent = pct + '% (' +  results[i].votes + ')';
+          }
+        });
+      });
+
+      const tot = wrap.querySelector('poll-total');
+      if (tot) tot.textContent = total + ' vote' + (total===1?'':'s');
     }
     </script>
 </body>
