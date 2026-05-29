@@ -32,8 +32,14 @@
     root.style.setProperty('--orange2', darken(accent));
     root.style.setProperty('--bg',      bg);
     root.style.setProperty('--surface', lighten(bg));
-
+  
     document.addEventListener('DOMContentLoaded', () => {
+        const gifbgUrl     = get('gifbgUrl')     || '';
+        const gifbgOpacity = Number(get('gifbgOpacity') || 8);
+        const gifbgSize = get('gifbgSize') || 'cover';
+        const isBoard = document.body.classList.contains('page-board')
+                   || document.body.classList.contains('page-thread');
+    
         document.body.style.fontFamily = font;
         document.body.style.fontSize   = fontSize + 'px';
 
@@ -73,6 +79,32 @@
                 else if (diff < 3600)   el.textContent = Math.floor(diff/60) + 'm ago';
                 else if (diff < 86400)  el.textContent = Math.floor(diff/3600) + 'h ago';
                 else                    el.textContent = Math.floor(diff/86400) + 'd ago';
+            });
+        }
+
+        if (isBoard && gifbgUrl) {
+            const sizeVal  = gifbgSize === 'repeat' ? 'auto' : gifbgSize;
+            const sizeMode = gifbgSize === 'repeat' ? 'repeat' : 'no-repeat';
+    
+            document.documentElement.style.setProperty(
+                '--gifbg-url', 'url("' + gifbgUrl.replace(/"/g, '') + '")'
+            );
+            document.documentElement.style.setProperty(
+                '--gifbg-opacity', (gifbgOpacity / 100).toFixed(2)
+            );
+            document.documentElement.style.setProperty(
+                '--gifbg-size', sizeVal
+            );
+            document.body.classList.add('has-gifbg');
+    
+            // Performance: pause GIF when tab is not visible :3
+            document.addEventListener('visibilitychange', () => {
+                const el = document.querySelector('body::before');
+                if (document.hidden) {
+                    document.body.classList.remove('has-gifbg');
+                } else {
+                    document.body.classList.add('has-gifbg');
+                }
             });
         }
     });

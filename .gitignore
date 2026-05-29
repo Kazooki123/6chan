@@ -1,5 +1,6 @@
 *.env
 *.lock
+*.sh
 
 sql
 dump
@@ -7,3 +8,7 @@ vendor
 **/uploads/*
 .venv
 /cache/
+
+# ignore ongoing/developing websites
+/wiki/
+/archive/

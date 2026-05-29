@@ -288,6 +288,77 @@ input[type=range] {
     </div>
 
     <div class="setting-group">
+        <h2>Board &amp; Thread Background</h2>
+    
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">GIF / Image background</div>
+                <div class="setting-desc">
+                    Shown only on board and thread pages. Paste a direct URL to
+                    any GIF or image. Leave blank to disable.
+                </div>
+            </div>
+        </div>
+    
+        <div style="margin-top:8px;">
+            <input type="text" id="gifbg-url"
+                   placeholder="https://example.com/cool.gif"
+                   style="width:100%;background:#111;border:1px solid var(--border);
+                          color:var(--white);font:12px 'Courier New',monospace;
+                          padding:5px 8px;box-sizing:border-box;">
+        </div>
+    
+        <div class="setting-row" style="margin-top:10px;">
+            <div>
+                <div class="setting-label">Opacity</div>
+                <div class="setting-desc" id="gifbg-opacity-label">8% (subtle)</div>
+            </div>
+            <div class="setting-control">
+                <input type="range" id="gifbg-opacity"
+                       min="2" max="40" value="8" step="1">
+            </div>
+        </div>
+    
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Size</div>
+                <div class="setting-desc">How the image fills the background.</div>
+            </div>
+            <div class="setting-control">
+                <select id="gifbg-size"
+                        style="background:#111;border:1px solid var(--border);
+                               color:var(--white);font:13px 'Courier New',monospace;
+                               padding:4px 8px;">
+                    <option value="cover">Cover (fill, crop edges)</option>
+                    <option value="contain">Contain (fit, show borders)</option>
+                    <option value="repeat">Tile (repeat pattern)</option>
+                    <option value="200px">Small tile (200px)</option>
+                    <option value="400px">Medium tile (400px)</option>
+                </select>
+            </div>
+        </div>
+    
+        <div id="gifbg-preview"
+             style="margin-top:10px;height:80px;border:1px solid var(--border);
+                    background:#111;position:relative;overflow:hidden;
+                    display:flex;align-items:center;justify-content:center;">
+            <div id="gifbg-preview-bg"
+                 style="position:absolute;inset:0;background-size:cover;
+                        background-position:center;opacity:0.08;
+                        will-change:opacity;transform:translateZ(0);"></div>
+            <span style="position:relative;font-size:12px;color:var(--grey);z-index:1;">
+                Preview — paste a URL above
+            </span>
+        </div>
+    
+        <div style="font-size:11px;color:var(--grey);margin-top:6px;line-height:1.6;">
+            ⚠ Large GIFs can impact performance on older devices.
+            Keep files under 2MB for best results.
+            The background only shows on board and thread pages.
+        </div>
+    </div>
+
+    <div class="setting-group">
         <button class="save-btn" onclick="saveSettings()">Save Settings</button>
         <div class="save-confirm" id="save-confirm">✔ Settings saved!</div>
         <div style="text-align:center;margin-top:10px;">
@@ -299,7 +370,7 @@ input[type=range] {
 
 <footer>@6chan — <a href="../index.php">Home</a></footer>
 
-<script>
+<script id="gifbg-settings-script">
 const DEFAULTS = {
     accent:      '#ff6600',
     bg:          '#1a1a1a',
@@ -309,6 +380,9 @@ const DEFAULTS = {
     hideImages:  false,
     showNsfw:    false,
     timestamps:  'datetime',
+    gifbgUrl:     '',
+    gifbgOpacity: 8,
+    gifbgSize:    'cover',
 };
 
 function loadSettings() {
@@ -381,7 +455,26 @@ function collectControls() {
         hideImages: document.getElementById('hide-images').checked,
         showNsfw:   document.getElementById('show-nsfw').checked,
         timestamps: document.getElementById('timestamp-fmt').value,
+        gifbgUrl:     document.getElementById('gifbg-url').value.trim(),
+        gifbgOpacity: Number(document.getElementById('gifbg-opacity').value),
+        gifbgSize:    document.getElementById('gifbg-size').value,
     };
+}
+
+function updateGifPreview(url, opacity, size) {
+    const bg = document.getElementById('gifbg-preview-bg');
+    const sizeVal = size === 'repeat' ? 'auto' : size;
+    const sizeMode = size === 'repeat' ? 'repeat' : 'no-repeat';
+
+    if (url) {
+        bg.style.backgroundImage    = 'url(' + CSS.escape(url) + ')';
+        bg.style.backgroundSize     = sizeVal;
+        bg.style.backgroundRepeat   = sizeMode;
+        bg.style.opacity            = opacity / 100;
+    } else {
+        bg.style.backgroundImage    = 'none';
+        bg.style.opacity            = 0.08;
+    }
 }
 
 function resetSettings() {
@@ -443,6 +536,26 @@ document.getElementById('font-size').addEventListener('input', function() {
 
 document.getElementById('compact-mode').addEventListener('change', function() {
     document.body.classList.toggle('compact', this.checked);
+});
+
+document.getElementById('gifbg-url').addEventListener('input', function() {
+    const opacity = document.getElementById('gifbg-opacity').value;
+    const size    = document.getElementById('gifbg-size').value;
+    updateGifPreview(this.value.trim(), opacity, size);
+});
+
+document.getElementById('gifbg-opacity').addEventListener('input', function() {
+    const url  = document.getElementById('gifbg-url').value.trim();
+    const size = document.getElementById('gifbg-size').value;
+    document.getElementById('gifbg-opacity-label').textContent =
+        this.value + '% opacity';
+    updateGifPreview(url, this.value, size);
+});
+
+document.getElementById('gifbg-size').addEventListener('change', function() {
+    const url     = document.getElementById('gifbg-url').value.trim();
+    const opacity = document.getElementById('gifbg-opacity').value;
+    updateGifPreview(url, opacity, this.value);
 });
 
 const s = loadSettings();

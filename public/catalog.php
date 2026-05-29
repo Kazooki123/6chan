@@ -1,5 +1,10 @@
 <?php
 require_once '../config/db.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->load();
+
 $db   = get_db();
 $slug = $_GET['b'] ?? '';
 
@@ -15,6 +20,17 @@ $threads = $db->prepare(
 );
 $threads->execute([$board['id']]);
 $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
+
+function media_url(string $key): string {
+    $uploads  = $_ENV['S3_UPLOAD'];
+    $endpoint = $_ENV['S3_ENDPOINT'];
+    
+    const STORAGE_BUCKET   = $uploads;
+    const STORAGE_ENDPOINT = $endpoint;
+
+    return STORAGE_ENDPOINT . '/' . STORAGE_BUCKET . '/' . $key;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,7 +64,7 @@ $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
       <?php $is_video = str_ends_with($t['img_path'] ?? '', '.mp4'); ?>
       <?php if (!empty($t['img_path'])): ?>
         <?php if ($is_video): ?>
-            <video src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt="" preload="none" loading="lazy"></video>
+            <video src="<?= htmlspecialchars(media_url($t['img_path'])) ?>" alt="" preload="none" loading="lazy"></video>
         <?php else: ?>
             <?php if ($t['nsfw']): ?>
                 <div style="position:absolute;top:4px;right:4px;background:#ff6688;color:#000;
@@ -56,7 +72,7 @@ $threads = $threads->fetchAll(PDO::FETCH_ASSOC);
                     NSFW
                 </div>
             <?php endif; ?>
-        <img src="uploads/<?= htmlspecialchars($t['img_path']) ?>" alt="" loading="lazy">
+        <img src="<?= htmlspecialchars(media_url($t['img_path'])) ?>" alt="" loading="lazy">
         <?php endif; ?>
       <?php else: ?>
         <div class="catalog-noimg">No Image</div>

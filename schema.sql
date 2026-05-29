@@ -57,6 +57,7 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('a', 'Anime', 'Japs & Manga'),
   ('g', 'Games', 'Video Games (General)'),
   ('m', 'Music', 'Music topics and discussions'),
+  ('sp', 'Sports', 'Sports Topic'),
   ('pg', 'Photography', 'Photos and Views'),
   ('art', 'Artwork', 'Arts and Paintings'),
   ('pol', 'Politics', 'International Politics'),
@@ -68,12 +69,13 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('dn', '.NET', 'DotNET discussions'),
   ('cs', 'Computer Science', 'Computer Science stuffs and topics.'),
   ('sm', 'S&M', 'Science & Math'),
+  ('cd', 'CD&DVD', 'CDs & DVD Collections'),
   ('h', 'History', 'History learning and Discussions'),
   ('wd', 'Web Dev', 'Web Development discussions'),
   ('f', 'FaceDev', 'Peak YouTuber, Face'),
   ('tu', 'Turtles', 'About Turtles'),
   ('lgb', 'LGBTQ', 'LGBTQ+ Topics'),
-  ('y', 'Yuri', 'Yuri (NSFW)'),
+  ('yh', 'Yuri', 'Yuri Media (NSFW)'),
 
 CREATE TABLE automod_rules (
     id         SERIAL PRIMARY KEY,
@@ -164,6 +166,7 @@ CREATE TABLE reactions (
 
 CREATE INDEX reactions_lookup_idx ON reactions (post_type, post_id);
 
+-- FOR POLLS
 CREATE TABLE polls (
 	id		   SERIAL PRIMARY KEY,
 	thread_id  INT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,

@@ -1,14 +1,23 @@
 <?php
 session_start();
-$config_path = __DIR__ . '/../config/db.php';
+$config_path = __DIR__ . '/../../config/db.php';
 if (!file_exists($config_path)) {
     die("FATAL: config/db.php not found at: $config_path <br>__DIR__ is: " . __DIR__);
 }
 
-require_once '../config/db.php';
-require_once '../config/captchav2.php';
-require_once '../config/automod.php';
-require_once '../config/cache.php';
+require_once '../../config/db.php';
+require_once '../../config/captchav2.php';
+require_once '../../config/automod.php';
+require_once '../../config/cache.php';
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
+use Ramsey\Uuid\Uuid;
+
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__ . '/../../.env'));
+$dotenv->load();
 
 $db = get_db();
 $ip = $_SERVER['REMOTE_ADDR'];
@@ -57,13 +66,16 @@ $board_stmt->execute([$slug]);
 $board = $board_stmt->fetch(PDO::FETCH_ASSOC);
 if (!$board) die('Invalid board: ' . htmlspecialchars($slug));
 
-function handle_upload(bool $nsfw = false): ?string {
+function handle_upload(bool $nsfw = false): ?array {
     if (empty($_FILES['image']['tmp_name']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
 
     $f   = $_FILES['image'];
     $err = $f['error'];
+
+    $s3key    = $_ENV['S3_KEY'];
+    $s3secret = $_ENV['S3_SECRET'];
 
     if ($err !== UPLOAD_ERR_OK) {
         $msgs = [
@@ -101,32 +113,67 @@ function handle_upload(bool $nsfw = false): ?string {
     }
 
     $ext  = $allowed[$mime]['ext'];
-    $name = uniqid('img_', true) . '.' . $ext;
+    $name = Uuid::uuid4('img_', true)->toString() . '.' . $ext;
 
-    $target_dir = __DIR__ . '/uploads';
-    if (!is_dir($target_dir)) {
-        if (!mkdir($target_dir, 0755, true)) {
-            die('FATAL: Could not create the uploads directory.');
-        }
+    $s3 = new S3Client([
+        'version'  => 'latest',
+        'region'   => 'us-east-1',
+        'endpoint' => 'http://localhost:9000', // Endpoint will change once deployed
+        'use_path_style_endpoint' => true,
+        'credentials' => [
+            'key'    => $s3key,
+            'secret' => $s3secret,
+        ],
+    ]);
+
+    $bucket = '6chan';
+    
+    if (str_starts_with($mime, 'image/')) {
+        $folder = 'images';
+    } elseif (str_starts_with($mime, 'video/')) {
+        $folder = 'videos';
+    } elseif (str_starts_with($mime, 'audio/')) {
+        $folder = 'audio';
+    } else {
+        $folder = 'misc';
     }
 
-    $dest = $target_dir. '/' . $name;
+    $object_key = $folder . '/' . $name;
 
-    if (!move_uploaded_file($f['tmp_name'], $dest)) {
-        die('Could not save file. Check that uploads/ exists and is writable (chmod 775).');
+    try {
+        $s3->putObject([
+            'Bucket'      => $bucket,
+            'Key'         => $object_key,
+            'SourceFile'  => $f['tmp_name'],
+            'ContentType' => $mime,
+        ]);
+    } catch (AwsException $e) {
+        die('MinIO upload failed: ' . $e->getMessage());
     }
-    chmod($dest, 0644);
-
+    
     $is_audio = str_starts_with($mime, 'audio/');
 
     if ($is_audio) {
         require_once '../config/audio.php';
-        $audio_meta = extract_audio_meta($dest, $name);
+        $audio_meta = extract_audio_meta($f['tmp_name'], $name);
 
-        $meta_path = $dest . '.json';
+        $meta_json = $json_encode(
+            $audio_meta,
+            JSON_UNESCAPED_UNICODE
+        );
 
-        file_put_contents($meta_path, json_encode($audio_meta, JSON_UNESCAPED_UNICODE));
-        chmod($meta_path, 0644);
+        try {
+            $s3->putObject([
+                'Bucket'      => $bucket,
+                'Key'         => $object_key,
+                'Body'        => $meta_json,
+                'ContentType' => 'application/json',
+            ]);
+        } catch (AwsException $e) {
+            error_log(
+                'Audio metadata upload failed: ' . $e->getMessage()
+            );
+        }
     }
 
     if ($is_audio && isset($_FILES['lrc']) && $_FILES['lrc']['error'] === UPLOAD_ERR_OK) {
@@ -134,30 +181,66 @@ function handle_upload(bool $nsfw = false): ?string {
         $lrc_data = parse_lrc($lrc_raw);
 
         if ($lrc_data) {
-            $sidecar = json_decode(file_get_contents($meta_path), true);
-            $sidecar['lrc'] = $lrc_data;
-            $sidecar['lyrics'] = null;
-            file_put_contents($meta_path, json_encode($sidecar, JSON_UNESCAPED_UNICODE));
+            $lyric_json = json_encode([
+                'lrc' => $lrc_data
+            ], JSON_UNESCAPED_UNICODE);
+
+            try {
+                $s3->putObject([
+                    'Bucket'      => $bucket,
+                    'Key'         => $object_key,
+                    'Body'        => $lyric_json,
+                    'ContentType' => 'application/json',
+                ]);
+            } catch (AwsException $e) {
+                error_log(
+                    'Lyrics upload failed: ' . $e->getMessage()
+                );
+            }
         }
     }
+
+    $preview_key = null;
     
     if ($nsfw && $mime !== 'video/mp4' && class_exists('Imagick')) {
         try {
-            $preview_name = 'blur_' . $name;
-            $preview_dest = __DIR__ . '/uploads/' . $preview_name;
+            $tmp_preview = tempnam(sys_get_temp_dir(), 'blur_');
 
-            $img = new Imagick($dest);
+            $img = new Imagick($f['tmp_name']);
             $img->blurImage(0, 18);
             $img->thumbnailImage(300, 300, true);
             $img->writeImage($preview_dest);
             $img->destroy();
-            chmod($preview_dest, 0644);
+
+            $preview_name = 'blur_' . $name;
+            $preview_key  = 'preview/' . $preview_name;
+            
+            $s3->putObject([
+                'Bucket'      => $bucket,
+                'Key'         => $preview_key,
+                'SourceFile'  => $tmp_preview,
+                'ContentType' => $mime,
+            ]);
+
+            unlink($tmp_preview);
         } catch (ImagickException $e) {
             error_log("Imagick blur failed! " . $e->getMessage());
         }
     }
 
-    return $name;
+    // Public URL (local)
+    $file_url = "http://localhost:9000/{$bucket}/{$object_key}";
+    $preview_url = $preview_key ? "http://localhost:9000/{$bucket}/{$preview_key}" : null;
+
+    return [
+        'name'         => $name,
+        'mime'         => $mime,
+        'size'         => $f['size'],
+        'bucket'       => $bucket,
+        'object_key'   => $object_key,
+        'url'          => $file_url,
+        'nsfw_preview' => $preview_url,
+    ];
 }
 
 function notify_automod(int $post_id, string $type, string $text): void {

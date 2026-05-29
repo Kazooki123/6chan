@@ -8,6 +8,11 @@ require_once '../config/captchav2.php';
 require_once '../config/markdown.php';
 require_once '../config/reactions.php';
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->load();
+
 $db   = get_db();
 $slug = $_GET['b'] ?? '';
 $id = (int)($_GET['id'] ?? 0);
@@ -67,15 +72,94 @@ foreach ($threads as &$t) {
 }
 unset($t);
 
+function media_url(string $key): string {
+    $uploads  = $_ENV['S3_UPLOAD'];
+    $endpoint = $_ENV['S3_ENDPOINT'];
+    
+    define('STORAGE_BUCKET',   $uploads);
+    define('STORAGE_ENDPOINT', $endpoint);
+
+    return STORAGE_ENDPOINT . '/' . STORAGE_BUCKET . '/' . $key;
+}
+
 function render_body(string $text, int $thread_id): string {
-    $lines = explode("\n", $text);
+    $lines     = explode("\n", $text);
     $processed = [];
 
     foreach ($lines as $line) {
         $trimmed = ltrim($line);
-        
+
         if (preg_match('/^>>(\d+)/', $trimmed)) {
             $line = preg_replace('/>>(\d+)/', '`%%QUOTE:$1%%`', $line);
+            $processed[] = $line;
+            continue;
+        }
+
+        // Color prefixes — convert to placeholder spans
+        // These run before markdown so the prefix chars don't get
+        // interpreted as markdown syntax (> would become blockquote,
+        // ^ has no markdown meaning but we protect it anyway)
+
+        // > greentext — but NOT >> (quotelink)
+        // NOT >! (spoiler, handled below)
+        if (preg_match('/^>(?![>!])/', $trimmed)) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 1)));
+            $processed[] = '%%COLOR:green%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // ^ orangetext
+        if (str_starts_with($trimmed, '^')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 1)));
+            $processed[] = '%%COLOR:orange%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // ~~ pinktext (prefix style, not strikethrough, only if the line starts with '~~')
+        if (str_starts_with($trimmed, '~~') && !str_ends_with(trim($line), '~~')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:pink%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // ** redtext (line starts with ** then emphasis on whole line)
+        if (str_starts_with($trimmed, '**') && !str_ends_with(trim($line), '**')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:red%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // == bluetext
+        if (str_starts_with($trimmed, '==')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:blue%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // >! spoiler text (line-level spoiler)
+        if (str_starts_with($trimmed, '>!')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:spoiler%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // rainbow text !! :3
+        if (str_starts_with($trimmed, '@@@')) {
+            $inner = ltrim(substr($trimmed, 3));
+            $colors  = ['#ff0000','#ff6600','#ffcc00','#00cc44','#4a9eff','#9b59b6','#ff66cc'];
+            $rainbow = '';
+            $ci      = 0;
+            foreach (mb_str_split($inner) as $char) {
+                if ($char === ' ') {
+                    $rainbow .= ' ';
+                } else {
+                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">'
+                              . htmlspecialchars($char) . '</span>';
+                    $ci++;
+                }
+            }
+            $processed[] = '%%RAINBOW%%' . $rainbow . '%%ENDRAINBOW%%';
+            continue;
         }
 
         $processed[] = $line;
@@ -94,16 +178,58 @@ function render_body(string $text, int $thread_id): string {
         },
         $html
     );
-    
+
+    $color_map = [
+        'green'  => 'var(--quote)',
+        'orange' => 'var(--orange)',
+        'pink'   => 'var(--pink)',
+        'red'    => '#cc2200',
+        'blue'   => '#4a9eff',
+    ];
+
+    $html = preg_replace_callback(
+        '/%%COLOR:(green|orange|pink|red|blue)%%(.+?)%%ENDCOLOR%%/s',
+        function($m) use ($color_map) {
+            $color = $color_map[$m[1]] ?? '#fff';
+            $prefix_chars = [
+                'green'  => '&gt;',
+                'orange' => '^',
+                'pink'   => '',
+                'red'    => '',
+                'blue'   => '',
+            ];
+            $prefix = $prefix_chars[$m[1]] ?? '';
+            return '<span class="color-' . $m[1] . '">'
+                 . $prefix . $m[2]
+                 . '</span>';
+        },
+        $html
+    );
+
+    $html = preg_replace_callback(
+        '/%%COLOR:spoiler%%(.+?)%%ENDCOLOR%%/s',
+        function($m) {
+            return '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">'
+                 . $m[1] . '</span>';
+        },
+        $html
+    );
+
+    $html = preg_replace(
+        '/%%RAINBOW%%(.+?)%%ENDRAINBOW%%/s',
+        '<span class="rainbow-text">$1</span>',
+        $html
+    );
+
     return $html;
 }
 
 function render_media(string $path, bool $nsfw, int $thread_id): string {
     $is_video  = str_ends_with($path, '.mp4');
     $is_audio  = preg_match('/\.(mp3|flac|ogg|wav)$/i', $path);
-    $blur_path = 'uploads/blur_' . $path;
-    $orig_path = 'uploads/' . $path;
-    $has_blur  = $nsfw && !$is_video && file_exists(__DIR__ . 'uploads/blur_' . $path);
+    $blur_path = media_url('preview/blur_' . $path);
+    $orig_path = media_url($path);
+    $has_blur  = $nsfw && !$is_video && file_exists(media_url('blur_') . $path);
     $uid       = 'media_' . md5($path . $thread_id);
     
     if ($is_video) {
@@ -122,7 +248,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
     }
 
     if ($is_audio) {
-        $meta_path = __DIR__ . '/uploads/' . $path . '.json';
+        $meta_path = media_url($path) . '.json';
         $meta      = file_exists($meta_path)
                        ? json_decode(file_get_contents($meta_path), true)
                        : [];
@@ -131,7 +257,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
         $duration = htmlspecialchars($meta['duration'] ?? '-');
         $cover    = !empty($meta['cover_file'])
-                        ? 'uploads/' . htmlspecialchars($meta['cover_file'])
+                        ? media_url(htmlspecialchars($meta['cover_file']))
                         : 'assets/no-cover.png';
 
         $pid = 'ap_' . md5($path);
@@ -371,7 +497,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <link rel="stylesheet" href="style.css">
     <script src="settingsloader.js"></script>
 </head>
-<body>
+<body class="page-board">
     <div id="topbar">
         <span class="site-name">@6chan</span>
         <a href="index.php">Home</a>
@@ -392,7 +518,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 
         <div class="postform">
             <h3>Start a new thread!! &lt;3</h3>
-            <form method="post" action="post.php" enctype="multipart/form-data">
+            <form method="post" action="services/post.php" enctype="multipart/form-data">
                 <input type="hidden" name="board_slug" value="<?= htmlspecialchars($board['slug']) ?>">
                 <input type="hidden" name="action" value="new_thread">
                 <table>
@@ -455,7 +581,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                         <td>Verify</td>
                         <td>
                             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                                <img src="captcha_img.php?token=<?= htmlspecialchars($captcha['token']) ?>"
+                                <img src="services/captcha_img.php?token=<?= htmlspecialchars($captcha['token']) ?>"
                                      alt="captcha"
                                      style="border:1px solid var(--border);height:60px;width:180px;
                                             image-rendering:pixelated;"
@@ -511,8 +637,8 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         <div class="thread">
             <div class="thread-op" id="p<?= $t['id'] ?>">
                     <?php if (!empty($t['img_path'])):
-                        $imgpath = "uploads/" . htmlspecialchars($t['img_path']); ?>
-                    <?= render_media($t['img_path'], (bool)$t['nsfw'], $t['id']) ?>
+                        $imgpath = htmlspecialchars(media_url($t['img_path'])); ?>
+                    <?= render_media(media_url($t['img_path']), (bool)$t['nsfw'], $t['id']) ?>
                     <a href="<?= $imgpath ?>">View original</a>
                     <?php endif; ?>
                 <div class="post-header">
@@ -569,8 +695,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                           class="report-link">[Report]</a>
                    </div>
                    <?php if (!empty($p['img_path'])):
-                       $imgpath =
-                           "uploads/" . htmlspecialchars($p['img_path']); ?>
+                       $imgpath = htmlspecialchars(media_url($p['img_path'])); ?>
                    <div class="post-img">
                        <?= render_media($p['img_path'], (bool)$p['nsfw'], $p['id']) ?>
                        <a href="<?= $imgpath ?>">View original</a>
@@ -605,7 +730,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
     </div>
 
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
 
     <div id="quote-popup"></div>
     
@@ -694,7 +819,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         form.append('emoji',     emoji);
     
         try {
-            const res  = await fetch('react.php', { method: 'POST', body: form });
+            const res  = await fetch('services/react.php', { method: 'POST', body: form });
             const data = await res.json();
     
             if (!data.ok) {
@@ -731,12 +856,12 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     }
 
     async function refreshCaptcha(btn) {
-      const res  = await fetch('captcha_new.php');
+      const res  = await fetch('services/captcha_new.php');
       const data = await res.json();
       if (!data.token) return;
 
       document.getElementById('captcha-img').src =
-          'captcha_img.php?token=' + data.token + '&t=' + Date.now();
+          'services/captcha_img.php?token=' + data.token + '&t=' + Date.now();
       document.getElementById('captcha-token-input').value = data.token;
     }
 
@@ -758,7 +883,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
       form.append('option_id', optionId);
 
       try {
-        const res  = await fetch('vote.php', { method: 'POST', body: form });
+        const res  = await fetch('services/vote.php', { method: 'POST', body: form });
         const data = await res.json();
         if (!data.ok) { console.warn(data.error); return; }
         updatePollUI(pollId, data.results, data.total);

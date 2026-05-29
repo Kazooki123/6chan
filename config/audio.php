@@ -1,6 +1,19 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->load();
+
+function media_url(string $key): string {
+    $uploads  = $_ENV['S3_UPLOAD'];
+    $endpoint = $_ENV['S3_ENDPOINT'];
+    
+    const STORAGE_BUCKET   = $uploads;
+    const STORAGE_ENDPOINT = $endpoint;
+
+    return STORAGE_ENDPOINT . '/' . STORAGE_BUCKET . '/' . $key;
+}
+
 function extract_audio_meta(string $filepath, string $filename): array {
     $getID3  = new getID3();
     $info    = $getID3->analyze($filepath);
@@ -46,7 +59,7 @@ function extract_audio_meta(string $filepath, string $filename): array {
         $ext_map    = ['image/jpeg'=>'jpg','image/png'=>'png','image/gif'=>'gif'];
         $cover_ext  = $ext_map[$cover_mime] ?? 'jpg';
         $cover_name = 'cover_' . pathinfo($filename, PATHINFO_FILENAME) . '.' . $cover_ext;
-        $cover_path = __DIR__ . '/../public/uploads/' . $cover_name;
+        $cover_path = media_url($cover_name);
 
         file_put_contents($cover_path, $cover_data);
         chmod($cover_path, 0644);

@@ -7,6 +7,11 @@ require_once '../config/captchav2.php';
 require_once '../config/markdown.php';
 require_once '../config/reactions.php';
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->load();
+
 $db = get_db();
 $id = (int)($_GET['id'] ?? 0);
 
@@ -20,6 +25,9 @@ $is_pinned = (bool)$thread['pinned'];
 
 $cache_key = "thread:{$id}";
 $cached    = cache_get($cache_key, $db);
+
+// Background Music
+$bgm = null;
 
 if ($cached) {
     $posts = $cached['posts'];
@@ -38,15 +46,115 @@ foreach ($posts as $p) {
 }
 $reactions = get_reactions($reaction_targets, $_SERVER['REMOTE_ADDR'], $db);
 
+function media_url(string $key): string {
+    $uploads  = $_ENV['S3_UPLOAD'];
+    $endpoint = $_ENV['S3_ENDPOINT'];
+    
+    const STORAGE_BUCKET   = $uploads;
+    const STORAGE_ENDPOINT = $endpoint;
+
+    return STORAGE_ENDPOINT . '/' . STORAGE_BUCKET . '/' . $key;
+}
+
+if (!empty($thread['bgm_post_id'])) {
+    $bgm_stmt = $db->prepare("SELECT img_path FROM posts WHERE id=?");
+    $bgm_stmt->execute([$thread['bgm_post_id']]);
+    $bgm_post = $bgm_stmt->fetch(PDO::FETCH_ASSOC);
+    if ($bgm_post && !empty($bgm_post['img_path'])) {
+        $bgm_path   = $bgm_post['img_path'];
+        $bgm_meta_f = media_url($bgm_path . '.json');
+        $bgm_meta   = file_exists($bgm_meta_f)
+                        ? json_decode(file_get_contents($bgm_meta_f), true)
+                        : [];
+        $bgm = [
+            'path'   => $bgm_path,
+            'title'  => $bgm_meta['title']  ?? 'Unknown',
+            'artist' => $bgm_meta['artist'] ?? 'Unknown',
+            'cover'  => !empty($bgm_meta['cover_file'])
+                            ? media_url($bgm_meta['cover_file'])
+                            : null,
+        ];
+    }
+}
+
 function render_body(string $text, int $thread_id): string {
-    $lines = explode("\n", $text);
+    $lines     = explode("\n", $text);
     $processed = [];
 
     foreach ($lines as $line) {
         $trimmed = ltrim($line);
-        
+
         if (preg_match('/^>>(\d+)/', $trimmed)) {
-            $line = preg_replace('/^>>(\d+)/', '`%%QUOTE:$1%%`', $line);
+            $line = preg_replace('/>>(\d+)/', '`%%QUOTE:$1%%`', $line);
+            $processed[] = $line;
+            continue;
+        }
+
+        // Color prefixes — convert to placeholder spans
+        // These run before markdown so the prefix chars don't get
+        // interpreted as markdown syntax (> would become blockquote,
+        // ^ has no markdown meaning but we protect it anyway)
+
+        // > greentext — but NOT >> (quotelinks already handled above)
+        // NOT >! (spoiler — handled below)
+        if (preg_match('/^>(?![>!])/', $trimmed)) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 1)));
+            $processed[] = '%%COLOR:green%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // ^ orangetext
+        if (str_starts_with($trimmed, '^')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 1)));
+            $processed[] = '%%COLOR:orange%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // ~~ pinktext (prefix style, not strikethrough, only if line starts with '~~')
+        if (str_starts_with($trimmed, '~~') && !str_ends_with(trim($line), '~~')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:pink%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // ** redtext (line starts with ** — emphasis on whole line)
+        if (str_starts_with($trimmed, '**') && !str_ends_with(trim($line), '**')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:red%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // == bluetext
+        if (str_starts_with($trimmed, '==')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:blue%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // >! spoiler text (line-level spoiler)
+        if (str_starts_with($trimmed, '>!')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 2)));
+            $processed[] = '%%COLOR:spoiler%%' . $inner . '%%ENDCOLOR%%';
+            continue;
+        }
+
+        // rainbow text — line starts with @@@
+        if (str_starts_with($trimmed, '@@@')) {
+            $inner = ltrim(substr($trimmed, 3));
+            $colors  = ['#ff0000','#ff6600','#ffcc00','#00cc44','#4a9eff','#9b59b6','#ff66cc'];
+            $rainbow = '';
+            $ci      = 0;
+            foreach (mb_str_split($inner) as $char) {
+                if ($char === ' ') {
+                    $rainbow .= ' ';
+                } else {
+                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">'
+                              . htmlspecialchars($char) . '</span>';
+                    $ci++;
+                }
+            }
+            $processed[] = '%%RAINBOW%%' . $rainbow . '%%ENDRAINBOW%%';
+            continue;
         }
 
         $processed[] = $line;
@@ -65,16 +173,58 @@ function render_body(string $text, int $thread_id): string {
         },
         $html
     );
-    
+
+    $color_map = [
+        'green'  => 'var(--quote)',
+        'orange' => 'var(--orange)',
+        'pink'   => 'var(--pink)',
+        'red'    => '#cc2200',
+        'blue'   => '#4a9eff',
+    ];
+
+    $html = preg_replace_callback(
+        '/%%COLOR:(green|orange|pink|red|blue)%%(.+?)%%ENDCOLOR%%/s',
+        function($m) use ($color_map) {
+            $color = $color_map[$m[1]] ?? '#fff';
+            $prefix_chars = [
+                'green'  => '&gt;',
+                'orange' => '^',
+                'pink'   => '',
+                'red'    => '',
+                'blue'   => '',
+            ];
+            $prefix = $prefix_chars[$m[1]] ?? '';
+            return '<span class="color-' . $m[1] . '">'
+                 . $prefix . $m[2]
+                 . '</span>';
+        },
+        $html
+    );
+
+    $html = preg_replace_callback(
+        '/%%COLOR:spoiler%%(.+?)%%ENDCOLOR%%/s',
+        function($m) {
+            return '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">'
+                 . $m[1] . '</span>';
+        },
+        $html
+    );
+
+    $html = preg_replace(
+        '/%%RAINBOW%%(.+?)%%ENDRAINBOW%%/s',
+        '<span class="rainbow-text">$1</span>',
+        $html
+    );
+
     return $html;
 }
 
 function render_media(string $path, bool $nsfw, int $thread_id): string {
     $is_video  = str_ends_with($path, '.mp4');
     $is_audio  = preg_match('/\.(mp3|flac|ogg|wav)$/i', $path);
-    $blur_path = 'uploads/blur_' . $path;
-    $orig_path = 'uploads/' . $path;
-    $has_blur  = $nsfw && !$is_video && file_exists(__DIR__ . 'uploads/blur_' . $path);
+    $blur_path = media_url('preview/blur_' . $path);
+    $orig_path = media_url($path);
+    $has_blur  = $nsfw && !$is_video && file_exists(media_url('blur_') . $path);
     $uid       = 'media_' . md5($path . $thread_id);
     
     if ($is_video) {
@@ -93,7 +243,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
     }
 
     if ($is_audio) {
-        $meta_path = __DIR__ . '/uploads/' . $path . '.json';
+        $meta_path = media_url($path) . '.json';
         $meta      = file_exists($meta_path)
                        ? json_decode(file_get_contents($meta_path), true)
                        : [];
@@ -102,7 +252,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
         $duration = htmlspecialchars($meta['duration'] ?? '-');
         $cover    = !empty($meta['cover_file'])
-                        ? 'uploads/' . htmlspecialchars($meta['cover_file'])
+                        ? media_url(htmlspecialchars($meta['cover_file']))
                         : 'assets/no-cover.png';
 
         $pid = 'ap_' . md5($path);
@@ -134,7 +284,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                     <div class='audio-duration' id='{$pid}-dur'>{$duration}</div>
                 </div>
                 <div class='audio-controls'>
-                    <audio id='{$pid}-audio' preload='metadata' loop>
+                    <audio id='{$pid}-audio' preload='metadata'>
                         <source src='{$orig_path}'>
                     </audio>
                     <button class='audio-btn' onclick='apToggle(\"{$pid}\")'>▶</button>
@@ -342,7 +492,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 <link rel="stylesheet" href="style.css">
 <script src="settingsloader.js"></script>
 </head>
-<body>
+<body class="page-thread">
 
 <div id="topbar">
     <span class="site-name">@6chan</span>
@@ -402,23 +552,21 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                 <a href="report.php?type=post&id=<?= $p['id'] ?>&tid=<?= $id ?>&b=<?= htmlspecialchars($thread['slug']) ?>"
                    class="report-link">[Report]</a>
             </div>
-            <?php if (!empty($p['img_path'])): ?>
+            <?php if (!empty($p['img_path']) && str_ends_with($p['img_path'], '.mp3')
+                   || str_ends_with($p['img_path'] ?? '', '.flac')
+                   || str_ends_with($p['img_path'] ?? '', '.ogg')): ?>
                 <?= render_media($p['img_path'], (bool)$p['nsfw'], $id) ?>
-                <?php if (!empty($p['img_path']) && str_ends_with($p['img_path'], '.mp3')
-                       || str_ends_with($p['img_path'] ?? '', '.flac')
-                       || str_ends_with($p['img_path'] ?? '', '.ogg')): ?>
-                    <form method="post" action="set_bgm.php" style="display:inline;">
-                        <input type="hidden" name="thread_id" value="<?= $id ?>">
-                        <input type="hidden" name="post_id"   value="<?= $p['id']?>">
-                        <?php if ($thread['bgm_post_id'] === $p['id']): ?>
-                            <input type="hidden" name="action" value="unset"> 
-                            <button class="bgm-btn active" type="submit">🎶BGM</button>
-                        <?php else: ?>
-                            <input type="hidden" name="action" value="set">
-                            <button class="bgm-btn" type="submit">🎶Set BGM</button>
-                        <?php endif; ?>
-                    </form>
-                <?php endif; ?>
+                <form method="post" action="services/set_bgm.php" style="display:inline;">
+                    <input type="hidden" name="thread_id" value="<?= $id ?>">
+                    <input type="hidden" name="post_id"   value="<?= $p['id']?>">
+                    <?php if ($thread['bgm_post_id'] === $p['id']): ?>
+                        <input type="hidden" name="action" value="unset"> 
+                        <button class="bgm-btn active" type="submit">🎶BGM</button>
+                    <?php else: ?>
+                        <input type="hidden" name="action" value="set">
+                        <button class="bgm-btn" type="submit">🎶Set BGM</button>
+                    <?php endif; ?>
+                </form>
             <?php endif; ?>
             <div class="post-body"><?= render_body($p['body'], $id) ?></div>
             <?= render_poll($id, $p['id'], $_SERVER['REMOTE_ADDR'], $db) ?>
@@ -434,7 +582,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <?php else: ?>
     <div class="postform">
         <h3>Post a reply</h3>
-        <form method="post" action="post.php" enctype="multipart/form-data">
+        <form method="post" action="services/post.php" enctype="multipart/form-data">
             <input type="hidden" name="thread_id"   value="<?= $id ?>">
             <input type="hidden" name="board_slug"  value="<?= htmlspecialchars($thread['slug']) ?>">
             <input type="hidden" name="action"      value="reply">
@@ -469,7 +617,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                     <td>Verify</td>
                     <td>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                            <img src="captcha_img.php?token=<?= htmlspecialchars($captcha['token']) ?>"
+                            <img src="services/captcha_img.php?token=<?= htmlspecialchars($captcha['token']) ?>"
                                  alt="captcha"
                                  style="border:1px solid var(--border);height:60px;width:180px;
                                         image-rendering:pixelated;"
@@ -527,93 +675,8 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <a href="settings/settings.php">[Settings]</a> |
     <a href="contact.php">[Contact]</a>
     <a href="support.php">[Support]</a>
+    <a href="etc/tsnclf.html">[Logics]</a>
 </footer>
-
-<?php
-
-// Background Music
-$bgm = null;
-if (!empty($thread['bgm_post_id'])) {
-    $bgm_stmt = $db->prepare("SELECT img_path FROM posts WHERE id=?");
-    $bgm_stmt->execute([$thread['bgm_post_id']]);
-    $bgm_post = $bgm_stmt->fetch(PDO::FETCH_ASSOC);
-    if ($bgm_post && !empty($bgm_post['img_path'])) {
-        $bgm_path   = $bgm_post['img_path'];
-        $bgm_meta_f = __DIR__ . '/uploads/' . $bgm_path . '.json';
-        $bgm_meta   = file_exists($bgm_meta_f)
-                        ? json_decode(file_get_contents($bgm_meta_f), true)
-                        : [];
-        $bgm = [
-            'path'   => $bgm_path,
-            'title'  => $bgm_meta['title']  ?? 'Unknown',
-            'artist' => $bgm_meta['artist'] ?? 'Unknown',
-            'cover'  => !empty($bgm_meta['cover_file'])
-                            ? 'uploads/' . $bgm_meta['cover_file']
-                            : null,
-        ];
-    }
-}
-?>
-
-<?php if ($bgm): ?>
-<div id="bgm-bar">
-    <audio id="bgm-audio" loop preload="none">
-        <source src="uploads/<?= htmlspecialchars($bgm['path']) ?>">
-    </audio>
-    <?php if ($bgm['cover']): ?>
-    <img src="<?= htmlspecialchars($bgm['cover']) ?>"
-         alt="cover" class="bgm-cover">
-    <?php endif; ?>
-    <div class="bgm-info">
-        <span class="bgm-title"><?= htmlspecialchars($bgm['title']) ?></span>
-        <span class="bgm-artist"><?= htmlspecialchars($bgm['artist']) ?></span>
-    </div>
-    <div class="bgm-controls">
-        <button class="bgm-play" onclick="bgmToggle()" title="Play/Pause">▶</button>
-        <div class="bgm-progress-wrap" onclick="bgmSeek(event)">
-            <div class="bgm-progress-bar" id="bgm-bar-fill"></div>
-        </div>
-        <span class="bgm-time" id="bgm-time">0:00</span>
-        <input type="range" class="bgm-vol" id="bgm-vol"
-               min="0" max="1" step="0.05" value="0.5"
-               oninput="bgmVol(this.value)"
-               title="Volume">
-        <button class="bgm-close" onclick="bgmClose()" title="Close">✕</button>
-    </div>
-    <div class="bgm-label">♪ Thread BGM</div>
-</div>
-
-<script>
-const bgmAudio = document.getElementById('bgm-audio');
-const bgmFill  = document.getElementById('bgm-bar-fill');
-const bgmTime  = document.getElementById('bgm-time');
-const bgmBtn   = document.querySelector('.bgm-play');
-bgmAudio.volume = 0.5;
-
-bgmAudio.addEventListener('timeupdate', () => {
-    const pct = bgmAudio.duration
-        ? (bgmAudio.currentTime / bgmAudio.duration * 100) : 0;
-    bgmFill.style.width = pct + '%';
-    const s = Math.floor(bgmAudio.currentTime);
-    bgmTime.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-});
-
-function bgmToggle() {
-    if (bgmAudio.paused) { bgmAudio.play(); bgmBtn.textContent = '⏸'; }
-    else                 { bgmAudio.pause(); bgmBtn.textContent = '▶'; }
-}
-function bgmSeek(e) {
-    const wrap = e.currentTarget;
-    const pct  = (e.clientX - wrap.getBoundingClientRect().left) / wrap.offsetWidth;
-    bgmAudio.currentTime = pct * bgmAudio.duration;
-}
-function bgmVol(v) { bgmAudio.volume = v; }
-function bgmClose() {
-    bgmAudio.pause();
-    document.getElementById('bgm-bar').style.display = 'none';
-}
-</script>
-<?php endif; ?>
 
 <div id="quote-popup"></div>
 
@@ -709,7 +772,7 @@ async function doReact(btn) {
     form.append('emoji',     emoji);
 
     try {
-        const res  = await fetch('react.php', { method: 'POST', body: form });
+        const res  = await fetch('services/react.php', { method: 'POST', body: form });
         const data = await res.json();
 
         if (!data.ok) {
@@ -745,12 +808,12 @@ async function doReact(btn) {
     }
 }
 async function refreshCaptcha(btn) {
-  const res  = await fetch('captcha_new.php');
+  const res  = await fetch('services/captcha_new.php');
   const data = await res.json();
   if (!data.token) return;
 
   document.getElementById('captcha-img').src =
-      'captcha_img.php?token=' + data.token + '&t=' + Date.now();
+      'services/captcha_img.php?token=' + data.token + '&t=' + Date.now();
   document.getElementById('captcha-token-input').value = data.token;
 }
 
@@ -759,7 +822,7 @@ async function castVote(pollId, optionId) {
   form.append('option_id', optionId);
 
   try {
-    const res  = await fetch('vote.php', { method: 'POST', body: form });
+    const res  = await fetch('services/vote.php', { method: 'POST', body: form });
     const data = await res.json();
     if (!data.ok) { console.warn(data.error); return; }
     updatePollUI(pollId, data.results, data.total);
@@ -782,6 +845,35 @@ function updatePollUI(pollId, results, total) {
 
   const tot = wrap.querySelector('poll-total');
   if (tot) tot.textContent = total + ' vote' + (total===1?'':'s');
+}
+
+const bgmAudio = document.getElementById('bgm-audio');
+const bgmFill  = document.getElementById('bgm-bar-fill');
+const bgmTime  = document.getElementById('bgm-time');
+const bgmBtn   = document.querySelector('.bgm-play');
+bgmAudio.volume = 0.5;
+
+bgmAudio.addEventListener('timeupdate', () => {
+    const pct = bgmAudio.duration
+        ? (bgmAudio.currentTime / bgmAudio.duration * 100) : 0;
+    bgmFill.style.width = pct + '%';
+    const s = Math.floor(bgmAudio.currentTime);
+    bgmTime.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+});
+
+function bgmToggle() {
+    if (bgmAudio.paused) { bgmAudio.play(); bgmBtn.textContent = '⏸'; }
+    else                 { bgmAudio.pause(); bgmBtn.textContent = '▶'; }
+}
+function bgmSeek(e) {
+    const wrap = e.currentTarget;
+    const pct  = (e.clientX - wrap.getBoundingClientRect().left) / wrap.offsetWidth;
+    bgmAudio.currentTime = pct * bgmAudio.duration;
+}
+function bgmVol(v) { bgmAudio.volume = v; }
+function bgmClose() {
+    bgmAudio.pause();
+    document.getElementById('bgm-bar').style.display = 'none';
 }
 
 </script>

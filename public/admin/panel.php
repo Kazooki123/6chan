@@ -4,7 +4,6 @@ if (!($_SESSION['admin'] ?? false)) { header('Location: login.php'); exit; }
 require_once '../../config/db.php';
 $db = get_db();
 
-
 $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['act'] ?? '';

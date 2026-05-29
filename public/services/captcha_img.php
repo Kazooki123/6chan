@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/captchav2.php';
+require_once '../../config/captchav2.php';
 
 $token = $_GET['token'] ?? '';
 if (!isset($_SESSION['captchav2'][$token])) {

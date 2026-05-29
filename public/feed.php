@@ -1,5 +1,10 @@
 <?php
 require_once '../config/db.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv->load();
+
 $db = get_db();
 
 $threads = $db->query(
@@ -10,6 +15,16 @@ $threads = $db->query(
      ORDER BY t.created_at DESC
      LIMIT 30"
 )->fetchAll(PDO::FETCH_ASSOC);
+
+function media_url(string $key): string {
+    $uploads  = $_ENV['S3_UPLOAD'];
+    $endpoint = $_ENV['S3_ENDPOINT'];
+    
+    const STORAGE_BUCKET   = $uploads;
+    const STORAGE_ENDPOINT = $endpoint;
+
+    return STORAGE_ENDPOINT . '/' . STORAGE_BUCKET . '/' . $key;
+}
 
 // Will change once deployed online
 $base = 'http://localhost:8080';
@@ -34,7 +49,7 @@ echo `<?xml version="1.0" encoding="UTF-8">`;
         <category>/<?= htmlspecialchars($t['slug']) ?>/ - <?= htmlspecialchars($t['bname']) ?></category>
         <description><![CDATA[
             <?php if (!empty($t['img_path'])): ?>
-            <img src="<?= $base ?>/uploads/<?= htmlspecialchars($t['img_path']) ?>"><br>
+            <img src="<?= $base ?><?= htmlspecialchars(media_url($t['img_path'])) ?>"><br>
             <?php endif; ?>
             <?= nl2br(htmlspecialchars(mb_substr($t['body'], 0, 300))) ?>
             <?= mb_strlen($t['body']) > 300 ? '...' : '' ?>

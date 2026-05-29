@@ -11,14 +11,10 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 <div id="topbar">
   <span class="site-name">@6chan</span>
   <a href="index.php">Home</a>
-  <!--
-  <?php foreach ($boards as $b): ?>
-    <a href="board.php?b=<?= htmlspecialchars($b['slug']) ?>">/<?= htmlspecialchars($b['slug']) ?>/</a>
-  <?php endforeach; ?>
-  -->
   <a href="contact.php">[Contact]</a>
   <a href="support.php">[Support]</a>
-  <a href="etc/tsnclf.html">[Fallacies]</a>
+  <a href="etc/fos.html">[FoS]</a>
+  <a href="etc/tsnclf.html">[Logics]</a>
 </div>
 
 <div class="wrap">
@@ -37,6 +33,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
       <li>NSFW content must be clearly marked and is only permitted on designated boards.</li>
       <li>Do not impersonate moderators, administrators, or other users.</li>
       <li>The moderation team has final say. Decisions may be appealed politely via the meta board.</li>
+      <li>No AI-slop content unless under specific reasons like satirical humor and other context(s).</li>
     </ol>
 
     <h2>Board-Specific Rules</h2>
@@ -47,7 +44,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
        Ban evasion results in an immediate permanent ban.</p>
   </div>
 </div>
-<footer>@6chan — <a href="index.php">home</a> — <a href="rules.php">Rules</a> <a href="contact.php">[Contact]</a>
+<footer>@6chan — <a href="index.php">Home</a> — <a href="rules.php">Rules</a> <a href="contact.php">[Contact]</a>
  <a href="support.php">[Support]</a></footer>
 </body>
 </html>
