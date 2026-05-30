@@ -257,7 +257,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
         $duration = htmlspecialchars($meta['duration'] ?? '-');
         $cover    = !empty($meta['cover_file'])
-                        ? media_url(htmlspecialchars($meta['cover_file']))
+                        ? htmlspecialchars($meta['cover_file'])
                         : 'assets/no-cover.png';
 
         $pid = 'ap_' . md5($path);
@@ -638,7 +638,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             <div class="thread-op" id="p<?= $t['id'] ?>">
                     <?php if (!empty($t['img_path'])):
                         $imgpath = htmlspecialchars(media_url($t['img_path'])); ?>
-                    <?= render_media(media_url($t['img_path']), (bool)$t['nsfw'], $t['id']) ?>
+                    <?= render_media($t['img_path'], (bool)$t['nsfw'], $t['id']) ?>
                     <a href="<?= $imgpath ?>">View original</a>
                     <?php endif; ?>
                 <div class="post-header">
@@ -695,7 +695,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                           class="report-link">[Report]</a>
                    </div>
                    <?php if (!empty($p['img_path'])):
-                       $imgpath = htmlspecialchars(media_url($p['img_path'])); ?>
+                       $imgpath = htmlspecialchars($p['img_path']); ?>
                    <div class="post-img">
                        <?= render_media($p['img_path'], (bool)$p['nsfw'], $p['id']) ?>
                        <a href="<?= $imgpath ?>">View original</a>

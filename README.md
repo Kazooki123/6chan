@@ -22,12 +22,12 @@ Read the **/rules**, don't be an idiot.
 
 ## 1. Database setup
 
-### WITH DOCKER
+### WITH PODMAN
 
 Run the command below to create a containerised database with the schema already applied:
 
 ```bash
-docker compose up -d
+podman compose up -d
 ```
 
 ### WITHOUT DOCKER

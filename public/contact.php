@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid email address.';
     } else {
         // NOTE: Temporary for now, just a placeholder, 6chan will have its own email one day ^0^
-        $to      = 'admin@6chan.org';
+        $to      = 'admin@6chan.local';
         $headers = "From: $name <$email>\r\nReply-To: $email\r\n";
         $body    = "Name: $name\nEmail: $email\nSubject: $subject\n\n$message";
         mail($to, "[6chan Contact] $subject", $body, $headers);

@@ -12,6 +12,10 @@ require_once '../../config/cache.php';
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+/**
+ * Note that this is for the MinIO storage bucket (local testing)
+ * For deployment, services might change depending on their prices today
+ */
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 use Ramsey\Uuid\Uuid;
@@ -154,7 +158,7 @@ function handle_upload(bool $nsfw = false): ?array {
     $is_audio = str_starts_with($mime, 'audio/');
 
     if ($is_audio) {
-        require_once '../config/audio.php';
+        require_once '../../config/audio.php';
         $audio_meta = extract_audio_meta($f['tmp_name'], $name);
 
         $meta_json = $json_encode(
@@ -263,7 +267,6 @@ function notify_automod(int $post_id, string $type, string $text): void {
 }
 
 if ($action === 'new_thread') {
-
     $body    = trim($_POST['body']    ?? '');
     $subject = trim($_POST['subject'] ?? '');
     $author  = trim($_POST['author']  ?? '');
@@ -292,7 +295,8 @@ if ($action === 'new_thread') {
     if ($body === '') die('Post body is required.');
 
     $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1' ? 1 : 0;
-    $img  = handle_upload((bool)$nsfw);
+    $upload = handle_upload((bool)$nsfw);
+    $img  = $upload['object_key'] ?? null;
 
     $check = automod_check($body, $db);
 
@@ -366,7 +370,7 @@ if ($action === 'new_thread') {
     
     cache_delete("board:{$board['id']}:p1", $db);
 
-    header("Location: thread.php?id=$tid");
+    header("Location: ../thread.php?id=$tid");
     exit;
 
 } elseif ($action === 'reply') {
@@ -408,8 +412,9 @@ if ($action === 'new_thread') {
     if ($row['locked']) die('This thread is locked! No new replies.');
 
     $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1' ? 1 : 0;
-    $img  = handle_upload((bool)$nsfw);
-
+    $upload = handle_upload((bool)$nsfw);
+    $img  = $upload['object_key'] ?? null;
+    
     $check        = automod_check($body, $db);
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
 
@@ -485,7 +490,7 @@ if ($action === 'new_thread') {
     cache_delete("board:{$board['id']}:p1", $db);
     cache_delete("thread:{$tid}", $db);
 
-    header("Location: thread.php?id=$tid");
+    header("Location: ../thread.php?id=$tid");
     exit;
 
 } else {

@@ -50,8 +50,8 @@ function media_url(string $key): string {
     $uploads  = $_ENV['S3_UPLOAD'];
     $endpoint = $_ENV['S3_ENDPOINT'];
     
-    const STORAGE_BUCKET   = $uploads;
-    const STORAGE_ENDPOINT = $endpoint;
+    define('STORAGE_BUCKET',   $uploads);
+    define('STORAGE_ENDPOINT', $endpoint);
 
     return STORAGE_ENDPOINT . '/' . STORAGE_BUCKET . '/' . $key;
 }
@@ -252,7 +252,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
         $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
         $duration = htmlspecialchars($meta['duration'] ?? '-');
         $cover    = !empty($meta['cover_file'])
-                        ? media_url(htmlspecialchars($meta['cover_file']))
+                        ? htmlspecialchars($meta['cover_file'])
                         : 'assets/no-cover.png';
 
         $pid = 'ap_' . md5($path);

@@ -25,8 +25,8 @@ function media_url(string $key): string {
     $uploads  = $_ENV['S3_UPLOAD'];
     $endpoint = $_ENV['S3_ENDPOINT'];
     
-    const STORAGE_BUCKET   = $uploads;
-    const STORAGE_ENDPOINT = $endpoint;
+    define('STORAGE_BUCKET',   $uploads);
+    define('STORAGE_ENDPOINT', $endpoint);
 
     return STORAGE_ENDPOINT . '/' . STORAGE_BUCKET . '/' . $key;
 }

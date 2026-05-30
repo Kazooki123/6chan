@@ -1,16 +1,59 @@
 services:
+  php:
+    image: php:8.5-apache
+    container_name: 6chan
+
+    ports:
+      - "8080:80"
+
+    volumes:
+      - ./:/var/www/html
+
   db:
-    image: postgres:latest
+    image: postgres:17-alpine
+    container_name: postgres
     restart: always
+    
     environment:
-      POSTGRES_USER: chan
-      POSTGRES_PASSWORD: chan
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: 6chan
+  
     ports:
       - "5432:5432"
     volumes:
-      - postgres:/var/lib/postgresql
+      - ./postgres-data:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: buckets
+    restart: unless-stopped
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASS}
+
+    volumes:
+      - minio_data:/data:Z
+    command: server /data --console-address ":9001"
+
+  mailer:
+    image: axllent/mailpit
+    container_name: mailer
+
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+    environment:
+      MP_DEFAULT_SENDER: "example@example.local"
 
 volumes:
   postgres:
+  minio_data:
+  php:
