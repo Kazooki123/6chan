@@ -29,7 +29,6 @@ CREATE TABLE threads (
     body         TEXT NOT NULL,
     img_path     VARCHAR(300),
     automod_flag VARCHAR(50),
-    bgm_post_id  INT REFERENCES posts(id) ON DELETE SET NULL,
     nsfw         BOOLEAN NOT NULL DEFAULT FALSE,
     pinned       BOOLEAN NOT NULL DEFAULT FALSE,
     locked       BOOLEAN NOT NULL DEFAULT FALSE,
@@ -75,7 +74,7 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('f', 'FaceDev', 'Peak YouTuber, Face'),
   ('tu', 'Turtles', 'About Turtles'),
   ('lgb', 'LGBTQ', 'LGBTQ+ Topics'),
-  ('yh', 'Yuri', 'Yuri Media (NSFW)'),
+  ('yh', 'Yuri', 'Yuri Media (NSFW)');
 
 CREATE TABLE automod_rules (
     id         SERIAL PRIMARY KEY,
@@ -104,55 +103,6 @@ CREATE TABLE cache (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX cache_expires_idx ON cache (expires_at)
-    WHERE expires_at IS NOT NULL;
-
-INSERT INTO automod_rules (pattern, rule_type, is_regex) VALUES
-    ('spam',          'flag',  false),
-    ('buy cheap',     'block', false),
-    ('\b(word)\b',    'block', true);
-
-INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH');
-
--- ADD AUTHORS
-ALTER TABLE threads ADD COLUMN author VARCHAR(64) NOT NULL DEFAULT 'Anonymous';
-ALTER TABLE posts   ADD COLUMN author VARCHAR(64) NOT NULL DEFAULT 'Anonymous';
-
--- DROP NOT NULL in img_path
-ALTER TABLE threads ALTER COLUMN img_path DROP NOT NULL;
-ALTER TABLE posts   ALTER COLUMN img_path DROP NOT NULL;
-
--- ADD PINS AND LOCKS
-ALTER TABLE threads ADD COLUMN pinned BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE threads ADD COLUMN locked BOOLEAN NOT NULL DEFAULT FALSE;
-
--- ADD IPs
-ALTER TABLE threads ADD COLUMN ip VARCHAR(45);
-ALTER TABLE posts   ADD COLUMN ip VARCHAR(45);
-
--- ADD OPTIONS (for Sage-ing)
-ALTER TABLE posts ADD COLUMN options VARCHAR(64);
-
--- FOR SEARCHES
-ALTER TABLE threads ADD COLUMN search_vec tsvector
-	GENERATED ALWAYS AS (
-		to_tsvector('english',
-		    coalesce(subject, '') || ' ' || coalesce(body, ''))
-	) STORED;
-	
-ALTER TABLE posts ADD COLUMN search_vec tsvector
-	GENERATED ALWAYS AS (
-		to_tsvector('english', coalesce(body, ''))
-	) STORED;
-	
-CREATE INDEX threads_fts_idx ON threads USING GIN(search_vec);
-CREATE INDEX posts_fts_idx ON posts USING GIN(search_vec);
-
-CREATE EXTENSION pg_trgm;
-CREATE INDEX threads_trgm_idx ON threads USING GIN(body gin_trgm_ops);
-CREATE INDEX posts_trgm_idx ON posts USING GIN(body gin_trgm_ops);
-
--- FOR REACTIONS
 CREATE TABLE reactions (
 	id		   SERIAL PRIMARY KEY,
 	post_type  VARCHAR(10) NOT NULL CHECK(post_type IN ('thread', 'post')),
@@ -166,7 +116,6 @@ CREATE TABLE reactions (
 
 CREATE INDEX reactions_lookup_idx ON reactions (post_type, post_id);
 
--- FOR POLLS
 CREATE TABLE polls (
 	id		   SERIAL PRIMARY KEY,
 	thread_id  INT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
@@ -190,3 +139,43 @@ CREATE TABLE poll_votes (
 	voted_at  TIMESTAMPTZ DEFAULT NOW(),
 	UNIQUE (option_id, ip_hash)
 );
+
+CREATE INDEX cache_expires_idx ON cache (expires_at)
+    WHERE expires_at IS NOT NULL;
+
+INSERT INTO automod_rules (pattern, rule_type, is_regex) VALUES
+    ('spam',          'flag',  false),
+    ('buy cheap',     'block', false),
+    ('\b(word)\b',    'block', true);
+
+INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH');
+
+-- BGM
+ALTER TABLE threads ADD COLUMN bgm_post_id  INT REFERENCES posts(id) ON DELETE SET NULL;
+
+-- DROP NOT NULL in img_path
+ALTER TABLE threads ALTER COLUMN img_path DROP NOT NULL;
+ALTER TABLE posts   ALTER COLUMN img_path DROP NOT NULL;
+
+-- ADD PINS AND LOCKS
+ALTER TABLE threads ADD COLUMN pinned BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE threads ADD COLUMN locked BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- FOR SEARCHES
+ALTER TABLE threads ADD COLUMN search_vec tsvector
+	GENERATED ALWAYS AS (
+		to_tsvector('english',
+		    coalesce(subject, '') || ' ' || coalesce(body, ''))
+	) STORED;
+	
+ALTER TABLE posts ADD COLUMN search_vec tsvector
+	GENERATED ALWAYS AS (
+		to_tsvector('english', coalesce(body, ''))
+	) STORED;
+	
+CREATE INDEX threads_fts_idx ON threads USING GIN(search_vec);
+CREATE INDEX posts_fts_idx ON posts USING GIN(search_vec);
+
+CREATE EXTENSION pg_trgm;
+CREATE INDEX threads_trgm_idx ON threads USING GIN(body gin_trgm_ops);
+CREATE INDEX posts_trgm_idx ON posts USING GIN(body gin_trgm_ops);

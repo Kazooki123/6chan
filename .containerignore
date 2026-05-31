@@ -1,0 +1,12 @@
+dump/
+archive/
+wiki/
+sql/
+.venv/
+cache/
+
+*.sh
+.env
+
+*.md
+!README.md
