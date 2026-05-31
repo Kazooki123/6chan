@@ -30,7 +30,7 @@ Run the command below to create a containerised database with the schema already
 podman compose up -d
 ```
 
-### WITHOUT DOCKER
+### WITHOUT PODMAN
 
 Run the commands below to create the database and apply the schema:
 
