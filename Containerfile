@@ -4,8 +4,10 @@ RUN apk add --no-cache postgresql17-contrib
 
 FROM php:8.5-apache
 
-RUN apt-get update && apt-get install -y libpq-dev \
+RUN apt-get update && apt-get install -y libpq-dev libmagickwand-dev \
     && docker-php-ext-install pdo pdo_pgsql pgsql \
+    && pecl install imagick \
+    && docker-php-ext-enable imagick \
     && rm -rf /var/lib/apt/lists/*
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
