@@ -74,4 +74,4 @@ You're always welcome to contribute to 6chan and make it a better place !! â­ğŸ
 
 ## License
 
-Under the **MIT** License.
+Under the **AGPL** License.
