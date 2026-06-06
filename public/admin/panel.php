@@ -101,7 +101,7 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
   <a href="../index.php">Home</a>
   <span style="margin-left:auto;font-size:12px;color:#ccc;">
     Logged in as <strong style="color:white;"><?= htmlspecialchars($_SESSION['admin_user']) ?></strong>
-    — <a href="logout.php" style="color:#ff4444;">[Logout]</a>
+    — <a href="logout.php" style="color:red;">[Logout]</a>
   </span>
 </div>
 
@@ -335,7 +335,7 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
               <td><?= htmlspecialchars($r['post_type']) ?></td>
               <td>
                   <?php if ($r['thread_id']): ?>
-                      <a href="../thread.php?id<?= $r['thread_id'] ?>#p<?= $r['post_id'] ?>">
+                      <a href="../thread.php?id=<?= $r['thread_id'] ?>#p<?= $r['post_id'] ?>">
                           #<?= $r['post_id'] ?>
                       </a>
                   <?php else: ?>

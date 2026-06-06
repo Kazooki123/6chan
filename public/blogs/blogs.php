@@ -279,7 +279,7 @@ $posts = $post ? [] : load_md_posts(__DIR__ . '/../../content/blogs');
 
 <footer>
     @6chan — <a href="../index.php">Home</a> —
-    <a href="news.php">News</a> —
+    <a href="../etc/news.php">News</a> —
     <a href="../contact.php">Contact</a>
 </footer>
 </body>

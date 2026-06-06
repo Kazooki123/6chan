@@ -17,6 +17,23 @@
   --postbg:   #1e1e1e;
   --replybg:  #1a1a1a;
   --num:      #ff6600;
+
+  --cbg:        #0d0d12;
+  --csurface:   #16161f;
+  --cborder:    #2a2a3a;
+  --accent:     #6c63ff;
+  --accent-hi:  #9b95ff;
+  --text:       #e8e8f0;
+  --muted:      #7a7a96;
+  --danger:     #ff5f72;
+
+  --green: #00ff41;
+  --green-dim: #00aa2a;
+  --green-glow: rgba(0,255,65,0.18);
+  --scanline: rgba(0,255,65,0.03);
+  --cursor: #00ff41;
+  
+  --radius: 10px;
 }
 
 @font-face {
@@ -59,11 +76,11 @@ a:hover      { text-decoration: underline; }
 .wrap { max-width: 900px; margin: 0 auto; padding: 12px; }
 
 /* ── board list (homepage) ── */
-.board-list { margin-top: 16px; }
+.board-list { margin-top: 16px; border: solid var(--pink); }
 .board-list h2 {
-  font-size: 13px;
+  font-size: 20px;
   color: var(--orange);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 5px solid var(--pink);
   padding-bottom: 4px;
   margin-bottom: 8px;
   text-transform: uppercase;
@@ -995,3 +1012,265 @@ body.has-gifbg .replies {
     background: rgba(18, 18, 18, calc(0.92 + (1 - var(--gifbg-opacity, 0.08)) * 0.05));
 }
 
+/* Checkout Page */
+.card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--scurface);
+  border: 1px solid var(--cborder);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,.5);
+}
+
+.card-header {
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 1px solid var(--cborder);
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.logo-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 10px var(--orange2);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: var(--text);
+}
+
+.card-body { padding: 1.75rem; }
+
+.embed-wrapper {
+  width: 100%;
+  border-radius: calc(var(--radius) - 4px);
+  overflow: hidden;
+  background: var(--cbg);
+  border: 1px solid var(--cborder);
+}
+
+.embed-wrapper iframe,
+.embed-wrapper > * {
+  width: 100% !important;
+  min-height: 560px;
+}
+
+.fallback {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .65rem 1.4rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: 'MapleMono', monospace;
+  font-size: .875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity .15s, transform .1s;
+}
+.btn:hover  { opacity: .88; }
+.btn:active { transform: scale(.97); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--cborder);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+.error-box {
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.error-label {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--danger);
+  margin-bottom: .4rem;
+}
+
+.error-msg {
+    font-family: 'MapleMono', monospace;
+  font-size: .825rem;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.card-footer {
+  padding: 1rem 1.75rem;
+  border-top: 1px solid var(--cborder);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.footer-note {
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+.back-link {
+  font-size: .8rem;
+  color: var(--accent-hi);
+  text-decoration: none;
+}
+.back-link:hover { text-decoration: underline; }
+
+.spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 28px; height: 28px;
+  border: 2px solid var(--cborder);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+#terminal {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 28px;
+  position: relative;
+}
+
+#boot-sequence {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+.boot-line {
+  opacity: 0;
+  animation: fadeIn 0.05s forwards;
+  line-height: 1.6;
+  text-shadow: 0 0 8px var(--green);
+}
+
+@keyframes fadeIn { to { opacity: 1; } }
+
+.dim { color: var(--green-dim); }
+.bright { color: #7fff7f; text-shadow: 0 0 12px #00ff41, 0 0 24px #00ff41; }
+.warn { color: #ffcc00; text-shadow: 0 0 8px #ffcc00; }
+.err  { color: #ff3333; text-shadow: 0 0 8px #ff3333; }
+.info { color: #00ccff; text-shadow: 0 0 8px #00ccff; }
+
+hr.divider {
+  border: none;
+  border-top: 1px solid var(--green-dim);
+  margin: 6px 0;
+  opacity: 0.35;
+}
+
+#output-area {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--green-dim) transparent;
+  padding-bottom: 8px;
+}
+
+#output-area::-webkit-scrollbar { width: 6px; }
+#output-area::-webkit-scrollbar-thumb { background: var(--green-dim); border-radius: 3px; }
+
+.output-line {
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-shadow: 0 0 6px var(--green-glow);
+}
+
+.output-line.cmd { color: #7fff7f; }
+
+#input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 6px;
+  border-top: 1px solid rgba(0,255,65,0.15);
+  padding-top: 8px;
+}
+
+#prompt-label {
+  color: var(--green);
+  white-space: nowrap;
+  text-shadow: 0 0 8px var(--green);
+  user-select: none;
+  font-size: 15px;
+}
+
+#cmd-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 15px;
+  caret-color: var(--cursor);
+  text-shadow: 0 0 8px var(--green);
+}
+
+@keyframes flicker {
+  0%,100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.92; }
+  94% { opacity: 1; }
+  96% { opacity: 0.97; }
+}
+#terminal { animation: flicker 8s infinite; }
+
+.ascii-art {
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green);
+  white-space: pre;
+}
+
+.progress-bar {
+  display: inline-block;
+  width: 0;
+  height: 12px;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  vertical-align: middle;
+  animation: grow 1.4s ease-out forwards;
+}
+@keyframes grow { to { width: 220px; } }

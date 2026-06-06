@@ -16,7 +16,7 @@ Read the **/rules**, don't be an idiot.
 > [!NOTE]
 > If you want to contribute to the automod system, you might want to have **Python** installed.
 
-- PostgreSQL **OR** Docker
+- PostgreSQL18 **OR** Podman
 - PHP (8.5+)
 - Composer
 
@@ -74,4 +74,4 @@ You're always welcome to contribute to 6chan and make it a better place !! ‚≠êü
 
 ## License
 
-Under the **MIT** License.
+Under the **AGPL** License.

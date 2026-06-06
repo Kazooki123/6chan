@@ -7,7 +7,11 @@ dump
 vendor
 **/uploads/*
 .venv
+.crush
 /cache/
+/fail2ban/
+/logs/
+**/__pycache__/
 
 # ignore ongoing/developing websites
 /wiki/

@@ -8,12 +8,13 @@ function get_db(): PDO {
     static $pdo = null;
     if ($pdo) return $pdo;
 
+    $db_host = $_ENV['DB_HOST'] ?? 'localhost';
     $db_name = $_ENV['DB_NAME'];
     $db_user = $_ENV['DB_USER'];
     $db_pass = $_ENV['DB_PASS'];
     
     $pdo = new PDO(
-        "pgsql:host=postgres;dbname=$db_name",
+        "pgsql:host=$db_host;dbname=$db_name",
         $db_user,
         $db_pass,
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]

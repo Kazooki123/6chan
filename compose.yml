@@ -32,6 +32,23 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
+  # Note to self: just experimental, prob removed/comment out or kept later on ^_^
+  fail2ban:
+    image: lscr.io/linuxserver/fail2ban:latest
+    container_name: fail2ban
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    network_mode: host
+
+    volumes:
+      - ./fail2ban/config:/config
+      - /var/log:/var/log:ro
+      - ./logs/apache:/remotelogs/apache:ro
+
+    restart: unless-stopped
+
   minio:
     image: quay.io/minio/minio:latest
     container_name: buckets

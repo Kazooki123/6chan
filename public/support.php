@@ -1,8 +1,3 @@
-<?php 
-require_once '../config/db.php';
-$db = get_db();
-$boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,7 +40,6 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 
         <h2>How to donate</h2>
         <p>
-            <!-- Replace these with your actual links -->
             <a href="https://ko-fi.com/" target="_blank">[☕ Ko-fi]</a>
             &nbsp;
             <a href="https://buymeacoffee.com/" target="_blank">[Buy Me a Coffee]</a>
@@ -53,6 +47,8 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
             <a href="https://paypal.me/" target="_blank">[PayPal]</a>
             &nbsp;
             <a href="https://" target="_blank">[GCash]</a>
+            &nbsp;
+            <a href="services/checkout.php?product_id=be8df67b-3722-4248-bfb0-952f03305bb0">[Checkout]</a>
         </p>
 
         <h2>Crypto</h2>

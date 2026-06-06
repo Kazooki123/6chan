@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6chan's Stack</title>
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+  <link rel="stylesheet" href="../style.css">
+  <script src="../settingsloader.js"></script>
+</head>
+<style>
+.stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.stack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--card-accent, #7c74ff);
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.7;
+}
+.stack-name {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 3px;
+    color: var(--orange);
+    font-family: 'MapleMono', monospace;
+    letter-spacing: 0.3px;
+}
+.stack-descrip {
+    color: #bbb;
+    font-size: 12px;
+    line-height: 1.65;
+    margin-bottom: 6px;
+}
+</style>
+<body>
+  <div id="topbar">
+    <span class="site-name">@6chan</span>
+    <a href="../index.php">[Home]</a>
+    <a href="../contact.php">[Contact]</a>
+    <a href="../support.php">[Support!]</a>
+    <a href="../blogs/blogs.php">[Blogs]</a>
+  </div>
+
+  <div class="wrap">
+    <div class="page-header">
+      <h1>Stacks of 6chan</h1>
+      <p>Core stacks that 6chan uses in development and production.</p>
+      <p>(Note that the stack list will change.)</p>
+    </div>
+
+    <div class="stack-grid">
+        <div class="stack-card">
+            <div class="stack-name"><a href="">PHP</a></div>
+            <div class="stack-descrip">Literally where this imageboard sits at.</div>
+        </div>
+        <div class="stack-card">
+            <div class="stack-name"><a href="">Postgres</a></div>
+            <div class="stack-descrip">The main database of the imageboard. Handles images, videos, audios and their metadata, threads &amp; posts, boards, automoderation rules, etc.</div>
+        </div>
+        <div class="stack-card">
+            <div class="stack-name"><a href="">MinIO</a></div>
+            <div class="stack-descrip">Usually for storage buckets, later on this might change depending on what storage bucket service is chosen.</div>
+        </div>
+        <div class="stack-card">
+            <div class="stack-name"><a href="">Podman</a></div>
+            <div class="stack-descrip">For containerization, a better alternative of Docker as well.</div>
+        </div>
+    </div>
+  </div>
+</body>
+</html>

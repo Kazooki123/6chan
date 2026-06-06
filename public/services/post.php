@@ -117,7 +117,7 @@ function handle_upload(bool $nsfw = false): ?array {
     }
 
     $ext  = $allowed[$mime]['ext'];
-    $name = Uuid::uuid4('img_', true)->toString() . '.' . $ext;
+    $name = 'img_' . Uuid::uuid4()->toString() . '.' . $ext;
 
     $s3 = new S3Client([
         'version'  => 'latest',
@@ -161,7 +161,7 @@ function handle_upload(bool $nsfw = false): ?array {
         require_once '../../config/audio.php';
         $audio_meta = extract_audio_meta($f['tmp_name'], $name);
 
-        $meta_json = $json_encode(
+        $meta_json = json_encode(
             $audio_meta,
             JSON_UNESCAPED_UNICODE
         );
@@ -213,7 +213,7 @@ function handle_upload(bool $nsfw = false): ?array {
             $img = new Imagick($f['tmp_name']);
             $img->blurImage(0, 18);
             $img->thumbnailImage(300, 300, true);
-            $img->writeImage($preview_dest);
+            $img->writeImage($tmp_preview);
             $img->destroy();
 
             $preview_name = 'blur_' . $name;
@@ -278,7 +278,7 @@ if ($action === 'new_thread') {
     if (!captchav2_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
         die("
-            <link rel='stylesheet' href='style.css'>
+            <link rel='stylesheet' href='../style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
                 <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -303,7 +303,7 @@ if ($action === 'new_thread') {
     if ($check['action'] === 'block') {
         http_response_code(403);
         die("
-            <link rel='stylesheet' href='style.css'>
+            <link rel='stylesheet' href='../style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
                 <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -388,7 +388,7 @@ if ($action === 'new_thread') {
     if (!captchav2_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
         die("
-            <link rel='stylesheet' href='style.css'>
+            <link rel='stylesheet' href='../style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
                 <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -421,7 +421,7 @@ if ($action === 'new_thread') {
     if ($check['action'] === 'block') {
         http_response_code(403);
         die("
-            <link rel='stylesheet' href='style.css'>
+            <link rel='stylesheet' href='../style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
                 <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -443,7 +443,7 @@ if ($action === 'new_thread') {
     if ($check['action'] === 'block') {
         http_response_code(403);
         die("
-            <link rel='stylesheet' href='style.css'>
+            <link rel='stylesheet' href='../style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
                 <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -484,15 +484,12 @@ if ($action === 'new_thread') {
 
     $new_post_id = (int)$db->query("SELECT lastval()")->fetchColumn();
 
-    
-    
     notify_automod($new_post_id, 'post', $body);
     cache_delete("board:{$board['id']}:p1", $db);
     cache_delete("thread:{$tid}", $db);
 
     header("Location: ../thread.php?id=$tid");
     exit;
-
 } else {
     die('Unknown action: ' . htmlspecialchars($action));
 }

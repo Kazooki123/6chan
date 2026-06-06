@@ -64,7 +64,7 @@ if (!empty($thread['bgm_post_id'])) {
         $bgm_path   = $bgm_post['img_path'];
         $bgm_meta_f = media_url($bgm_path . '.json');
         $bgm_meta   = file_exists($bgm_meta_f)
-                        ? json_decode(file_get_contents($bgm_meta_f), true)
+                        ? json_decode(media_url($bgm_meta_f), true)
                         : [];
         $bgm = [
             'path'   => $bgm_path,

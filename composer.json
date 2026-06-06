@@ -10,7 +10,9 @@
         "ramsey/uuid": "^4.9",
         "intervention/image": "^4.1",
         "aws/aws-sdk-php": "^3.382",
-        "surrealdb/surrealdb.php": "^1.0"
+        "stripe/stripe-php": "^20.2",
+        "phpmailer/phpmailer": "^7.1",
+        "polar-sh/sdk": "^0.10.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "*"

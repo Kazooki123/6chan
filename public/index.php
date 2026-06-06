@@ -12,6 +12,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css"/>
     <script src="settingsloader.js"></script>
+    <script src="shortcuts.js"></script>
 </head>
 <body>
     <div id="topbar">
@@ -39,6 +40,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                 <a href="etc/copyright.html">[copyright]</a>
                 <a href="etc/privacy.html">[privacy]</a>
                 <a href="etc/fos.html">[freedom]</a>
+                <a href="">[wiki]</a>
                 <!-- <a href="etc/tsnclf.html">[logics]</a> -->
             </div>
         </div>
@@ -54,7 +56,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                 <span class ="desc">- <?= htmlspecialchars($b['descript']) ?></span>
             </div>
             <?php endforeach; ?>
-        <div>
+        </div>
 
         <div class="stats-block" id="stats-block">
             <div class="stats-grid">

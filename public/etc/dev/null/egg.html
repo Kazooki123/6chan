@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6chan :: /dev/null</title>
+  <link rel="icon" type="image/x-icon" href="../../../assets/favicon.ico">
+  <link rel="stylesheet" href="../../../style.css">
+  <style>
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        var(--scanline) 2px,
+        var(--scanline) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+      z-index: 99;
+    }
+  </style>
+</head>
+<body>
+<div id="terminal">
+
+  <div id="boot-sequence"></div>
+  <hr class="divider" id="boot-hr" style="opacity:0">
+
+  <div id="output-area"></div>
+
+  <div id="input-row" style="display:none">
+    <span id="prompt-label">root@6chan:~$</span>
+    <input id="cmd-input" type="text" autocomplete="off" spellcheck="false" autofocus>
+  </div>
+</div>
+
+<script>
+const bootLines = [
+  { text: '6CHAN BIOS v1.3.67  (C) 1980 Free Software Federation', cls: 'dim', delay: 0 },
+  { text: 'CPU: AMD Ryzen 3-A∞  @  [REDACTED] MHz', cls: 'dim', delay: 120 },
+  { text: 'RAM Check: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  640k — enough for anyone', cls: 'dim', delay: 240 },
+  { text: '', delay: 350 },
+  { text: 'Loading kernel modules ...', cls: '', delay: 420 },
+  { text: '  [  OK  ] anon_identity          ..............  LOADED', cls: 'dim', delay: 580 },
+  { text: '  [  OK  ] greentext_parser       ..............  LOADED', cls: 'dim', delay: 700 },
+  { text: '  [  OK  ] sage_protection        ..............  LOADED', cls: 'dim', delay: 820 },
+  { text: '  [ WARN ] goyim watchers         ..............  NOT FOUND', cls: 'warn', delay: 810},
+  { text: '  [ WARN ] jannies                ..............  NOT FOUND', cls: 'warn', delay: 960 },
+  { text: '  [  OK  ] based_detector         ..............  LOADED', cls: 'dim', delay: 1100 },
+  { text: '', delay: 1200 },
+  { text: '██████████████████████  SYSTEM READY', cls: 'bright', delay: 1320 },
+  { text: '', delay: 1500 },
+];
+
+const bootEl = document.getElementById('boot-sequence');
+const bootHr = document.getElementById('boot-hr');
+const inputRow = document.getElementById('input-row');
+const outputArea = document.getElementById('output-area');
+const cmdInput = document.getElementById('cmd-input');
+
+function renderBoot() {
+  bootLines.forEach(({ text, cls, delay }) => {
+    setTimeout(() => {
+      const line = document.createElement('div');
+      line.className = `boot-line${cls ? ' ' + cls : ''}`;
+      line.style.animationDelay = '0s';
+      line.textContent = text;
+      bootEl.appendChild(line);
+    }, delay);
+  });
+  const lastDelay = bootLines[bootLines.length - 1].delay;
+  setTimeout(() => {
+    bootHr.style.opacity = '0.35';
+    inputRow.style.display = 'flex';
+    printWelcome();
+    cmdInput.focus();
+  }, lastDelay + 200);
+}
+
+function print(text = '', cls = '') {
+  const line = document.createElement('div');
+  line.className = 'output-line' + (cls ? ' ' + cls : '');
+  line.textContent = text;
+  outputArea.appendChild(line);
+  outputArea.scrollTop = outputArea.scrollHeight;
+}
+
+function printHTML(html, cls = '') {
+  const line = document.createElement('div');
+  line.className = 'output-line' + (cls ? ' ' + cls : '');
+  line.innerHTML = html;
+  outputArea.appendChild(line);
+  outputArea.scrollTop = outputArea.scrollHeight;
+}
+
+function printWelcome() {
+  printHTML(`<span class="ascii-art">
+  ██████╗  ██████╗██╗  ██╗ █████╗ ███╗   ██╗
+  ██╔════╝ ██╔════╝██║  ██║██╔══██╗████╗  ██║
+  ███████╗ ██║     ███████║███████║██╔██╗ ██║
+  ██╔════╝ ██║     ██╔══██║██╔══██║██║╚██╗██║
+  ╚██████╗ ╚██████╗██║  ██║██║  ██║██║ ╚████║
+   ╚═════╝  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
+</span>`);
+  print('  /dev/null — the place where posts go to die', 'dim');
+  print();
+  print('  You found a secret. Congrats, you are incredibly online.', 'bright');
+  print();
+  print('  Type  help  to see available commands.', 'dim');
+  print();
+}
+
+const COMMANDS = {
+
+  help() {
+    print();
+    print('  AVAILABLE COMMANDS', 'bright');
+    print('  ──────────────────────────────────────────────────');
+    [
+      ['help',       'show this message'],
+      ['about',      'about 6chan'],
+      ['boards',     'list all boards'],
+      ['fortune',    'receive wisdom from the void'],
+      ['greentext',  'how to greentext properly'],
+      ['rules',      'the only rules that matter'],
+      ['lore',       'chan culture crash course'],
+      ['ascii',      'generate some ASCII art'],
+      ['whoami',     'you already know'],
+      ['uptime',     'how long this site has been running'],
+      ['exit',       'leave this place'],
+      ['clear',      'clear the terminal'],
+    ].forEach(([cmd, desc]) => {
+      print(`  ${cmd.padEnd(22)} ${desc}`, 'dim');
+    });
+    print();
+  },
+
+  about() {
+    print();
+    print('  6chan — an imageboard', 'bright');
+    print();
+    print('  Built from scratch in PHP. No JavaScript frameworks were');
+    print('  harmed in the making of this site (mostly).');
+    print();
+    print('  Stack: PHP 8.5 · PostgreSQL 18 · Apache · MinIO · Mailpit · Fail2ban');
+    print('  Containerized with Podman because Docker is fed-posting.');
+    print();
+    print('  Author: Anonymous (but you know who)', 'dim');
+    print('  Version: ??? (rolling release, like Arch but way worse)', 'dim');
+    print();
+  },
+
+  boards() {
+    print();
+    print('  ACTIVE BOARDS', 'bright');
+    print('  ────────────────────────────────');
+    [
+      ['/r/',   'Random',          '???'],
+      ['/g/',   'Technology',      'no botnet allowed'],
+      ['/a/',   'Anime & Manga',   'hopefully theres no hentai..'],
+      ['/v/',   'Video Games',     'still no good games'],
+      ['/pol/', 'Politically Incorrect', '(jannies are asleep)'],
+      ['/meta/','Site Feedback',   'be civil or be banned'],
+    ].forEach(([board, name, desc]) => {
+      print(`  ${board.padEnd(8)} ${name.padEnd(24)} — ${desc}`, 'dim');
+    });
+    print();
+    print('  Suggestion: use the catalog. It is right there.', 'dim');
+    print();
+  },
+
+  fortune() {
+    const fortunes = [
+      'Your post will get exactly 0 replies.',
+      'A janny is watching you right now.',
+      'You will find dubs. But not today.',
+      '>tfw no gf — this will not change.',
+      'The answer is lurk more.',
+      'Touch grass. Skill issue.',
+      'Your IP has been reported to the based department.',
+      'DIGITS CONFIRM: you are ngmi.',
+      'All your sage are belong to us.',
+      'This fortune is intentionally left blank.',
+      'An anon somewhere is replying to bait right now.',
+      'You were never going to finish that project. But you will anyway.',
+    ];
+    const f = fortunes[Math.floor(Math.random() * fortunes.length)];
+    print();
+    print('  🎴 FORTUNE OF THE VOID:', 'bright');
+    print(`  "${f}"`);
+    print();
+  },
+
+  greentext() {
+    print();
+    print('  GREENTEXT: AN AUTHORIZED GUIDE', 'bright');
+    print();
+    printHTML(`  <span class="dim">&gt; be me</span>`);
+    printHTML(`  <span class="dim">&gt; find secret terminal on 6chan</span>`);
+    printHTML(`  <span class="dim">&gt; type "greentext" like a nerd</span>`);
+    printHTML(`  <span class="dim">&gt; learn nothing new</span>`);
+    printHTML(`  <span class="dim">&gt; mfw</span>`);
+    print();
+    print('  Rules:');
+    print('  1. Start line with >', 'dim');
+    print('  2. Past tense. Always past tense.', 'dim');
+    print('  3. "mfw" is not optional, it is mandatory.', 'dim');
+    print('  4. End with emotional devastation or unexpected victory.', 'dim');
+    print();
+  },
+
+  rules() {
+    print();
+    print('  THE RULES', 'bright');
+    print();
+    print('  1. You do not talk about /r/.', 'dim');
+    print('  2. You do not talk about /r/.', 'dim');
+    print('  3. No raids. No dox. No csam. No exceptions.', 'err');
+    print('  4. Lurk before you post. Lurk more after that.', 'dim');
+    print('  5. There are no girls on the internet.', 'dim');
+    print('  6. LURK MOAR. It\'s never enough.', 'dim');
+    print('  7. Tits or GTFO.', 'dim');
+    print('  8. An hero is not funny. Take care of yourself.', 'warn');
+    print();
+    print('  Admin > all. No appeals.', 'dim');
+    print();
+  },
+
+  lore() {
+    print();
+    print('  CHAN LORE: SPEED RUN', 'bright');
+    print();
+    const entries = [
+      ['2chan (2001)',   '2channel created by Hiroyuki. Japan goes feral.'],
+      ['4chan (2003)',   'moot creates 4chan. The rest is history/a disaster.'],
+      ['Anonymous',     'not a person. not a group. a shared identity.'],
+      ['Sage',          'posting without bumping. ultimate power move.'],
+      ['Dubs',          'getting repeating post IDs. quasi-religious experience.'],
+      ['Janitor',       '"janny" — unpaid mod. highest calling. lowest status.'],
+      ['Greentext',     '> story format. often sad. sometimes triumphant.'],
+      ['OC',            'original content. rare. precious. usually stolen immediately.'],
+      ['Lurk moar',     'the eternal advice. never wrong.'],
+    ];
+    entries.forEach(([term, def]) => {
+      print(`  ${term.padEnd(18)} ${def}`, 'dim');
+    });
+    print();
+  },
+
+  ascii() {
+    const arts = [
+`  （ ^_^）o自自o（^_^ ）
+  ＜（　　　＞　　　＜　　　）＞
+    cheers anon!`,
+`      (\_/)
+      (•_•)
+      />💾 rare artifact`,
+`   ___
+  /   \\
+ | ¯\\_¯ |   this is fine
+  \\___/`,
+`   ∩～～∩
+  (= ˘ᵕ˘=)  you found the cat
+   \\____/`,
+    ];
+    const a = arts[Math.floor(Math.random() * arts.length)];
+    print();
+    a.split('\n').forEach(l => print(l));
+    print();
+  },
+
+  whoami() {
+    print();
+    print('  uid=0(anonymous) gid=0(nobody) groups=0(lurkers),1337(oldfags)', 'dim');
+    print('  You are Anonymous. You are Legion. You do not forgive slow servers.', 'bright');
+    print();
+  },
+
+  uptime() {
+    const now = new Date();
+    const start = new Date('2026-01-01');
+    const diff = now - start;
+    const days = Math.floor(diff / 86400000);
+    const hrs  = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    print();
+    print(`  System uptime: ${days}d ${hrs}h ${mins}m (probably)`, 'bright');
+    print('  Downtime: more than we\'d like. less than reddit.', 'dim');
+    print();
+  },
+
+  'sudo rm -rf /'() {
+    print();
+    print('  Permission denied.', 'err');
+    print('  Nice try, skid', 'dim');
+    print('  Your attempt has been logged..', 'dim');
+    print();
+  },
+
+  exit() {
+    print();
+    print('  There is no escape.', 'warn');
+    print('  (closing the tab also works)', 'dim');
+    setTimeout(() => { window.location.href = '/'; }, 2200);
+    print();
+    print('  Redirecting to homepage...', 'dim');
+    print();
+  },
+
+  clear() {
+    outputArea.innerHTML = '';
+  },
+
+};
+
+const history = [];
+let histIdx = -1;
+
+cmdInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const raw = cmdInput.value.trim();
+    if (!raw) return;
+    history.unshift(raw);
+    histIdx = -1;
+
+    print(`root@6chan:~$ ${raw}`, 'cmd');
+
+    const lower = raw.toLowerCase();
+    if (COMMANDS[lower]) {
+      COMMANDS[lower]();
+    } else {
+      print();
+      print(`  bash: ${raw}: command not found`, 'err');
+      print('  Type  help  for available commands.', 'dim');
+      print();
+    }
+
+    cmdInput.value = '';
+    outputArea.scrollTop = outputArea.scrollHeight;
+
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (histIdx < history.length - 1) {
+      histIdx++;
+      cmdInput.value = history[histIdx];
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (histIdx > 0) {
+      histIdx--;
+      cmdInput.value = history[histIdx];
+    } else {
+      histIdx = -1;
+      cmdInput.value = '';
+    }
+  }
+});
+
+renderBoot();
+</script>
+</body>
+</html>

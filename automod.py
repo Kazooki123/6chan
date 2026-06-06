@@ -8,7 +8,7 @@ DB = psycopg2.connect(
     dbname=os.getenv("DB_NAME"),
     user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASS"),
-    host="localhost"
+    host=os.getenv("DB_HOST")
 )
 
 app = FastAPI()

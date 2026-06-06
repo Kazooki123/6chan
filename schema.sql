@@ -50,11 +50,11 @@ CREATE TABLE posts (
 );
 
 INSERT INTO boards (slug, name, descript) VALUES
-  ('qa', 'Q/A', 'Question & Answers'),
+  ('qa', 'Q&A', 'Question & Answers'),
   ('r', 'Random', 'Anything goes.'),
   ('t', 'Tech', 'Technology Board'),
   ('a', 'Anime', 'Japs & Manga'),
-  ('g', 'Games', 'Video Games (General)'),
+  ('v', 'Games', 'Video Games (General)'),
   ('m', 'Music', 'Music topics and discussions'),
   ('sp', 'Sports', 'Sports Topic'),
   ('pg', 'Photography', 'Photos and Views'),
@@ -74,7 +74,8 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('f', 'FaceDev', 'Peak YouTuber, Face'),
   ('tu', 'Turtles', 'About Turtles'),
   ('lgb', 'LGBTQ', 'LGBTQ+ Topics'),
-  ('yh', 'Yuri', 'Yuri Media (NSFW)');
+  ('yh', 'Yuri', 'Yuri Media (NSFW)'),
+  ('x', 'Paranormal', 'Paranormal Activities');
 
 CREATE TABLE automod_rules (
     id         SERIAL PRIMARY KEY,
@@ -146,9 +147,9 @@ CREATE INDEX cache_expires_idx ON cache (expires_at)
 INSERT INTO automod_rules (pattern, rule_type, is_regex) VALUES
     ('spam',          'flag',  false),
     ('buy cheap',     'block', false),
-    ('\b(word)\b',    'block', true);
-
-INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH');
+    ('\b(
+        word|
+        )\b',         'block', true);
 
 -- BGM
 ALTER TABLE threads ADD COLUMN bgm_post_id  INT REFERENCES posts(id) ON DELETE SET NULL;

@@ -248,7 +248,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
     }
 
     if ($is_audio) {
-        $meta_path = media_url($path) . '.json';
+        $meta_path = media_url('audio/' . $path) . '.json';
         $meta      = file_exists($meta_path)
                        ? json_decode(file_get_contents($meta_path), true)
                        : [];
@@ -496,6 +496,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css">
     <script src="settingsloader.js"></script>
+    <script src="shortcuts.js"></script>
 </head>
 <body class="page-board">
     <div id="topbar">
