@@ -56,6 +56,5 @@ echo `<?xml version="1.0" encoding="UTF-8">`;
         ]]></description>
     </item>
     <?php endforeach; ?>
-
 </channel>
 </rss>

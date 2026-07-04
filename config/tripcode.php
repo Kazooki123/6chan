@@ -11,7 +11,7 @@
  *
  * Binary location:
  *   Place tripcodes.exe (Windows) or tripcodes (Linux) in:
- *   /projroot/bin/tripcodes[.exe]
+ *   /bin/tripcodes[.exe]
  *
  * To compile on Windows:
  *   go build -o bin/tripcodes.exe tripcodes.go
@@ -95,7 +95,7 @@ function generate_tripcode(string $password): ?string {
         return null;
     }
 
-    fclose($pipes[0]); // close stdin
+    fclose($pipes[0]);
 
     $output = stream_get_contents($pipes[1]);
     $errors = stream_get_contents($pipes[2]);

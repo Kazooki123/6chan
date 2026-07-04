@@ -341,6 +341,7 @@ if ($action === 'new_thread') {
     ]);
 
     $tid = $s->fetchColumn();
+    $new_post_id = (int)$db->query("SELECT lastval()")->fetchColumn();
     notify_automod((int)$tid, 'thread', $body);
 
     if (!empty($_POST['add_poll']) && !empty($_POST['poll_question'])) {

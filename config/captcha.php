@@ -58,5 +58,3 @@ function captcha_verify(string $token, string $answer): bool {
 
     return strtolower(trim($answer)) === $data['answer'];
 }
-
-?>

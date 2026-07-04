@@ -6,6 +6,16 @@ Welcome to **6chan**! Unlike imageboards like **Soyjack.party**, **4chan**, and 
 
 Read the **/rules**, don't be an idiot.
 
+## Features
+
+- Music display with lyrics embed support
+- Reactions
+- Polls
+- Custom gif background (in settings)
+- Custom **tripcodes**
+- Markdown support (LaTeX support later)
+- Customizable colors and fonts (in settings)
+
 > [!IMPORTANT]
 > This project is still in it's early development stage, updates and patches are ongoing, thank you!
 

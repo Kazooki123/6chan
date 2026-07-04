@@ -33,5 +33,3 @@ function cache_delete(string $key, PDO $db): void {
 function cache_flush_expired(PDO $db): void {
     $db->exec("DELETE FROM cache WHERE expires_at < NOW()");
 }
-
-?>

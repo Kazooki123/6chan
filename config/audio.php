@@ -119,7 +119,7 @@ function extract_audio_meta(string $filepath, string $filename): array {
                                 );
                             } elseif ($bom === "\xFE\xFF") {
                                 $decoded = mb_convert_encoding(
-                                    subtr($lyrics_utf16, 2), 'UTF-8', 'UTF-16BE'
+                                    substr($lyrics_utf16, 2), 'UTF-8', 'UTF-16BE'
                                 );
                             } else {
                                 $decoded = mb_convert_encoding(

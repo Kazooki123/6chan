@@ -39,11 +39,11 @@ function get_purifier(): HTMLPurifier {
     $config->set('Cache.SerializerPath', $cache);
 
     $config->set('HTML.Allowed',
-        'p,br,strong,b,em,i,del,s,code,pre,blockquote,' .
+        value: 'p,br,strong,b,em,i,del,s,code,pre,blockquote,' .
         'ul,ol,li,a[href|title],img[src|alt|title|width|height],' .
         'h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,hr,span'
     );
-    
+
     $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true]);
     $config->set('URI.DisableExternalResources', true);
 
@@ -60,5 +60,3 @@ function render_markdown(string $text): string {
 
     return $clean;
 }
-
-?>

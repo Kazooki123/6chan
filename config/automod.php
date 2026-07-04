@@ -31,5 +31,3 @@ function automod_check(string $text, PDO $db): array {
     }
     return $result;
 }
-
-?>
