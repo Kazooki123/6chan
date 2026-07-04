@@ -35,11 +35,11 @@ if ($productId) {
                     : true));
 
         $httpClient = new \GuzzleHttp\Client([
-            'verify' => $caBundle;
+            'verify' => $caBundle
         ]);
         
         $sdk = Polar::builder()
-            -setClient($httpClient)
+            ->setClient($httpClient)
             ->setServer('sandbox')
             ->setSecurity($token)
             ->setServerURL('https://sandbox-api.polar.sh')
@@ -60,7 +60,7 @@ if ($productId) {
         } else {
             $error = 'Polar returned an empty checkout response.';
         }
-    } catch (Errors\HTTPValidationError\Throwable $e) {
+    } catch (Throwable $e) {
         $error = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
     }
 } else {
