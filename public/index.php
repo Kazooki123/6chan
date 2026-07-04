@@ -124,7 +124,6 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                     if (!el) continue;
                     const val = fmt(data[key] ?? 0);
                     if (el.textContent !== val && el.textContent !== '—') {
-                        // Bump animation when value changes
                         el.classList.add('bump');
                         setTimeout(() => el.classList.remove('bump'), 350);
                     }

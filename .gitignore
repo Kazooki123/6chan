@@ -14,5 +14,4 @@ vendor
 **/__pycache__/
 
 # ignore ongoing/developing websites
-/wiki/
 /archive/
