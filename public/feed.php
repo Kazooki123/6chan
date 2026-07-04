@@ -36,7 +36,7 @@ echo `<?xml version="1.0" encoding="UTF-8">`;
 <channel>
     <title>@6chan - Recent Threads</title>
     <link><?= $base ?></link>
-    <description>The LATEST threads from 6chan</description>
+    <description>The latest threads from 6chan</description>
     <language>en-us</language>
     <lastBuildDate><?= date(DATE_RSS) ?></lastBuildDate>
 

@@ -12,7 +12,8 @@
         "aws/aws-sdk-php": "^3.382",
         "stripe/stripe-php": "^20.2",
         "phpmailer/phpmailer": "^7.1",
-        "polar-sh/sdk": "^0.10.0"
+        "polar-sh/sdk": "^0.10.0",
+        "minishlink/web-push": "^10.1"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "*"

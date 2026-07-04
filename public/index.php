@@ -41,7 +41,6 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                 <a href="etc/privacy.html">[privacy]</a>
                 <a href="etc/fos.html">[freedom]</a>
                 <a href="">[wiki]</a>
-                <!-- <a href="etc/tsnclf.html">[logics]</a> -->
             </div>
         </div>
         
