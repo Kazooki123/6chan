@@ -25,6 +25,7 @@ CREATE TABLE threads (
     ip           VARCHAR(45),
     board_id     INT NOT NULL REFERENCES boards(id),
     author       VARCHAR(64) NOT NULL DEFAULT 'Anonymous',
+    tripcode     VARCHAR(12) DEFAULT NULL,
     subject      VARCHAR(200),
     body         TEXT NOT NULL,
     img_path     VARCHAR(300),
@@ -41,6 +42,7 @@ CREATE TABLE posts (
     ip           VARCHAR(45),
     thread_id    INT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
     author       VARCHAR(64) NOT NULL DEFAULT 'Anonymous',
+    tripcode     VARCHAR(12) DEFAULT NULL,
     body         TEXT NOT NULL,
     img_path     VARCHAR(300),
     automod_flag VARCHAR(50),
@@ -176,6 +178,9 @@ ALTER TABLE posts ADD COLUMN search_vec tsvector
 	
 CREATE INDEX threads_fts_idx ON threads USING GIN(search_vec);
 CREATE INDEX posts_fts_idx ON posts USING GIN(search_vec);
+
+CREATE INDEX idx_threads_tripcode ON threads (tripcode) WHERE tripcode IS NOT NULL;
+CREATE INDEX idx_posts_tripcode   ON posts (tripcode) WHERE tripcode IS NOT NULL;
 
 CREATE EXTENSION pg_trgm;
 CREATE INDEX threads_trgm_idx ON threads USING GIN(body gin_trgm_ops);

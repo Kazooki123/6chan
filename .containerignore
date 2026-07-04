@@ -2,7 +2,7 @@
 .gitignore
 
 *.md
-README.md
+!README.md
 
 *.sh
 # .env
@@ -25,4 +25,6 @@ archive/
 wiki/
 sql/
 .venv/
+.crush/
 cache/
+__pycache__/

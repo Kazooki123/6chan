@@ -651,7 +651,12 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                     <?php if ($t['subject']): ?>
                         <span class="subject"><?= htmlspecialchars($t['subject']) ?></span>
                     <?php endif; ?>
-                    <span class="author"><?= htmlspecialchars($t['author'] ?? 'Anon') ?></span>
+                    <span class="author">
+                        <?= htmlspecialchars($t['author'] ?? 'Anon') ?>
+                        <?php if (!empty($t['tripcode'])): ?>
+                            <span class="tripcode"><?= htmlspecialchars($t['tripcode']) ?></span>
+                        <?php endif; ?>
+                    </span>
                     <span class="postnum">No.<?= $t['id'] ?></span>
                     <span class="postdate"><?= date('Y-m-d H:i', strtotime($t['created_at'])) ?></span>
                     <a href="thread.php?id=<?= $t['id'] ?>" class="reply-link">[Reply]</a>
@@ -686,7 +691,12 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                        <?php if (!empty($p['options']) && $p['options'] === 'sage'): ?>
                          <span style="color:var(--grey);font-size:11px;margin-left:4px;">[sage]</span>
                        <?php endif; ?>
-                       <span class="author"><?= htmlspecialchars($p['author'] ?? 'Anon') ?></span>
+                       <span class="author">
+                           <?= htmlspecialchars($p['author'] ?? 'Anon') ?>
+                           <?php if (!empty($p['tripcode'])): ?>
+                               <span class="tripcode"><?= htmlspecialchars($p['tripcode']) ?></span>
+                           <?php endif; ?>
+                       </span>
                        <span class="postnum">No.<?= $p['id'] ?></span>
                        <span class="postdate"
                              data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">

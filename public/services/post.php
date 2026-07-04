@@ -1,14 +1,16 @@
 <?php
 session_start();
-$config_path = __DIR__ . '/../../config/db.php';
-if (!file_exists($config_path)) {
-    die("FATAL: config/db.php not found at: $config_path <br>__DIR__ is: " . __DIR__);
-}
+/** $config_path = __DIR__ . '/../../config/db.php';
+ *  if (!file_exists($config_path)) {
+ *     die("FATAL: config/db.php not found at: $config_path <br>__DIR__ is: " . __DIR__);
+ *  }
+ */
 
 require_once '../../config/db.php';
 require_once '../../config/captchav2.php';
 require_once '../../config/automod.php';
 require_once '../../config/cache.php';
+require_once '../../config/tripcode.php';
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -181,7 +183,7 @@ function handle_upload(bool $nsfw = false): ?array {
     }
 
     if ($is_audio && isset($_FILES['lrc']) && $_FILES['lrc']['error'] === UPLOAD_ERR_OK) {
-        $lrc_raw  = file_get_contents();
+        $lrc_raw  = file_get_contents($_FILES['lrc']['tmp_name']);
         $lrc_data = parse_lrc($lrc_raw);
 
         if ($lrc_data) {
@@ -267,10 +269,10 @@ function notify_automod(int $post_id, string $type, string $text): void {
 }
 
 if ($action === 'new_thread') {
-    $body    = trim($_POST['body']    ?? '');
-    $subject = trim($_POST['subject'] ?? '');
-    $author  = trim($_POST['author']  ?? '');
-    $author  = ($author === '') ? 'Anon' : $author;
+    $body       = trim($_POST['body']    ?? '');
+    $subject    = trim($_POST['subject'] ?? '');
+    $raw_author = trim($_POST['author']  ?? '');
+    [$author, $tripcode]  = parse_tripcode($raw_author);
 
     $captcha_token  = $_POST['captcha_token']  ?? '';
     $captcha_answer = $_POST['captcha_answer'] ?? '';
@@ -323,8 +325,8 @@ if ($action === 'new_thread') {
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
 
     $s = $db->prepare(
-        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, automod_flag, nsfw)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
+        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, tripcode, automod_flag, nsfw)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
     );
     $s->execute([
         $board['id'],
@@ -333,6 +335,7 @@ if ($action === 'new_thread') {
         $img,
         $ip,
         $author,
+        $tripcode,
         $automod_flag,
         $nsfw,
     ]);
@@ -377,8 +380,8 @@ if ($action === 'new_thread') {
 
     $tid    = (int)($_POST['thread_id'] ?? 0);
     $body   = trim($_POST['body']       ?? '');
-    $author = trim($_POST['author']     ?? '');
-    $author = ($author === '') ? 'Anon' : $author;
+    $raw_author = trim($_POST['author']  ?? '');
+    [$author, $tripcode]  = parse_tripcode($raw_author);
     $options = strtolower(trim($_POST['options'] ?? ''));
     $is_sage = ($options === 'sage');
 
@@ -463,8 +466,8 @@ if ($action === 'new_thread') {
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
 
     $s = $db->prepare(
-        "INSERT INTO posts (thread_id, body, img_path, ip, author, options, automod_flag, nsfw)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO posts (thread_id, body, img_path, ip, author, tripcode, options, automod_flag, nsfw)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $s->execute([
         $tid,
@@ -472,6 +475,7 @@ if ($action === 'new_thread') {
         $img,
         $ip,
         $author,
+        $tripcode,
         $is_sage ? 'sage' : null,
         $automod_flag,
         $nsfw,

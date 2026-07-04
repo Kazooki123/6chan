@@ -188,6 +188,14 @@ a:hover      { text-decoration: underline; }
 .post-body del        { color: var(--grey); }
 .post-body hr         { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
 
+.tripcode {
+    color: #87CEFA;
+    font-family: 'MapleMono', monospace;
+    font-family: 12px;
+    margin-left: 2px;
+    user-select: all;
+}
+
 /* Inline code */
 .post-body code {
     background: #111;
