@@ -13,9 +13,38 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->load();
 
+use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
+
 $db   = get_db();
 $slug = $_GET['b'] ?? '';
 $id = (int)($_GET['id'] ?? 0);
+
+$s3key    = $_ENV['S3_KEY'];
+$s3secret = $_ENV['S3_SECRET'];
+$s3 = new S3Client([
+    'version'  => 'latest',
+    'region'   => 'us-east-1',
+    'endpoint' => $_ENV['S3_ENDPOINT'] ?? 'http://localhost:9000',
+    'use_path_style_endpoint' => true,
+    'credentials' => [
+        'key'    => $s3key,
+        'secret' => $s3secret,
+    ],
+]);
+$s3_bucket = $_ENV['S3_UPLOAD'];
+
+function get_audio_metadata(string $audio_path, S3Client $s3, string $bucket): array {
+    try {
+        $result = $s3->getObject([
+            'Bucket' => $bucket,
+            'Key'    => $audio_path . '.json',
+        ]);
+        return json_decode($result['Body'], true) ?? [];
+    } catch (AwsException $e) {
+        return [];
+    }
+}
 
 $board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
 $board->execute([$slug]);
@@ -225,6 +254,8 @@ function render_body(string $text, int $thread_id): string {
 }
 
 function render_media(string $path, bool $nsfw, int $thread_id): string {
+    global $s3, $s3_bucket;
+    
     $is_video  = str_ends_with($path, '.mp4');
     $is_audio  = preg_match('/\.(mp3|flac|ogg|wav)$/i', $path);
     $blur_path = media_url('preview/blur_' . $path);
@@ -248,16 +279,13 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
     }
 
     if ($is_audio) {
-        $meta_path = media_url('audio/' . $path) . '.json';
-        $meta      = file_exists($meta_path)
-                       ? json_decode(file_get_contents($meta_path), true)
-                       : [];
+        $meta = get_audio_metadata($path, $s3, $s3_bucket);
                        
         $title    = htmlspecialchars($meta['title']    ?? 'Unknown');
         $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
         $duration = htmlspecialchars($meta['duration'] ?? '-');
         $cover    = !empty($meta['cover_file'])
-                        ? htmlspecialchars($meta['cover_file'])
+                        ? media_url($meta['cover_file'])
                         : 'assets/no-cover.png';
 
         $pid = 'ap_' . md5($path);
@@ -518,7 +546,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
 
         <div class="postform">
-            <h3>Start a new thread!! &lt;3</h3>
+            <h3>Start a new thread &lt;3</h3>
             <form method="post" action="services/post.php" enctype="multipart/form-data">
                 <input type="hidden" name="board_slug" value="<?= htmlspecialchars($board['slug']) ?>">
                 <input type="hidden" name="action" value="new_thread">

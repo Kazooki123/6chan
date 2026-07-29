@@ -8,6 +8,7 @@ vendor
 **/uploads/*
 .venv
 .crush
+.vscode
 /cache/
 /fail2ban/
 /logs/

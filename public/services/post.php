@@ -171,7 +171,7 @@ function handle_upload(bool $nsfw = false): ?array {
         try {
             $s3->putObject([
                 'Bucket'      => $bucket,
-                'Key'         => $object_key,
+                'Key'         => $object_key . '.json',
                 'Body'        => $meta_json,
                 'ContentType' => 'application/json',
             ]);
