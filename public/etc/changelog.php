@@ -32,9 +32,9 @@
     <div id="topbar">
         <span class="site-name">@6chan</span>
         <a href="../index.php">Home</a>
-        <a href="../rules.php">[Rules]</a>
+        <a href="../rules.html">[Rules]</a>
         <a href="../contact.php">[Contact]</a>
-        <a href="../support.php">[Support]</a>
+        <a href="../support.html">[Support]</a>
     </div>
 
     <div class="wrap">

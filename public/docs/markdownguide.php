@@ -106,9 +106,9 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="../index.php">Home</a>
-    <a href="../rules.php">[Rules]</a>
+    <a href="../rules.html">[Rules]</a>
     <a href="../search.php">[Search]</a>
-    <a href="../support.php">[Support]</a>
+    <a href="../support.html">[Support]</a>
     <a href="../contact.php">[Contact]</a>
     <a href="../feed.php">[RSS]</a>
 </div>
@@ -302,7 +302,7 @@ $boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO:
 
 <footer>
     @6chan — <a href="../index.php">Home</a> —
-    <a href="../rules.php">Rules</a> —
+    <a href="../rules.html">Rules</a> —
     <a href="../search.php">Search</a>
 </footer>
 </body>

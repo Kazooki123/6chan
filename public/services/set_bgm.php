@@ -27,5 +27,5 @@ if ($action === 'set') {
        ->execute([$thread_id]);
 }
 
-header("Location: thread.php?id=$thread_id");
+header("Location: ../thread.php?id=$thread_id");
 exit;

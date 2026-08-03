@@ -51,7 +51,7 @@ $board->execute([$slug]);
 $board = $board->fetch(PDO::FETCH_ASSOC);
 if (!$board) {
     http_response_code(404);
-    header('Location: /404.php');
+    header('Location: /404.html');
 }
 
 $page     = max(1, (int)($_GET['p'] ?? 1));
@@ -532,10 +532,10 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         <a href="index.php">Home</a>
         <a href="board.php?b=<?= htmlspecialchars($board['slug']) ?>">/<?= htmlspecialchars($board['slug']) ?>/</a>
         <a href="catalog.php?b=<?= htmlspecialchars($board['slug']) ?>">[Catalog]</a>
-        <a href="rules.php">[Rules]</a>
+        <a href="rules.html">[Rules]</a>
         <a href="search.php">[Search]</a>
         <a href="contact.php">[Contact]</a>
-        <a href="support.php">[Support]</a>
+        <a href="support.html">[Support]</a>
         <a href="feed.php">[RSS]</a>
     </div>
 
@@ -734,7 +734,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                           class="report-link">[Report]</a>
                    </div>
                    <?php if (!empty($p['img_path'])):
-                       $imgpath = htmlspecialchars($p['img_path']); ?>
+                       $imgpath = htmlspecialchars(media_url($p['img_path'])); ?>
                    <div class="post-img">
                        <?= render_media($p['img_path'], (bool)$p['nsfw'], $p['id']) ?>
                        <a href="<?= $imgpath ?>">View original</a>
@@ -769,7 +769,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
     </div>
 
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
 
     <div id="quote-popup"></div>
     

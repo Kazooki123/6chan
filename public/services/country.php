@@ -1,6 +1,6 @@
 <?php
 
 /**
- * This displays a country flag of a user whenever it posts, no tracking,
- * just let users choose what flags they want to **larp** on.
+ * This displays a country flag of a user, uses IP API without tracking, optional if they are willing
+ * to in settings.
  */

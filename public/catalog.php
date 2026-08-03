@@ -11,7 +11,7 @@ $slug = $_GET['b'] ?? '';
 $board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
 $board->execute([$slug]);
 $board = $board->fetch(PDO::FETCH_ASSOC);
-if (!$board) { http_response_code(404); header('Location: /404.php'); }
+if (!$board) { http_response_code(404); header('Location: /404.html'); }
 
 $threads = $db->prepare(
     "SELECT t.*, (SELECT COUNT(*) FROM posts WHERE thread_id=t.id) AS reply_count
@@ -49,7 +49,7 @@ function media_url(string $key): string {
   <a href="board.php?b=<?= htmlspecialchars($board['slug']) ?>">/<?= htmlspecialchars($board['slug']) ?>/</a>
   <a href="catalog.php?b=<?= htmlspecialchars($board['slug']) ?>">[Catalog]</a>
   <a href="contact.php">[Contact]</a>
-  <a href="support.php">[Support]</a>
+  <a href="support.html">[Support]</a>
 </div>
 
 <div class="wrap">
@@ -86,6 +86,6 @@ function media_url(string $key): string {
   </div>
 </div>
 
-<footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a></footer>
+<footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a></footer>
 </body>
 </html>

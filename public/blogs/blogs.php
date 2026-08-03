@@ -186,10 +186,10 @@ $posts = $post ? [] : load_md_posts(__DIR__ . '/../../content/blogs');
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="../index.php">Home</a>
-    <a href="../rules.php">[Rules]</a>
+    <a href="../rules.html">[Rules]</a>
     <a href="../search.php">[Search]</a>
     <a href="news.php">[News]</a>
-    <a href="../support.php">[Support]</a>
+    <a href="../support.html">[Support]</a>
     <a href="../contact.php">[Contact]</a>
 </div>
 

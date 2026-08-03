@@ -20,7 +20,7 @@
  *   set GOOS=linux && set GOARCH=amd64 && go build -o bin/tripcodes tripcodes.go
  *
  * TinyGo WASM (optional & browser-side only):
- *   tinygo build -o public/tripcodes.wasm -target wasm tripcodes.go
+ *   tinygo build -o bin/tripcodes.wasm -target wasm tripcodes.go
  */
 
 defined('ROOT_PATH') || define('ROOT_PATH', dirname(__DIR__));

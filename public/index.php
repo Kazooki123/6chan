@@ -18,10 +18,10 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
     <div id="topbar">
         <span class="site-name">@6chan</span>
         <a href="index.php">Home</a>
-        <a href="rules.php">[Rules]</a>
+        <a href="rules.html">[Rules]</a>
         <a href="search.php">[Search]</a>
         <a href="contact.php">[Contact]</a>
-        <a href="support.php">[Support]</a>
+        <a href="support.html">[Support]</a>
         <a href="feed.php">[RSS]</a>
         <a href="https://codeberg.org/Kazooki123/6chan">[⭐ Source]</a>
     </div>
@@ -34,7 +34,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                 This is a community built on honest and thoughtful discussion - read the rules, respect the boards, and don't be an IDIOT.
             </p>
             <div class="welcome-links">
-                <a href="rules.php">[rules]</a>
+                <a href="rules.html">[rules]</a>
                 <a href="board.php?b=r">[/r/ - random]</a>
                 <a href="board.php?b=t">[/t/ - tech]</a>
                 <a href="etc/copyright.html">[copyright]</a>
@@ -93,7 +93,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
         </div>
         
     </div>
-    <footer>@6chan v0.5 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.php">[Support]</a> <a href="etc/news.php">[News]</a> <a href="feed.php">[RSS]</a> </footer>
+    <footer>@6chan v0.5 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.html">[Support]</a> <a href="etc/news.php">[News]</a> <a href="feed.php">[RSS]</a> </footer>
     
     <script>
     (function() {

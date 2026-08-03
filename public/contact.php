@@ -1,8 +1,4 @@
 <?php
-require_once '../config/db.php';
-$db = get_db();
-$boards = $db->query("SELECT slug, name FROM boards ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
-
 $sent  = false;
 $error = '';
 
@@ -36,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="index.php">Home</a>
-    <a href="rules.php">[Rules]</a>
-    <a href="support.php">[Support]</a>
+    <a href="rules.html">[Rules]</a>
+    <a href="support.html">[Support]</a>
 </div>
 
 <div class="wrap">
@@ -102,6 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 </div>
 
-<footer>@6chan — <a href="index.php">Home</a> — <a href="support.php">Support</a></footer>
+<footer>@6chan — <a href="index.php">Home</a> — <a href="support.html">Support</a></footer>
 </body>
 </html>

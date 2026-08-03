@@ -266,9 +266,9 @@ $total = count($thread_hits) + count($post_hits);
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="index.php">Home</a>
-    <a href="rules.php">[Rules]</a>
+    <a href="rules.html">[Rules]</a>
     <a href="search.php">[Search]</a>
-    <a href="support.php">[Support]</a>
+    <a href="support.html">[Support]</a>
     <a href="contact.php">[Contact]</a>
     <a href="feed.php">[RSS]</a>
 </div>
@@ -370,7 +370,7 @@ $total = count($thread_hits) + count($post_hits);
 </div>
 
 <footer>
-    @6chan — <a href="index.php">Home</a> — <a href="rules.php">Rules</a> <a href="contact.php">[Contact]</a> <a href="support.php">[Support]</a>
+    @6chan — <a href="index.php">Home</a> — <a href="rules.html">Rules</a> <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a>
 </footer>
 
 <script>

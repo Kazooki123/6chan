@@ -47,7 +47,7 @@ function get_audio_metadata(string $audio_path, S3Client $s3, string $bucket): a
 $thread = $db->prepare("SELECT t.*, b.slug, b.name AS bname FROM threads t JOIN boards b ON b.id=t.board_id WHERE t.id=?");
 $thread->execute([$id]);
 $thread = $thread->fetch(PDO::FETCH_ASSOC);
-if (!$thread) { http_response_code(404); header('Location: /404.php'); exit; }
+if (!$thread) { http_response_code(404); header('Location: /404.html'); exit; }
 
 $is_locked = (bool)$thread['locked'];
 $is_pinned = (bool)$thread['pinned'];
@@ -90,18 +90,15 @@ if (!empty($thread['bgm_post_id'])) {
     $bgm_stmt->execute([$thread['bgm_post_id']]);
     $bgm_post = $bgm_stmt->fetch(PDO::FETCH_ASSOC);
     if ($bgm_post && !empty($bgm_post['img_path'])) {
-        $bgm_path   = $bgm_post['img_path'];
-        $bgm_meta_f = media_url($bgm_path . '.json');
-        $bgm_meta   = file_exists($bgm_meta_f)
-                        ? json_decode(media_url($bgm_meta_f), true)
-                        : [];
+        $bgm_path = $bgm_post['img_path'];
+        $bgm_meta = get_audio_metadata($bgm_path, $s3, $s3_bucket);
         $bgm = [
             'path'   => $bgm_path,
             'title'  => $bgm_meta['title']  ?? 'Unknown',
             'artist' => $bgm_meta['artist'] ?? 'Unknown',
             'cover'  => !empty($bgm_meta['cover_file'])
                             ? media_url($bgm_meta['cover_file'])
-                            : null,
+                            : 'assets/no-cover.png',
         ];
     }
 }
@@ -527,10 +524,10 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <a href="index.php">Home</a>
     <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">/<?= htmlspecialchars($thread['slug']) ?>/</a>
     <a href="catalog.php?b=<?= htmlspecialchars($thread['slug']) ?>">[Catalog]</a>
-    <a href="rules.php">[Rules]</a>
+    <a href="rules.html">[Rules]</a>
     <a href="search.php">[Search]</a>
     <a href="contact.php">[Contact]</a>
-    <a href="support.php">[Support]</a>
+    <a href="support.html">[Support]</a>
     <a href="feed.php">[RSS]</a>
 </div>
 
@@ -590,21 +587,21 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                 <a href="report.php?type=post&id=<?= $p['id'] ?>&tid=<?= $id ?>&b=<?= htmlspecialchars($thread['slug']) ?>"
                    class="report-link">[Report]</a>
             </div>
-            <?php if (!empty($p['img_path']) && str_ends_with($p['img_path'], '.mp3')
-                   || str_ends_with($p['img_path'] ?? '', '.flac')
-                   || str_ends_with($p['img_path'] ?? '', '.ogg')): ?>
+            <?php if (!empty($p['img_path'])): ?>
                 <?= render_media($p['img_path'], (bool)$p['nsfw'], $id) ?>
-                <form method="post" action="services/set_bgm.php" style="display:inline;">
-                    <input type="hidden" name="thread_id" value="<?= $id ?>">
-                    <input type="hidden" name="post_id"   value="<?= $p['id']?>">
-                    <?php if ($thread['bgm_post_id'] === $p['id']): ?>
-                        <input type="hidden" name="action" value="unset"> 
-                        <button class="bgm-btn active" type="submit">🎶BGM</button>
-                    <?php else: ?>
-                        <input type="hidden" name="action" value="set">
-                        <button class="bgm-btn" type="submit">🎶Set BGM</button>
-                    <?php endif; ?>
-                </form>
+                <?php if (preg_match('/\.(mp3|flac|ogg|wav)$/i', $p['img_path'])): ?>
+                    <form method="post" action="services/set_bgm.php" style="display:inline;">
+                        <input type="hidden" name="thread_id" value="<?= $id ?>">
+                        <input type="hidden" name="post_id"   value="<?= $p['id']?>">
+                        <?php if ($thread['bgm_post_id'] === $p['id']): ?>
+                            <input type="hidden" name="action" value="unset"> 
+                            <button class="bgm-btn active" type="submit">🎶BGM</button>
+                        <?php else: ?>
+                            <input type="hidden" name="action" value="set">
+                            <button class="bgm-btn" type="submit">🎶Set BGM</button>
+                        <?php endif; ?>
+                    </form>
+                <?php endif; ?>
             <?php endif; ?>
             <div class="post-body"><?= render_body($p['body'], $id) ?></div>
             <?= render_poll($id, $p['id'], $_SERVER['REMOTE_ADDR'], $db) ?>
@@ -706,13 +703,35 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <?php endif; ?>
 </div>
 
+<?php if ($bgm): ?>
+<div id="bgm-bar">
+    <img class="bgm-cover" src="<?= htmlspecialchars($bgm['cover']) ?>" alt="Cover art">
+    <div class="bgm-info">
+        <div class="bgm-title"><?= htmlspecialchars($bgm['title']) ?></div>
+        <div class="bgm-artist"><?= htmlspecialchars($bgm['artist']) ?></div>
+    </div>
+    <div class="bgm-controls">
+        <button class="bgm-play" type="button" onclick="bgmToggle()">▶</button>
+        <div class="bgm-progress-wrap" onclick="bgmSeek(event)">
+            <div class="bgm-progress-bar" id="bgm-bar-fill"></div>
+        </div>
+        <span class="bgm-time" id="bgm-time">0:00</span>
+        <input class="bgm-vol" type="range" min="0" max="1" step="0.01"
+               value="0.5" onchange="bgmVol(this.value)">
+        <button class="bgm-close" type="button" onclick="bgmClose()">✕</button>
+    </div>
+    <span class="bgm-label">BGM</span>
+    <audio id="bgm-audio" preload="metadata" src="<?= htmlspecialchars(media_url($bgm['path'])) ?>"></audio>
+</div>
+<?php endif; ?>
+
 <footer>
     @6chan —
     <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">[back]</a> —
     <a href="index.php">Home</a> |
     <a href="settings/settings.php">[Settings]</a> |
     <a href="contact.php">[Contact]</a>
-    <a href="support.php">[Support]</a>
+    <a href="support.html">[Support]</a>
     <a href="etc/tsnclf.html">[Logics]</a>
 </footer>
 
@@ -889,29 +908,35 @@ const bgmAudio = document.getElementById('bgm-audio');
 const bgmFill  = document.getElementById('bgm-bar-fill');
 const bgmTime  = document.getElementById('bgm-time');
 const bgmBtn   = document.querySelector('.bgm-play');
-bgmAudio.volume = 0.5;
+if (bgmAudio) {
+    bgmAudio.volume = 0.5;
 
-bgmAudio.addEventListener('timeupdate', () => {
-    const pct = bgmAudio.duration
-        ? (bgmAudio.currentTime / bgmAudio.duration * 100) : 0;
-    bgmFill.style.width = pct + '%';
-    const s = Math.floor(bgmAudio.currentTime);
-    bgmTime.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-});
+    bgmAudio.addEventListener('timeupdate', () => {
+        const pct = bgmAudio.duration
+            ? (bgmAudio.currentTime / bgmAudio.duration * 100) : 0;
+        if (bgmFill) bgmFill.style.width = pct + '%';
+        const s = Math.floor(bgmAudio.currentTime);
+        if (bgmTime) bgmTime.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    });
+}
 
 function bgmToggle() {
-    if (bgmAudio.paused) { bgmAudio.play(); bgmBtn.textContent = '⏸'; }
-    else                 { bgmAudio.pause(); bgmBtn.textContent = '▶'; }
+    if (!bgmAudio) return;
+    if (bgmAudio.paused) { bgmAudio.play(); if (bgmBtn) bgmBtn.textContent = '⏸'; }
+    else                 { bgmAudio.pause(); if (bgmBtn) bgmBtn.textContent = '▶'; }
 }
 function bgmSeek(e) {
+    if (!bgmAudio) return;
     const wrap = e.currentTarget;
     const pct  = (e.clientX - wrap.getBoundingClientRect().left) / wrap.offsetWidth;
     bgmAudio.currentTime = pct * bgmAudio.duration;
 }
-function bgmVol(v) { bgmAudio.volume = v; }
+function bgmVol(v) { if (bgmAudio) bgmAudio.volume = v; }
 function bgmClose() {
+    if (!bgmAudio) return;
     bgmAudio.pause();
-    document.getElementById('bgm-bar').style.display = 'none';
+    const bgmBar = document.getElementById('bgm-bar');
+    if (bgmBar) bgmBar.style.display = 'none';
 }
 
 </script>

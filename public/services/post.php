@@ -1,10 +1,5 @@
 <?php
 session_start();
-/** $config_path = __DIR__ . '/../../config/db.php';
- *  if (!file_exists($config_path)) {
- *     die("FATAL: config/db.php not found at: $config_path <br>__DIR__ is: " . __DIR__);
- *  }
- */
 
 require_once '../../config/db.php';
 require_once '../../config/captchav2.php';
@@ -378,7 +373,6 @@ if ($action === 'new_thread') {
     exit;
 
 } elseif ($action === 'reply') {
-
     $tid    = (int)($_POST['thread_id'] ?? 0);
     $body   = trim($_POST['body']       ?? '');
     $raw_author = trim($_POST['author']  ?? '');

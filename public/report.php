@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="index.php">Home</a>
-    <a href="rules.php">[Rules]</a>
+    <a href="rules.html">[Rules]</a>
 </div>
 
 <div class="wrap">
