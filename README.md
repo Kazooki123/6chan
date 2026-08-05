@@ -6,6 +6,8 @@ Welcome to **6chan**! Unlike imageboards like **Soyjack.party**, **4chan**, and 
 
 Read the **/rules**, don't be an idiot.
 
+**Shoutout to @immesolite (Kabusa) on Discord for the logo!**
+
 ## Features
 
 - Music display with lyrics embed support
