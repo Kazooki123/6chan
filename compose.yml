@@ -66,6 +66,14 @@ services:
       - minio_data:/data:Z
     command: server /data --console-address ":9001"
 
+  owncast:
+    image: owncast/owncast:latest
+    ports:
+      - "8080:8080"
+      - "1935:1935"
+    volumes:
+      - ./data:/app/data
+
   mailer:
     image: axllent/mailpit
     container_name: mailer

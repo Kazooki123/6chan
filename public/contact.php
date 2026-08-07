@@ -43,10 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="page-header">
-        <h1>Other Contacts (Owner of 6chan)</h1>
+        <h1>Other Contacts (Owner)</h1>
         <p>
-            <b style="color:var(--link);">Gmail: markanthonygelito@gmail.com</b><br>
-            <b style="color:var(--pink);">Bluesky: starloexoliz123.bsky.social</b><br>
+            <b style="color:var(--link);">Gmail:</b> <p>mgamerdinge146@gmail.com</p><br>
+            <b style="color:var(--pink);">Bluesky:</b> <p>starloexoliz123.bsky.social</p><br>
+            <b style="color:var(--accent);">Discord:</b> <p>starloexoliz11</p><br>
         </p>
     </div>
 

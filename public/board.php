@@ -1,7 +1,4 @@
 <?php
-// require_once __DIR__ . '/../vendor/autoload.php';
-// session_start();
-
 require_once '../config/db.php';
 require_once '../config/cache.php';
 require_once '../config/captchav2.php';
@@ -53,6 +50,16 @@ if (!$board) {
     http_response_code(404);
     header('Location: /404.html');
 }
+
+$spaces_stmt = $db->prepare(
+    "SELECT id, title, host_author, host_trip,
+            (SELECT COUNT(*) FROM space_participants
+             WHERE space_id = spaces.id AND left_at IS NULL) AS listeners
+     FROM spaces WHERE board_id = ? AND status = 'live'
+     ORDER BY started_at DESC"
+);
+$spaces_stmt->execute([$board['id']]);
+$live_spaces = $spaces_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $page     = max(1, (int)($_GET['p'] ?? 1));
 $per_page = 10;
@@ -545,6 +552,20 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             <p><?= htmlspecialchars($board['descript']) ?></p>
         </div>
 
+        <?php if ($live_spaces): ?>
+        <div class="spaces-banner">
+            <h3>🦭 Live Spaces on /<?= htmlspecialchars($board['slug']) ?>/</h3>
+            <?php foreach ($live_spaces as $sp): ?>
+            <a class="space-card" href="space.php?id=<?= $sp['id'] ?>">
+                <span class="space-live-dot"></span>
+                <span class="space-title"><?= htmlspecialchars($sp['title']) ?></span>
+                <span class="space-host">hosted by <?= htmlspecialchars($sp['host_author']) ?><?= $sp['host_trip'] ? ' <span class="tripcode">'.htmlspecialchars($sp['host_trip']).'</span>' : '' ?></span>
+                <span class="space-listeners"><?= $sp['listeners'] ?> listening</span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
         <div class="postform">
             <h3>Start a new thread &lt;3</h3>
             <form method="post" action="services/post.php" enctype="multipart/form-data">
@@ -658,6 +679,17 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                         </td>
                     </tr>
                     <tr><td></td><td><button type="submit">Post</button></td></tr>
+                </table>
+            </form>
+        </div>
+
+        <div class="postform">
+            <h3>🎙️ Start a Space</h3>
+            <form id="space-start-form">
+                <table>
+                    <tr><td>Title</td><td><input type="text" id="space-title" maxlength="200" placeholder="What's this Space about?" required></td></tr>
+                    <tr><td>Name</td><td><input type="text" id="space-author" maxlength="64" placeholder="Anonymous or name#pwrd"></td></tr>
+                    <tr><td></td><td><button type="submit">Go Live</button></td></tr>
                 </table>
             </form>
         </div>
@@ -946,6 +978,23 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
       const tot = wrap.querySelector('poll-total');
       if (tot) tot.textContent = total + ' vote' + (total===1?'':'s');
     }
+
+    document.getElementById('space-start-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let sid = sessionStorage.getItem('space_sid');
+        if (!sid) { sid = crypto.randomUUID(); sessionStorage.setItem('space_sid', sid); }
+
+        const form = new FormData();
+        form.append('sid', sid);
+        form.append('board_slug', <?= json_encode($board['slug']) ?>);
+        form.append('title', document.getElementById('space-title').value);
+        form.append('author', document.getElementById('space-author').value);
+
+        const res = await fetch('services/space_create.php', { method: 'POST', body: form });
+        const data = await res.json();
+        if (!data.ok) { alert(date.error || 'Could not start Space!'); return; }
+        location.href = 'space.php?id=' + data.space_id;
+    });
     </script>
 </body>
 </html>

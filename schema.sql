@@ -76,7 +76,7 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('f', 'FaceDev', 'Peak YouTuber, Face'),
   ('tu', 'Turtles', 'About Turtles'),
   ('lgb', 'LGBTQ', 'LGBTQ+ Topics'),
-  ('yh', 'Yuri', 'Yuri Media (NSFW)'),
+  ('y', 'Yuri', 'Yuri Media (NSFW)'),
   ('x', 'Paranormal', 'Paranormal Activities');
 
 CREATE TABLE automod_rules (
@@ -143,6 +143,58 @@ CREATE TABLE poll_votes (
 	UNIQUE (option_id, ip_hash)
 );
 
+CREATE TABLE spaces (
+    id           SERIAL PRIMARY KEY,
+    board_id     INT NOT NULL REFERENCES boards(id),
+    thread_id    INT REFERENCES threads(id) ON DELETE SET NULL,
+    title        VARCHAR(200) NOT NULL,
+    host_session VARCHAR(64) NOT NULL,
+    host_author  VARCHAR(64) NOT NULL DEFAULT 'Anon',
+    host_trip    VARCHAR(12),
+    status       VARCHAR(10) NOT NULL DEFAULT 'live' CHECK (status IN ('live', 'ended')),
+    max_speakers INT NOT NULL DEFAULT 6,
+    started_at   TIMESTAMPTZ DEFAULT NOW(),
+    ended_at     TIMESTAMPTZ
+);
+
+CREATE TABLE space_participants (
+    id         SERIAL PRIMARY KEY,
+    space_id   INT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    session_id VARCHAR(64) NOT NULL,
+    author     VARCHAR(64) NOT NULL DEFAULT 'Anon',
+    tripcode   VARCHAR(12),
+    role       VARCHAR(10) NOT NULL DEFAULT 'listener' CHECK (role IN ('host', 'speaker', 'listener')),
+    muted      BOOLEAN NOT NULL DEFAULT FALSE,
+    joined_at  TIMESTAMPTZ DEFAULT NOW(),
+    left_at    TIMESTAMPTZ,
+    last_seen  TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (space_id, session_id)
+);
+
+CREATE TABLE space_speaker_requests (
+    id           SERIAL PRIMARY KEY,
+    space_id     INT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    session_id   VARCHAR(64) NOT NULL,
+    author       VARCHAR(64) NOT NULL DEFAULT 'Anon',
+    tripcode     VARCHAR(12),
+    status       VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'denied')),
+    requested_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (space_id, session_id)
+);
+
+CREATE TABLE space_signals (
+    id           BIGSERIAL PRIMARY KEY,
+    space_id     INT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    from_session VARCHAR(64) NOT NULL,
+    to_session   VARCHAR(64),
+    type         VARCHAR(20) NOT NULL,
+    payload      JSONB NOT NULL,
+    created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Run: `php -r "echo password_hash('yourpassword', PASSWORD_DEFAULT) . PHP_EOL;"`
+INSERT INTO admins (username, pwd_hash) VALUES ('admin', '$2y$12$HASH');
+
 CREATE INDEX cache_expires_idx ON cache (expires_at)
     WHERE expires_at IS NOT NULL;
 
@@ -185,3 +237,9 @@ CREATE INDEX idx_posts_tripcode   ON posts (tripcode) WHERE tripcode IS NOT NULL
 CREATE EXTENSION pg_trgm;
 CREATE INDEX threads_trgm_idx ON threads USING GIN(body gin_trgm_ops);
 CREATE INDEX posts_trgm_idx ON posts USING GIN(body gin_trgm_ops);
+
+CREATE INDEX space_signals_poll_idx
+    ON space_signals (space_id, to_session, id);
+
+CREATE INDEX spaces_live_board_idx
+    ON spaces (board_id, status) WHERE status = 'live';
