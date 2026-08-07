@@ -80,6 +80,23 @@ php -S localhost:8080 # Start the server
 
 You can now visit [https://localhost:8080](https://localhost:8080) and begin using 6chan!!
 
+## Donating 🩷
+
+If you have a few bucks to throw around, maybe support this project!
+Your donations will be used for:
+
+- Domain registration and renewals
+- Storage bucket fees
+- Hard drives & servers
+- Development for features and improvements
+
+and much more!
+
+LTC: `ltc1qq969qhfpxyx3c8twgrdezmt5ec5amxar6c9lck`
+ETH: `0x52c38E0097D5cbc8e552E38014805eC4E43DD18e`
+
+**A huge Huge thanks to `@.zelte` for donating to this project!!**
+
 ## Contribution
 
 You're always welcome to contribute to 6chan and make it a better place !! ⭐💗
