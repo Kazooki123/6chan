@@ -96,6 +96,8 @@ LTC: `ltc1qq969qhfpxyx3c8twgrdezmt5ec5amxar6c9lck`
 
 ETH: `0x52c38E0097D5cbc8e552E38014805eC4E43DD18e`
 
+SOL: `4CZQYQCvArR6PYm9x4NoW5wDGjVUQKiGcFYBcStNQxUP`
+
 **A huge Huge thanks to `@.zelte` for donating to this project!!**
 
 ## Contribution
