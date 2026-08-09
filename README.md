@@ -2,7 +2,8 @@
 
 ![Logo](6chan.png)
 
-Welcome to **6chan**! Unlike imageboards like **Soyjack.party**, **4chan**, and other imageboards where racist, homophobic, and other discrimination happens, we're making this website as friendly and welcoming as possible!
+Welcome to **6chan**! An imageboard from scratch with the philosophy of **4chan** and a few modern web
+concepts that still keeps users anonymous and private!
 
 Read the **/rules**, don't be an idiot.
 
