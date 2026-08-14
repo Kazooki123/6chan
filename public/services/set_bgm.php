@@ -12,7 +12,7 @@ $action    = $_POST['action'] ?? '';
 session_start();
 if (!($_SESSION['admin'] ?? false)) {
     http_response_code(403);
-    die('Admin only for now! Tripcodes OP auth coming soon ^_^');
+    die('Admin only for now!');
 }
 
 if ($action === 'set') {

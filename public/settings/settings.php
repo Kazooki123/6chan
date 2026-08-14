@@ -15,7 +15,7 @@
 }
 .setting-group h2 {
     color: var(--orange);
-    font-size: 13px;
+    font-size: 16px;
     text-transform: uppercase;
     letter-spacing: 1px;
     border-bottom: 1px solid var(--border);
@@ -28,7 +28,7 @@
     justify-content: space-between;
     padding: 6px 0;
     border-bottom: 1px solid var(--border);
-    font-size: 13px;
+    font-size: 16px;
 }
 .setting-row:last-child { border-bottom: none; }
 .setting-label { color: var(--white); }
@@ -53,7 +53,7 @@
     color: var(--white);
     padding: 6px 10px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 16px;
     margin-bottom: 4px;
     display: block;
     width: 100%;
@@ -72,7 +72,7 @@ input[type=range] {
     background: var(--orange);
     border: none;
     color: #000;
-    font: bold 13px 'Courier New', monospace;
+    font: bold 16px 'Courier New', monospace;
     padding: 8px 24px;
     cursor: pointer;
     width: 100%;
@@ -92,7 +92,7 @@ input[type=range] {
     border: 1px solid var(--border);
     padding: 12px;
     margin-top: 8px;
-    font-size: 13px;
+    font-size: 16px;
 }
 .preview-box .preview-header {
     font-size: 12px;
@@ -148,7 +148,7 @@ input[type=range] {
             </div>
             <div class="setting-control">
                 <select id="bg-select" style="background:#111;border:1px solid var(--border);
-                        color:var(--white);font:13px 'Courier New',monospace;padding:4px 8px;">
+                        color:var(--white);font:16px 'Courier New',monospace;padding:4px 8px;">
                     <option value="#1a1a1a">Dark (default)</option>
                     <option value="#111111">Darker</option>
                     <option value="#242424">Slightly lighter</option>
@@ -255,7 +255,7 @@ input[type=range] {
             </div>
             <div class="setting-control">
                 <select id="timestamp-fmt" style="background:#111;border:1px solid var(--border);
-                        color:var(--white);font:13px 'Courier New',monospace;padding:4px 8px;">
+                        color:var(--white);font:16px 'Courier New',monospace;padding:4px 8px;">
                     <option value="datetime">2026-05-18 14:32 (default)</option>
                     <option value="relative">3 hours ago</option>
                     <option value="date">2026-05-18</option>
@@ -322,7 +322,7 @@ input[type=range] {
             <div class="setting-control">
                 <select id="gifbg-size"
                         style="background:#111;border:1px solid var(--border);
-                               color:var(--white);font:13px 'Courier New',monospace;
+                               color:var(--white);font:16px 'Courier New',monospace;
                                padding:4px 8px;">
                     <option value="cover">Cover (fill, crop edges)</option>
                     <option value="contain">Contain (fit, show borders)</option>
@@ -347,7 +347,7 @@ input[type=range] {
         </div>
     
         <div style="font-size:11px;color:var(--grey);margin-top:6px;line-height:1.6;">
-            ⚠ Large GIFs can impact performance on older devices.
+            <b style="color:var(--red);">⚠ Large GIFs can impact performance on older devices.</b>
             Keep files under 2MB for best results.
             The background only shows on board and thread pages.
         </div>

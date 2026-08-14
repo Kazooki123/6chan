@@ -181,20 +181,8 @@ function render_body(string $text, int $thread_id): string {
 
         // rainbow text !! :3
         if (str_starts_with($trimmed, '@@@')) {
-            $inner = ltrim(substr($trimmed, 3));
-            $colors  = ['#ff0000','#ff6600','#ffcc00','#00cc44','#4a9eff','#9b59b6','#ff66cc'];
-            $rainbow = '';
-            $ci      = 0;
-            foreach (mb_str_split($inner) as $char) {
-                if ($char === ' ') {
-                    $rainbow .= ' ';
-                } else {
-                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">'
-                              . htmlspecialchars($char) . '</span>';
-                    $ci++;
-                }
-            }
-            $processed[] = '%%RAINBOW%%' . $rainbow . '%%ENDRAINBOW%%';
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 3)));
+            $processed[] = '%%RAINBOW%%' . $inner . '%%ENDRAINBOW%%';
             continue;
         }
 
@@ -251,9 +239,33 @@ function render_body(string $text, int $thread_id): string {
         $html
     );
 
-    $html = preg_replace(
+    $html = preg_replace_callback(
         '/%%RAINBOW%%(.+?)%%ENDRAINBOW%%/s',
-        '<span class="rainbow-text">$1</span>',
+        function($m) {
+            $inner = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $colors = [
+                '#ff0000',
+                '#ff6600',
+                '#ffcc00',
+                '#00cc44',
+                '#4a9eff',
+                '#9b59b6',
+                '#ff66cc'
+            ];
+
+            $rainbow = '';
+            $ci      = 0;
+            foreach (mb_str_split($inner) as $char) {
+                if ($char === ' ') {
+                    $rainbow .= ' ';
+                } else {
+                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">' . htmlspecialchars($char, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</span>';
+                    $ci++;
+                }
+            }
+
+            return '<span class="rainbow-text">' . $rainbow . '</span>';
+        },
         $html
     );
 
@@ -582,7 +594,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                                 <code>**bold**</code> <code>*italic*</code>
                                 <code>`code`</code> <code>~~strike~~</code>
                                 <code>&gt;greentext</code> <code>&gt;&gt;123</code> |
-                                <a href="docs/markdownguide.php" style="color:var(--orange);font-size:11px;">[Guide]</a>
+                                <a href="docs/markdownguide.html" style="color:var(--orange);font-size:11px;">[Guide]</a>
                             </div>
                         </td>
                     </tr>
@@ -671,7 +683,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                     <tr>
                         <td>NSFW</td>
                         <td>
-                            <label style="font-size:13px;color:var(--grey);cursor:pointer;">
+                            <label style="font-size:16px;color:var(--grey);cursor:pointer;">
                                 <input type="checkbox" name="nsfw" value="1"
                                        style="accent-color:var(--orange);margin-right:4px;">
                                 Mark as NSFW

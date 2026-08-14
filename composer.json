@@ -15,7 +15,9 @@
         "polar-sh/sdk": "^0.10.0",
         "minishlink/web-push": "^10.1",
         "monero-integrations/monerophp": "@dev",
-        "landrok/activitypub": "^0.8.1"
+        "landrok/activitypub": "^0.8.1",
+        "phiki/phiki": "^2.2",
+        "predis/predis": "^3.5"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "*"

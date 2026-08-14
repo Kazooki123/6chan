@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <td>Reason</td>
                     <td>
                         <select name="reason" style="background:#111;border:1px solid var(--border);
-                               color:var(--white);font:13px 'MapleMono',monospace;padding:4px 6px;width:100%;">
+                               color:var(--white);font:16px 'MapleMono',monospace;padding:4px 6px;width:100%;">
                             <option value="">— Select a reason —</option>
                             <option>Spam or flooding</option>
                             <option>Illegal content</option>

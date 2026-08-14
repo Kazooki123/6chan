@@ -370,7 +370,7 @@ $total = count($thread_hits) + count($post_hits);
 </div>
 
 <footer>
-    @6chan — <a href="index.php">Home</a> — <a href="rules.html">Rules</a> <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a>
+    @6chan — <a href="index.php">Home</a> — <a href="rules.html">Rules</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a>
 </footer>
 
 <script>

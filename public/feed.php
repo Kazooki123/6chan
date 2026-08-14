@@ -30,7 +30,7 @@ function media_url(string $key): string {
 $base = 'http://localhost:8080';
 
 header('Content-Type: application/rss+xml; charset=utf-8');
-echo `<?xml version="1.0" encoding="UTF-8">`;
+echo '<?xml version="1.0" encoding="UTF-8"?>';
 ?>
 <rss version="2.0">
 <channel>
@@ -49,7 +49,7 @@ echo `<?xml version="1.0" encoding="UTF-8">`;
         <category>/<?= htmlspecialchars($t['slug']) ?>/ - <?= htmlspecialchars($t['bname']) ?></category>
         <description><![CDATA[
             <?php if (!empty($t['img_path'])): ?>
-            <img src="<?= $base ?><?= htmlspecialchars(media_url($t['img_path'])) ?>"><br>
+                <img src="<?= $base ?><?= htmlspecialchars(media_url($t['img_path'])) ?>"><br>
             <?php endif; ?>
             <?= nl2br(htmlspecialchars(mb_substr($t['body'], 0, 300))) ?>
             <?= mb_strlen($t['body']) > 300 ? '...' : '' ?>

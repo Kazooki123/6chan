@@ -68,11 +68,27 @@ services:
 
   owncast:
     image: owncast/owncast:latest
+    container_name: livestream
     ports:
       - "8080:8080"
       - "1935:1935"
     volumes:
       - ./data:/app/data
+
+  coturn:
+    image: docker.io/coturn/coturn
+    container_name: coturn
+    restart: unless-stoped
+    network_mode: "host"
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478"
+      - "5349:5349/udp"
+      - "5349:5349"
+    volumes:
+      - "./turnserver.conf:/etc/coturn/turnserver.conf:Z"
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - coturn_data:/var/lib/coturn
 
   mailer:
     image: axllent/mailpit
@@ -88,3 +104,4 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  coturn_data:

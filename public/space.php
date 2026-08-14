@@ -20,7 +20,7 @@ if (!$space) { http_response_code(404); die('Space not found.'); }
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎙️ <?= htmlspecialchars($space['title']) ?> — @6chan Space</title>
+<title>🎙️ <?= htmlspecialchars($space['title']) ?> - @6chan Space</title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
 <style>

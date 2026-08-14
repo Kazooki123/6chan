@@ -3,7 +3,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Aws\S3\S3Client;
 
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__ . '/../.env'));
 $dotenv->load();
 
 function extract_audio_meta(string $filepath, string $filename): array {
@@ -168,13 +168,13 @@ function extract_audio_meta(string $filepath, string $filename): array {
         }
     }
     
-    if (!$raw_lyrics && isset($info['tags']['id3v2']['SYLT'])) {
-        $sylt = reset($info['tags']['id3v2']['SYLT']);
+    if (!$raw_lyrics && isset($info['id3v2']['SYLT'])) {
+        $sylt = reset($info['id3v2']['SYLT']);
         if (!empty($sylt['data'])) {
             $lines = [];
             foreach ($sylt['data'] as $entry) {
                 $lines[] = [
-                    'time' => ($entry['timestampformat'] ?? 0) / 1000,
+                    'time' => ($entry['timestamp'] ?? 0) / 1000,
                     'line' => $entry['text'] ?? '',
                 ];
             }

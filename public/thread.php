@@ -516,6 +516,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
 <script src="settingsloader.js"></script>
+<script src="shortcuts.js"></script>
 </head>
 <body class="page-thread">
 
@@ -644,7 +645,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                             <code>**bold**</code> <code>*italic*</code>
                             <code>`code`</code> <code>~~strike~~</code>
                             <code>&gt;greentext</code> <code>&gt;&gt;123</code> |
-                            <a href="docs/markdownguide.php" style="color:var(--orange);font-size:11px;">[Guide]</a>
+                            <a href="docs/markdownguide.html" style="color:var(--orange);font-size:11px;">[Guide]</a>
                         </div>
                     </td>
                 </tr>

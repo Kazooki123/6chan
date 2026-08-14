@@ -26,7 +26,7 @@ if ($hits > 120) {
 // ROUTER
 switch ($endpoint) {
 
-    // GET /api.php?endpoint=boards
+    // GET api/api.php?endpoint=boards
     case 'boards':
         $rows = $db->query(
             "SELECT slug, name, descript,
@@ -38,7 +38,7 @@ switch ($endpoint) {
         echo json_encode(['ok'=>true,'boards'=>$rows]);
         break;
 
-    // GET /api.php?endpoint=threads&board=g&page=1&limit=20
+    // GET api/api.php?endpoint=threads&board=g&page=1&limit=20
     case 'threads':
         $slug = $_GET['board'] ?? '';
         if (!$slug) { echo json_encode(['error'=>'Missing board']); break; }
@@ -118,7 +118,7 @@ switch ($endpoint) {
         ]);
         break;
 
-    // GET /api.php?endpoint=search&q=hello&board=g
+    // GET api/api.php?endpoint=search&q=hello&board=g
     case 'search':
         $q = trim($_GET['q'] ?? '');
         if (strlen($q) < 2) { echo json_encode(['error'=>'Query too short']); break; }
@@ -139,7 +139,7 @@ switch ($endpoint) {
         echo json_encode(['ok'=>true,'results'=>$rows->fetchAll(PDO::FETCH_ASSOC)]);
         break;
 
-    // GET /api.php?endpoint=stats
+    // GET api/api.php?endpoint=stats
     case 'stats':
         $stats = $db->query(
             "SELECT

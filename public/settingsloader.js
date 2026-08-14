@@ -38,7 +38,8 @@
         const gifbgOpacity = Number(get('gifbgOpacity') || 8);
         const gifbgSize = get('gifbgSize') || 'cover';
         const isBoard = document.body.classList.contains('page-board')
-                   || document.body.classList.contains('page-thread');
+                   || document.body.classList.contains('page-thread')
+                   || document.body.classList.contains('home');
     
         document.body.style.fontFamily = font;
         document.body.style.fontSize   = fontSize + 'px';
