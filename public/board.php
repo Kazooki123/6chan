@@ -4,6 +4,7 @@ require_once '../config/cache.php';
 require_once '../config/captchav2.php';
 require_once '../config/markdown.php';
 require_once '../config/reactions.php';
+require_once '../config/pfps.php';
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -584,7 +585,19 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                 <input type="hidden" name="board_slug" value="<?= htmlspecialchars($board['slug']) ?>">
                 <input type="hidden" name="action" value="new_thread">
                 <table>
-                    <tr><td>Name</td><td><input type="text" name="author" maxlength="64" placeholder="Anon"></td></tr>
+                    <tr>
+                        <td>Name</td>
+                        <td>
+                            <input type="text" name="author" id="postform-name" maxlength="64" placeholder="Anon">
+                            <button type="button" class="pfp-set-btn" title="Set the profile picture for this tripcode"
+                                    onclick="document.getElementById('pfp-file-input').click()">Set pfp</button>
+                            <input type="file" id="pfp-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+                            <span id="pfp-set-status" style="font-size:11px;color:var(--grey);margin-left:6px;"></span>
+                            <div style="font-size:11px;color:var(--grey);margin-top:2px;">
+                                Requires a tripcode (name#password) - the pfp is tied to the trip, not the name.
+                            </div>
+                        </td>
+                    </tr>
                     <tr><td>Subject</td><td><input type="text" name="subject" maxlength="200"></td></tr>
                     <tr>
                         <td></td>
@@ -696,7 +709,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
 
         <div class="postform">
-            <h3>🎙️ Start a Space</h3>
+            <h3>🎙️ Start a Space [BETA]</h3>
             <form id="space-start-form">
                 <table>
                     <tr><td>Title</td><td><input type="text" id="space-title" maxlength="200" placeholder="What's this Space about?" required></td></tr>
@@ -715,6 +728,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                     <a href="<?= $imgpath ?>">View original</a>
                     <?php endif; ?>
                 <div class="post-header">
+                    <img class="pfp" src="<?= htmlspecialchars(pfp_url_for_trip($t['tripcode'] ?? null, $db)) ?>" alt="" width="32" height="32" loading="lazy">
                     <?php if ($t['nsfw']): ?>
                         <span class="thread-badge" style="background:#2a0010;color:#ff6688;border-color:#ff6688;">
                             NSFW
@@ -760,10 +774,11 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                <?php foreach ($t['replies'] as $p): ?>
                <div class="post" id="p<?= $p['id'] ?>">
                    <div class="post-header">
+                       <img class="pfp" src="<?= htmlspecialchars(pfp_url_for_trip($p['tripcode'] ?? null, $db)) ?>" alt="" width="24" height="24" loading="lazy">
+                       <span class="author"></span>
                        <?php if (!empty($p['options']) && $p['options'] === 'sage'): ?>
                          <span style="color:var(--grey);font-size:11px;margin-left:4px;">[sage]</span>
                        <?php endif; ?>
-                       <span class="author">
                            <?= htmlspecialchars($p['author'] ?? 'Anon') ?>
                            <?php if (!empty($p['tripcode'])): ?>
                                <span class="tripcode"><?= htmlspecialchars($p['tripcode']) ?></span>
@@ -774,8 +789,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                              data-ts="<?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>">
                            <?= date('Y-m-d H:i', strtotime($p['created_at'])) ?>
                        </span>
-                       <a href="report.php?type=thread&id=<?= $p['id'] ?>&b=<?= $p['slug'] ?? $slug ?>"
-                          class="report-link">[Report]</a>
+                       <a href="report.php?type=thread&id=<?= $p['id'] ?>&b=<?= $p['slug'] ?? $slug ?>" class="report-link">[Report]</a>
                    </div>
                    <?php if (!empty($p['img_path'])):
                        $imgpath = htmlspecialchars(media_url($p['img_path'])); ?>
@@ -813,7 +827,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
     </div>
 
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="about.html">[About]</a> <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
 
     <div id="quote-popup"></div>
     
@@ -937,6 +951,45 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             console.error('Reaction fetch failed:', err);
         }
     }
+
+    document.getElementById('pfp-file-input')?.addEventListener('change', async function() {
+        const file   = this.files[0];
+        const status = document.getElementById('pfp-set-status');
+        if (!file) return;
+
+        const nameVal = document.getElementById('postform-name').value.trim();
+
+        if (!nameVal.includes('#')) {
+            status.textContent = 'Add #password to your name first.';
+            status.style.color = '#cc2200';
+            this.value = '';
+            return;
+        }
+
+        const form = new FormData();
+        form.append('name', nameVal);
+        form.append('image', file);
+
+        status.textContent = 'Uploading...';
+        status.style.color = 'var(--grey)';
+
+        try {
+            const res  = await fetch('services/pfp_set.php', { method: 'POST', body: form });
+            const data = await res.json();
+            if (!data.ok) {
+                status.textContent = data.error || 'Failed to set pfp.';
+                status.style.color = '#cc2200';
+                this.value = '';
+                return;
+            }
+            status.textContent = '✔ Pfp set for this trip!';
+            status.style.color = '#6f6';
+        } catch (err) {
+            status.textContent = 'Upload failed.';
+            status.style.color = '#cc2200';
+        }
+        this.value = '';
+    });
 
     async function refreshCaptcha(btn) {
       const res  = await fetch('services/captcha_new.php');

@@ -101,6 +101,38 @@ a:hover      { text-decoration: underline; }
 }
 .board-item .desc { color: var(--grey); font-size: 12px; }
 
+.trending-block { margin-top: 16px; border: solid var(--pink); }
+.trending-block h2 {
+  font-size: 20px;
+  color: var(--orange);
+  border-bottom: 5px solid var(--pink);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.trending-list { display: flex; flex-direction: column; gap: 4px; }
+.trending-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--postbg);
+  border: 1px solid var(--border);
+}
+.trending-item.nsfw { border-color: var(--red); }
+.trending-title {
+  color: var(--white);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trending-title:hover { color: var(--orange); text-decoration: none; }
+.trending-meta { color: var(--grey); font-size: 11px; }
+.nsfw-tag { color: var(--red); font-weight: bold; }
+.trending-empty { color: var(--grey); font-size: 12px; padding: 6px 0; }
+
 /* ── page header ── */
 .page-header {
   background: var(--surface);

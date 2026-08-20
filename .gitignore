@@ -2,6 +2,7 @@
 *.lock
 *.sh
 *.conf
+*.dump
 
 sql
 dump

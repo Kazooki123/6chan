@@ -123,6 +123,41 @@ input[type=range] {
     </div>
 
     <div class="setting-group">
+        <h2>Profile Picture</h2>
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Tripcode</div>
+                <div class="setting-desc">
+                    Enter name#password - same syntax as posting. This is
+                    what proves the pfp is yours. there's no login.
+                </div>
+            </div>
+        </div>
+        <input type="text" id="pfp-name" placeholder="Name#password"
+               style="width:100%;background:#111;border:1px solid var(--border);
+                      color:var(--white);font:12px 'Courier New',monospace;
+                      padding:5px 8px;box-sizing:border-box;margin-top:6px;">
+
+        <div class="setting-row" style="margin-top:10px;">
+            <div>
+                <div class="setting-label">Image</div>
+                <div class="setting-desc">JPG, PNG, WEBP, or GIF. Max 3MB.</div>
+            </div>
+            <div class="setting-control">
+                <input type="file" id="pfp-file" accept="image/jpeg,image/png,image/webp,image/gif">
+            </div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;align-items:center;gap:10px;">
+            <img id="pfp-current-preview" src="../assets/profile.jpg" width="48" height="48"
+                 alt="" style="border:1px solid var(--border);object-fit:cover;">
+            <button class="save-btn" style="width:auto;padding:8px 20px;margin-top:0;"
+                    onclick="savePfp()">Upload Pfp</button>
+        </div>
+        <div class="save-confirm" id="pfp-confirm"></div>
+    </div>
+
+    <div class="setting-group">
         <h2>Color Scheme</h2>
         <div class="setting-row">
             <div>
@@ -379,6 +414,49 @@ const DEFAULTS = {
     gifbgOpacity: 8,
     gifbgSize:    'cover',
 };
+
+async function savePfp() {
+    const nameVal = document.getElementById('pfp-name').value.trim();
+    const fileInp = document.getElementById('pfp-file');
+    const confirm = document.getElementById('pfp-confirm');
+
+    confirm.style.display = 'block';
+
+    if (!nameVal.includes('#')) {
+        confirm.textContent = 'Enter Name#password first.';
+        confirm.style.color = '#cc2200';
+        return;
+    }
+    if (!fileInp.files[0]) {
+        confirm.textContent = 'Choose an image first.';
+        confirm.style.color = '#cc2200';
+        return;
+    }
+
+    const form = new FormData();
+    form.append('name', nameVal);
+    form.append('image', fileInp.files[0]);
+
+    confirm.textContent = 'Uploading...';
+    confirm.style.color = 'var(--grey)';
+
+    try {
+        const res  = await fetch('../services/pfp_set.php', { method: 'POST', body: form });
+        const data = await res.json();
+        if (!data.ok) {
+            confirm.textContent = data.error || 'Failed to set pfp.';
+            confirm.style.color = '#cc2200';
+            return;
+        }
+        confirm.textContent = '✔ Profile picture updated!';
+        confirm.style.color = '#6f6';
+        document.getElementById('pfp-current-preview').src = data.url + '?t=' + Date.now();
+        setTimeout(() => confirm.style.display = 'none', 3000);
+    } catch (err) {
+        confirm.textContent = 'Upload failed.';
+        confirm.style.color = '#cc2200';
+    }
+}
 
 function loadSettings() {
     const s = {};

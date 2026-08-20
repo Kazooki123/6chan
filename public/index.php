@@ -58,6 +58,13 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <?php endforeach; ?>
         </div>
 
+        <div class="trending-block" id="trending-block">
+            <h2>Trending</h2>
+            <div class="trending-list" id="trending-list">
+                <div class="trending-empty" id="trending-empty">Loading...</div>
+            </div>
+        </div>
+
         <div class="stats-block" id="stats-block">
             <div class="stats-grid">
                 <div class="stat-item">
@@ -141,6 +148,47 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
     
         loadStats();
         setInterval(loadStats, 30000);
+    })();
+
+    (function() {
+        const list  = document.getElementById('trending-list');
+        const empty = document.getElementById('trending-empty');
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s ?? '';
+            return d.innerHTML;
+        }
+
+        async function loadTrending() {
+            try {
+                const res  = await fetch('services/recommend.php?limit=8&_=' + Date.now());
+                const data = await res.json();
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    empty.textContent = 'Nothing trending yet.';
+                    return;
+                }
+
+                list.innerHTML = data.map(t => `
+                    <div class="trending-item${t.nsfw ? ' nsfw' : ''}">
+                        <a href="board.php?b=${esc(t.board_slug)}#p${t.id}" class="trending-title">
+                            /${esc(t.board_slug)}/ ${t.subject ? esc(t.subject) : esc(t.snippet)}
+                        </a>
+                        <span class="trending-meta">
+                            ${t.reply_count} repl${t.reply_count === 1 ? 'y' : 'ies'} ·
+                            ${t.reaction_count} reaction${t.reaction_count === 1 ? '' : 's'}
+                            ${t.nsfw ? ' · <span class="nsfw-tag">NSFW</span>' : ''}
+                        </span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                empty.textContent = 'Could not load trending threads.';
+            }
+        }
+
+        loadTrending();
+        setInterval(loadTrending, 60000);
     })();
     </script>
 </body>

@@ -97,7 +97,7 @@ function handle_upload(bool $nsfw = false): ?array {
         'image/png'  => ['ext' => 'png',  'max' => 4  * 1024 * 1024],
         'image/gif'  => ['ext' => 'gif',  'max' => 8  * 1024 * 1024],  // 8MB (for hq gifs)
         'image/webp' => ['ext' => 'webp', 'max' => 4  * 1024 * 1024],
-        'video/mp4'  => ['ext' => 'mp4',  'max' => 10 * 1024 * 1024],  // 10MB
+        'video/mp4'  => ['ext' => 'mp4',  'max' => 20 * 1024 * 1024],  // 20MB
         'audio/mpeg' => ['ext' => 'mp3',  'max' => 10 * 1024 * 1024],
         'audio/flac' => ['ext' => 'flac', 'max' => 20 * 1024 * 1024],
         'audio/ogg'  => ['ext' => 'ogg',  'max' => 10 * 1024 * 1024],

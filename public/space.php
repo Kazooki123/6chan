@@ -23,6 +23,7 @@ if (!$space) { http_response_code(404); die('Space not found.'); }
 <title>🎙️ <?= htmlspecialchars($space['title']) ?> - @6chan Space</title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
+<script src="settingsloader.js"></script>
 <style>
 .space-room { max-width: 700px; margin: 0 auto; padding: 12px; }
 .space-header { background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 14px; }

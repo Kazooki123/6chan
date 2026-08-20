@@ -62,7 +62,8 @@ INSERT INTO boards (slug, name, descript) VALUES
   ('pg', 'Photography', 'Photos and Views'),
   ('art', 'Artwork', 'Arts and Paintings'),
   ('pol', 'Politics', 'International Politics'),
-  ('d', 'Dev', 'Developer/Coder discussions'),
+  ('fem', 'Feminism', 'Feminism discussions'),
+  ('d', 'Dev', 'Developer discussions'),
   ('rs', 'Rust', 'Rust Programming Language'),
   ('py', 'Python', 'Python Language'),
   ('go', 'Go', 'Go Programming Language'),
@@ -190,6 +191,12 @@ CREATE TABLE space_signals (
     type         VARCHAR(20) NOT NULL,
     payload      JSONB NOT NULL,
     created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE pfps (
+    tripcode   VARCHAR(12) PRIMARY KEY,
+    img_key    VARCHAR(300) NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Run: `php -r "echo password_hash('yourpassword', PASSWORD_DEFAULT) . PHP_EOL;"`

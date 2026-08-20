@@ -2,7 +2,7 @@
 
 - [ ] Notification system & UI
 - [ ] Country flag for users
-- [ ] Profile Pictures (tied to tripcodes)
+- [x] Profile Pictures (tied to tripcodes)
 - [ ] Better filtering (Automod)
 - [ ] Livestream (`/live/`)
 - [ ] Recommendation algorithm (score-based)

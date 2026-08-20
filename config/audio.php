@@ -169,16 +169,44 @@ function extract_audio_meta(string $filepath, string $filename): array {
     }
     
     if (!$raw_lyrics && isset($info['id3v2']['SYLT'])) {
-        $sylt = reset($info['id3v2']['SYLT']);
-        if (!empty($sylt['data'])) {
-            $lines = [];
-            foreach ($sylt['data'] as $entry) {
-                $lines[] = [
-                    'time' => ($entry['timestamp'] ?? 0) / 1000,
-                    'line' => $entry['text'] ?? '',
-                ];
+        foreach ($info['id3v2']['SYLT'] as $sylt) {
+            $lines  = [];
+            $format = $sylt['timestampformat'] ?? 2; // 1 = MPEG frames, 2 = milliseconds
+
+            // Preferred path: getID3's own SYLT parser (module.tag.id3v2.php)
+            // structures entries under $frame['lyrics'][i]['data'/'timestamp'].
+            // It does NOT convert the text to UTF-8 for us (unlike USLT), so
+            // we decode each line ourselves using the frames `encodingid`.
+            if (!empty($sylt['lyrics']) && is_array($sylt['lyrics']) && $format == 2) {
+                foreach ($sylt['lyrics'] as $entry) {
+                    $text = $entry['data'] ?? '';
+                    if (trim($text) === '') continue;
+                    $lines[] = [
+                        'time' => ($entry['timestamp'] ?? 0) / 1000,
+                        'line' => sylt_decode_text($text, $sylt['encodingid'] ?? 0),
+                    ];
+                }
             }
-            $meta['lrc'] = $lines;
+
+            // Fallback
+            if (empty($lines) && isset($sylt['dataoffset'], $sylt['datalength'])) {
+                $parsed = parse_sylt_raw($filepath, (int)$sylt['dataoffset'], (int)$sylt['datalength']);
+                if ($parsed && $parsed['format'] == 2) {
+                    foreach ($parsed['entries'] as $entry) {
+                        if (trim($entry['text']) === '') continue;
+                        $lines[] = [
+                            'time' => $entry['timestamp'] / 1000,
+                            'line' => $entry['text'],
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($lines)) {
+                usort($lines, fn($a, $b) => $a['time'] <=> $b['time']);
+                $meta['lrc'] = $lines;
+                break;
+            }
         }
     }
 
@@ -194,6 +222,82 @@ function extract_audio_meta(string $filepath, string $filename): array {
     return $meta;
 }
 
+/**
+ * Decodes a raw SYLT lyric-line string according to its ID3v2 text-encoding id.
+ *   0 = ISO-8859-1
+ *   1 = UTF-16 with BOM
+ *   2 = UTF-16BE without BOM
+ *   3 = UTF-8 (ID3v2.4 only)
+ */
+function sylt_decode_text(string $text, int $encodingid): string {
+    switch ($encodingid) {
+        case 1:
+            return trim((string)mb_convert_encoding($text, 'UTF-8', 'UTF-16'));
+        case 2:
+            return trim((string)mb_convert_encoding($text, 'UTF-8', 'UTF-16BE'));
+        case 3:
+            return trim($text); // already UTF-8
+        case 0:
+        default:
+            return trim((string)mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1'));
+    }
+}
+
+/**
+ * Manually parses a raw SYLT frame's payload straight from the file.
+ * Layout (per ID3v2 spec, matches getid3_write_id3v2's SYLT encoder):
+ *   encoding(1) + language(3) + timestampformat(1) + contenttype(1)
+ *   + description + terminator
+ *   + repeated: [syllable text][terminator][timestamp, 4 bytes BE]
+ */
+function parse_sylt_raw(string $filepath, int $offset, int $length): ?array {
+    if ($length < 6) return null;
+
+    $fh = fopen($filepath, 'rb');
+    if (!$fh) return null;
+    fseek($fh, $offset, SEEK_SET);
+    $raw = fread($fh, $length);
+    fclose($fh);
+
+    if ($raw === false || strlen($raw) < 6) return null;
+
+    $pos         = 0;
+    $encodingid  = ord($raw[$pos]); $pos += 1;
+    $pos        += 3;
+    $tsformat    = ord($raw[$pos]); $pos += 1;
+    $pos        += 1;
+
+    $is_utf16 = ($encodingid === 1 || $encodingid === 2);
+    $termlen  = $is_utf16 ? 2 : 1;
+
+    // Skip the content descriptor field
+    $descEnd = $is_utf16 ? strpos($raw, "\x00\x00", $pos) : strpos($raw, "\x00", $pos);
+    if ($descEnd === false) return null;
+    $pos = $descEnd + $termlen;
+
+    $len     = strlen($raw);
+    $entries = [];
+
+    while ($pos < $len) {
+        $textEnd = $is_utf16 ? strpos($raw, "\x00\x00", $pos) : strpos($raw, "\x00", $pos);
+        if ($textEnd === false) break;
+
+        $textRaw = substr($raw, $pos, $textEnd - $pos);
+        $pos     = $textEnd + $termlen;
+
+        if ($pos + 4 > $len) break;
+        $unpacked  = unpack('N', substr($raw, $pos, 4));
+        $timestamp = $unpacked[1];
+        $pos      += 4;
+
+        $entries[] = [
+            'timestamp' => $timestamp,
+            'text'      => sylt_decode_text($textRaw, $encodingid),
+        ];
+    }
+
+    return ['format' => $tsformat, 'entries' => $entries];
+}
 
 function parse_lrc(string $lrc): array {
     $lines  = explode("\n", $lrc);

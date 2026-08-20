@@ -1,11 +1,10 @@
 <?php
-// session_start();
-
 require_once '../config/db.php';
 require_once '../config/cache.php';
 require_once '../config/captchav2.php';
 require_once '../config/markdown.php';
 require_once '../config/reactions.php';
+require_once '../config/pfps.php';
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -164,22 +163,10 @@ function render_body(string $text, int $thread_id): string {
             continue;
         }
 
-        // rainbow text — line starts with @@@
+        // rainbow text !! :3
         if (str_starts_with($trimmed, '@@@')) {
-            $inner = ltrim(substr($trimmed, 3));
-            $colors  = ['#ff0000','#ff6600','#ffcc00','#00cc44','#4a9eff','#9b59b6','#ff66cc'];
-            $rainbow = '';
-            $ci      = 0;
-            foreach (mb_str_split($inner) as $char) {
-                if ($char === ' ') {
-                    $rainbow .= ' ';
-                } else {
-                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">'
-                              . htmlspecialchars($char) . '</span>';
-                    $ci++;
-                }
-            }
-            $processed[] = '%%RAINBOW%%' . $rainbow . '%%ENDRAINBOW%%';
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 3)));
+            $processed[] = '%%RAINBOW%%' . $inner . '%%ENDRAINBOW%%';
             continue;
         }
 
@@ -236,9 +223,33 @@ function render_body(string $text, int $thread_id): string {
         $html
     );
 
-    $html = preg_replace(
+    $html = preg_replace_callback(
         '/%%RAINBOW%%(.+?)%%ENDRAINBOW%%/s',
-        '<span class="rainbow-text">$1</span>',
+        function($m) {
+            $inner = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $colors = [
+                '#ff0000',
+                '#ff6600',
+                '#ffcc00',
+                '#00cc44',
+                '#4a9eff',
+                '#9b59b6',
+                '#ff66cc'
+            ];
+
+            $rainbow = '';
+            $ci      = 0;
+            foreach (mb_str_split($inner) as $char) {
+                if ($char === ' ') {
+                    $rainbow .= ' ';
+                } else {
+                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">' . htmlspecialchars($char, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</span>';
+                    $ci++;
+                }
+            }
+
+            return '<span class="rainbow-text">' . $rainbow . '</span>';
+        },
         $html
     );
 
@@ -515,7 +526,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 <title>6chan — <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
-<script src="settingsloader.js"></script>
+
 <script src="shortcuts.js"></script>
 </head>
 <body class="page-thread">
@@ -549,6 +560,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
         <?php endif; ?>
         <div class="post-header">
+            <img class="pfp" src="<?= htmlspecialchars(pfp_url_for_trip($thread['tripcode'] ?? null, $db)) ?>" alt="" width="32" height="32" loading="lazy">
             <?php if ($thread['subject']): ?>
                 <span class="subject"><?= htmlspecialchars($thread['subject']) ?></span>
             <?php endif; ?>
@@ -571,6 +583,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         <?php foreach ($posts as $p): ?>
         <div class="post" id="p<?= $p['id'] ?>">
             <div class="post-header">
+                <img class="pfp" src="<?= htmlspecialchars(pfp_url_for_trip($p['tripcode'] ?? null, $db)) ?>" alt="" width="24" height="24" loading="lazy">
                 <?php if (!empty($p['options']) && $p['options'] === 'sage'): ?>
                     <span style="color:var(--grey);font-size:11px;">[sage]</span>
                 <?php endif; ?>
@@ -625,9 +638,18 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             <input type="hidden" name="captcha_token" value="<?= htmlspecialchars($captcha['token']) ?>">
             <table>
                 <tr>
-                    <td>Name</td>
-                    <td><input type="text" name="author" maxlength="64" placeholder="Anon"></td>
-                </tr>
+                        <td>Name</td>
+                        <td>
+                            <input type="text" name="author" id="postform-name" maxlength="64" placeholder="Anon">
+                            <button type="button" class="pfp-set-btn" title="Set the profile picture for this tripcode"
+                                    onclick="document.getElementById('pfp-file-input').click()">Set pfp</button>
+                            <input type="file" id="pfp-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+                            <span id="pfp-set-status" style="font-size:11px;color:var(--grey);margin-left:6px;"></span>
+                            <div style="font-size:11px;color:var(--grey);margin-top:2px;">
+                                Requires a tripcode (ame#password) - the pfp is tied to the trip, not the name.
+                            </div>
+                        </td>
+                    </tr>
                 <tr>
                     <td>Options</td>
                     <td><input type="text" name="options" maxlength="64"
@@ -865,6 +887,46 @@ async function doReact(btn) {
         console.error('Reaction fetch failed:', err);
     }
 }
+
+document.getElementById('pfp-file-input')?.addEventListener('change', async function() {
+    const file   = this.files[0];
+    const status = document.getElementById('pfp-set-status');
+    if (!file) return;
+
+    const nameVal = document.getElementById('postform-name').value.trim();
+
+    if (!nameVal.includes('#')) {
+        status.textContent = 'Add #password to your name first.';
+        status.style.color = '#cc2200';
+        this.value = '';
+        return;
+    }
+
+    const form = new FormData();
+    form.append('name', nameVal);
+    form.append('image', file);
+
+    status.textContent = 'Uploading...';
+    status.style.color = 'var(--grey)';
+
+    try {
+        const res  = await fetch('services/pfp_set.php', { method: 'POST', body: form });
+        const data = await res.json();
+        if (!data.ok) {
+            status.textContent = data.error || 'Failed to set pfp.';
+            status.style.color = '#cc2200';
+            this.value = '';
+            return;
+        }
+        status.textContent = '✔ Pfp set for this trip!';
+        status.style.color = '#6f6';
+    } catch (err) {
+        status.textContent = 'Upload failed.';
+        status.style.color = '#cc2200';
+    }
+    this.value = '';
+});
+
 async function refreshCaptcha(btn) {
   const res  = await fetch('services/captcha_new.php');
   const data = await res.json();
