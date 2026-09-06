@@ -44,6 +44,22 @@ function get_audio_metadata(string $audio_path, S3Client $s3, string $bucket): a
     }
 }
 
+// Manually-saved lyrics (via the LRC button / save_lrc.php) always take
+// priority over whatever auto-extraction found, that's the whole point
+// of the override.
+function get_manual_lrc(string $audio_path, S3Client $s3, string $bucket): ?array {
+    try {
+        $result = $s3->getObject([
+            'Bucket' => $bucket,
+            'Key'    => $audio_path . '.lrc.json',
+        ]);
+        $data = json_decode($result['Body'], true);
+        return !empty($data['lrc']) ? $data['lrc'] : null;
+    } catch (AwsException $e) {
+        return null;
+    }
+}
+
 $board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
 $board->execute([$slug]);
 $board = $board->fetch(PDO::FETCH_ASSOC);
@@ -187,6 +203,13 @@ function render_body(string $text, int $thread_id): string {
             continue;
         }
 
+        // sapphic text (rainbow text variant)
+        if (str_starts_with($trimmed, '@@!')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 3)));
+            $processed[] = '%%SAPPHIC%%' . $inner . '%%ENDSAPPHIC%%';
+            continue;
+        }
+
         $processed[] = $line;
     }
 
@@ -270,10 +293,40 @@ function render_body(string $text, int $thread_id): string {
         $html
     );
 
+    $html = preg_replace_callback(
+        '/%%SAPPHIC%%(.+?)%%ENDSAPPHIC%%/s',
+        function($m) {
+            $inner = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $colors = [
+                '#d52d00',
+                '#ef7627',
+                '#ff9a56',
+                '#ffffff',
+                '#d162a4',
+                '#b55690',
+                '#a30262'
+            ];
+
+            $rainbow = '';
+            $ci      = 0;
+            foreach (mb_str_split($inner) as $char) {
+                if ($char === ' ') {
+                    $rainbow .= ' ';
+                } else {
+                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">' . htmlspecialchars($char, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</span>';
+                    $ci++;
+                }
+            }
+
+            return '<span class="sapphic-text">' . $rainbow . '</span>';
+        },
+        $html
+    );
+
     return $html;
 }
 
-function render_media(string $path, bool $nsfw, int $thread_id): string {
+function render_media(string $path, bool $nsfw, string $owner_type, int $owner_id): string {
     global $s3, $s3_bucket;
     
     $is_video  = str_ends_with($path, '.mp4');
@@ -281,7 +334,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
     $blur_path = media_url('preview/blur_' . $path);
     $orig_path = media_url($path);
     $has_blur  = $nsfw && !$is_video && file_exists(media_url('blur_') . $path);
-    $uid       = 'media_' . md5($path . $thread_id);
+    $uid       = 'media_' . md5($path . $owner_type . $owner_id);
     
     if ($is_video) {
         $nsfw_wrap = $nsfw
@@ -300,7 +353,12 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
 
     if ($is_audio) {
         $meta = get_audio_metadata($path, $s3, $s3_bucket);
-                       
+
+        $manual_lrc = get_manual_lrc($path, $s3, $s3_bucket);
+        if ($manual_lrc !== null) {
+            $meta['lrc'] = $manual_lrc;
+        }
+
         $title    = htmlspecialchars($meta['title']    ?? 'Unknown');
         $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
         $duration = htmlspecialchars($meta['duration'] ?? '-');
@@ -346,6 +404,8 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                         <div class='audio-progress-bar' id='{$pid}-bar'></div>
                     </div>
                     <span class='audio-time' id='{$pid}-time'>0:00</span>
+                    <button class='audio-btn lrc-edit-btn' title='Add or fix lyrics'
+                            onclick='openLrcEditor(\"{$owner_type}\", {$owner_id})'>LRC</button>
                 </div>
             </div>
             <div class='audio-lyrics' id='{$pid}-lyrics'>
@@ -540,6 +600,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="6chan the Open Source Imageboard.">
     <title>/<?= htmlspecialchars($board['slug']) ?>/ - <?= htmlspecialchars($board['name']) ?></title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="style.css">
@@ -585,19 +646,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                 <input type="hidden" name="board_slug" value="<?= htmlspecialchars($board['slug']) ?>">
                 <input type="hidden" name="action" value="new_thread">
                 <table>
-                    <tr>
-                        <td>Name</td>
-                        <td>
-                            <input type="text" name="author" id="postform-name" maxlength="64" placeholder="Anon">
-                            <button type="button" class="pfp-set-btn" title="Set the profile picture for this tripcode"
-                                    onclick="document.getElementById('pfp-file-input').click()">Set pfp</button>
-                            <input type="file" id="pfp-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
-                            <span id="pfp-set-status" style="font-size:11px;color:var(--grey);margin-left:6px;"></span>
-                            <div style="font-size:11px;color:var(--grey);margin-top:2px;">
-                                Requires a tripcode (name#password) - the pfp is tied to the trip, not the name.
-                            </div>
-                        </td>
-                    </tr>
+                    <tr><td>Name</td><td><input type="text" name="author" maxlength="64" placeholder="Anon"></td></tr>
                     <tr><td>Subject</td><td><input type="text" name="subject" maxlength="200"></td></tr>
                     <tr>
                         <td></td>
@@ -709,7 +758,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
 
         <div class="postform">
-            <h3>🎙️ Start a Space [BETA]</h3>
+            <h3>🎙️ Start a Space</h3>
             <form id="space-start-form">
                 <table>
                     <tr><td>Title</td><td><input type="text" id="space-title" maxlength="200" placeholder="What's this Space about?" required></td></tr>
@@ -724,7 +773,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             <div class="thread-op" id="p<?= $t['id'] ?>">
                     <?php if (!empty($t['img_path'])):
                         $imgpath = htmlspecialchars(media_url($t['img_path'])); ?>
-                    <?= render_media($t['img_path'], (bool)$t['nsfw'], $t['id']) ?>
+                    <?= render_media($t['img_path'], (bool)$t['nsfw'], 'thread', $t['id']) ?>
                     <a href="<?= $imgpath ?>">View original</a>
                     <?php endif; ?>
                 <div class="post-header">
@@ -740,7 +789,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                     <span class="author">
                         <?= htmlspecialchars($t['author'] ?? 'Anon') ?>
                         <?php if (!empty($t['tripcode'])): ?>
-                            <span class="tripcode"><?= htmlspecialchars($t['tripcode']) ?></span>
+                            <span class="tripcode">ID: <?= htmlspecialchars($t['tripcode']) ?></span>
                         <?php endif; ?>
                     </span>
                     <span class="postnum">No.<?= $t['id'] ?></span>
@@ -779,9 +828,10 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                        <?php if (!empty($p['options']) && $p['options'] === 'sage'): ?>
                          <span style="color:var(--grey);font-size:11px;margin-left:4px;">[sage]</span>
                        <?php endif; ?>
+                       <span class="author">
                            <?= htmlspecialchars($p['author'] ?? 'Anon') ?>
                            <?php if (!empty($p['tripcode'])): ?>
-                               <span class="tripcode"><?= htmlspecialchars($p['tripcode']) ?></span>
+                               <span class="tripcode">ID: <?= htmlspecialchars($p['tripcode']) ?></span>
                            <?php endif; ?>
                        </span>
                        <span class="postnum">No.<?= $p['id'] ?></span>
@@ -794,7 +844,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                    <?php if (!empty($p['img_path'])):
                        $imgpath = htmlspecialchars(media_url($p['img_path'])); ?>
                    <div class="post-img">
-                       <?= render_media($p['img_path'], (bool)$p['nsfw'], $p['id']) ?>
+                       <?= render_media($p['img_path'], (bool)$p['nsfw'], 'post', $p['id']) ?>
                        <a href="<?= $imgpath ?>">View original</a>
                    </div>
                    <?php endif; ?>
@@ -827,7 +877,21 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
     </div>
 
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="about.html">[About]</a> <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
+    <div id="lrc-modal" class="lrc-modal" style="display:none;">
+        <div class="lrc-modal-box">
+            <h3>Add / fix lyrics</h3>
+            <p class="lrc-modal-hint">name#password, or just #password if posting anonymously.</p>
+            <input type="text" id="lrc-creds" placeholder="name#password" autocomplete="off">
+            <textarea id="lrc-paste" placeholder="Paste LRC here, e.g.&#10;[00:12]First line&#10;[00:16]Second line" rows="10"></textarea>
+            <div class="lrc-modal-msg" id="lrc-modal-msg"></div>
+            <div class="lrc-modal-actions">
+                <button type="button" id="lrc-cancel-btn">Cancel</button>
+                <button type="button" id="lrc-save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
 
     <div id="quote-popup"></div>
     
@@ -1059,6 +1123,58 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         const data = await res.json();
         if (!data.ok) { alert(date.error || 'Could not start Space!'); return; }
         location.href = 'space.php?id=' + data.space_id;
+    });
+
+    // LRC editor modal
+    let lrcTarget = null;
+
+    function openLrcEditor(ownerType, ownerId) {
+        lrcTarget = { ownerType, ownerId };
+        document.getElementById('lrc-creds').value = '';
+        document.getElementById('lrc-paste').value = '';
+        document.getElementById('lrc-modal-msg').textContent = '';
+        document.getElementById('lrc-modal').style.display = 'flex';
+    }
+
+    document.getElementById('lrc-cancel-btn').addEventListener('click', () => {
+        document.getElementById('lrc-modal').style.display = 'none';
+        lrcTarget = null;
+    });
+
+    document.getElementById('lrc-save-btn').addEventListener('click', async () => {
+        if (!lrcTarget) return;
+
+        const creds = document.getElementById('lrc-creds').value;
+        const lrc   = document.getElementById('lrc-paste').value;
+        const msgEl = document.getElementById('lrc-modal-msg');
+
+        if (!lrc.trim()) {
+            msgEl.textContent = 'Paste some LRC text first.';
+            return;
+        }
+
+        const form = new FormData();
+        form.append('owner_type', lrcTarget.ownerType);
+        form.append('owner_id', lrcTarget.ownerId);
+        form.append('credentials', creds);
+        form.append('lrc', lrc);
+
+        msgEl.textContent = 'Saving...';
+
+        try {
+            const res  = await fetch('services/save_lrc.php', { method: 'POST', body: form });
+            const data = await res.json();
+
+            if (!data.ok) {
+                msgEl.textContent = data.error || 'Could not save lyrics.';
+                return;
+            }
+
+            msgEl.textContent = 'Saved! Reloading...';
+            setTimeout(() => location.reload(), 600);
+        } catch (e) {
+            msgEl.textContent = 'Network error, try again.';
+        }
     });
     </script>
 </body>

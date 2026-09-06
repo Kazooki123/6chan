@@ -26,9 +26,6 @@ Read the **/rules**, don't be an idiot.
 
 **Prerequisites:**
 
-> [!NOTE]
-> If you want to contribute to the automod system, you might want to have **Python** installed.
-
 - PostgreSQL18 **OR** Podman
 - PHP (8.5+)
 - Composer
@@ -69,7 +66,7 @@ If these extensions are missing from the terminal output, open your `php.ini` co
 Install the required packages:
 
 ```bash
-compose install
+composer install
 ```
 
 ## 4. Starting the server

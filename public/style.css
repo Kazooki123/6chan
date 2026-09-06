@@ -49,6 +49,7 @@ html, body {
   color: var(--white);
   font-family: 'MapleMono', monospace;
   font-size: 16px;
+  isolation: isolate;
 }
 
 a            { color: var(--link); text-decoration: none; }
@@ -303,6 +304,7 @@ a:hover      { text-decoration: underline; }
 .color-blue   { color: #4a9eff; }
 
 .rainbow-text { font-weight: bold; }
+.sapphic-text { font-weight: bold; }
 
 .spoiler {
     background: #222;
@@ -662,6 +664,77 @@ body.compact .post-img video {
     padding: 0;
 }
 .audio-btn:hover { background: var(--orange2); }
+
+.audio-btn.lrc-edit-btn {
+    width: auto;
+    padding: 0 8px;
+    font: bold 10px 'MapleMono', monospace;
+    letter-spacing: 0.5px;
+}
+
+.lrc-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+.lrc-modal-box {
+    background: var(--surface);
+    border: 1px solid var(--orange);
+    padding: 14px 16px;
+    width: 90%;
+    max-width: 440px;
+    box-shadow: 2px 2px 8px #000a;
+}
+.lrc-modal-box h3 {
+    color: var(--orange);
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+.lrc-modal-hint {
+    color: var(--grey);
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+.lrc-modal-box input,
+.lrc-modal-box textarea {
+    background: #111;
+    border: 1px solid var(--border);
+    color: var(--white);
+    font: 13px/1.4 'MapleMono', monospace;
+    padding: 5px 7px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+.lrc-modal-box textarea { resize: vertical; }
+.lrc-modal-msg {
+    color: var(--pink);
+    font-size: 11px;
+    min-height: 14px;
+    margin-bottom: 6px;
+}
+.lrc-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.lrc-modal-actions button {
+    background: var(--orange);
+    border: none;
+    color: #000;
+    cursor: pointer;
+    font: bold 13px 'MapleMono', monospace;
+    padding: 5px 14px;
+}
+.lrc-modal-actions button:hover { background: var(--orange2); }
+#lrc-cancel-btn {
+    background: transparent !important;
+    color: var(--grey) !important;
+    border: 1px solid var(--border) !important;
+}
+#lrc-cancel-btn:hover { color: var(--white) !important; }
 
 .audio-progress-wrap {
     flex: 1;
@@ -1024,7 +1097,7 @@ body.has-gifbg::before {
     content: '';
     position: fixed;
     inset: 0;
-    z-index: -1;
+    z-index: 0;
 
     background-image:    var(--gifbg-url, none);
     background-size:     var(--gifbg-size, cover);
@@ -1034,8 +1107,8 @@ body.has-gifbg::before {
 
     opacity: var(--gifbg-opacity, 0.08);
     will-change: opacity;
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    /** transform: translateZ(0); **/
+    /** backface-visibility: hidden; **/
 }
 
 body.has-gifbg .wrap,

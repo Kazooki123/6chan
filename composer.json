@@ -17,9 +17,18 @@
         "monero-integrations/monerophp": "@dev",
         "landrok/activitypub": "^0.8.1",
         "phiki/phiki": "^2.2",
-        "predis/predis": "^3.5"
+        "predis/predis": "^3.5",
+        "astrotomic/php-twemoji": "^0.2.4",
+        "codewithkyrian/whisper.php": "^1.1",
+        "cloudflare/sdk": "*",
+        "codewithkyrian/transformers": "*"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "codewithkyrian/platform-package-installer": true
+        }
     }
 }

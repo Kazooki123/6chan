@@ -1,0 +1,23 @@
+{
+    "rainbow": {
+        "red":    "#ff0000",
+        "orange": "#ff6600",
+        "yellow": "#ffcc00",
+        "green":  "#00cc44",
+        "blue":   "#4a9eff",
+        "purple": "#9b59b6",
+        "pink":   "#ff66cc"
+    },
+    "sapphic": {
+        "dark_orange":  "#d52d00",
+        "orange":       "#ef7627",
+        "light_orange": "#ff9a56",
+        "white":        "#ffffff",
+        "pink":         "#d162a4",
+        "light_pink":   "#b55690",
+        "rose_pink":    "#a30262"
+    },
+    "trans": {
+        "": ""
+    }
+}

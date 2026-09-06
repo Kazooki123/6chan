@@ -8,14 +8,16 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="6chan the Open Source Imageboard">
     <title>6chan - Home</title>
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico"/>
     <link rel="stylesheet" href="style.css"/>
-    <script src="settingsloader.js"></script>
-    <script src="shortcuts.js"></script>
+    <script src="/settingsloader.js"></script>
+    <script src="/shortcuts.js"></script>
+    <script src="/oneko.js" defer></script>
 </head>
 <body class="home">
-    <div id="topbar">
+    <nav id="topbar">
         <span class="site-name">@6chan</span>
         <a href="index.php">Home</a>
         <a href="rules.html">[Rules]</a>
@@ -24,7 +26,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
         <a href="support.html">[Support]</a>
         <a href="feed.php">[RSS]</a>
         <a href="https://codeberg.org/Kazooki123/6chan">[⭐ Source]</a>
-    </div>
+    </nav>
 
     <div class="wrap">
         <div class="welcome-block">
@@ -99,9 +101,9 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                 <span class="stats-dot" id="stats-dot" title="Live">●</span>
             </div>
         </div>
-        
     </div>
-    <footer>@6chan v0.6 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.html">[Support]</a> <a href="etc/news.php">[News]</a> <a href="feed.php">[RSS]</a> </footer>
+
+    <footer>@6chan v0.6 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.html">[Support]</a> <a href="news/news.php">[News]</a> <a href="feed.php">[RSS]</a> </footer>
     
     <script>
     (function() {

@@ -15,6 +15,7 @@ vendor
 /fail2ban/
 /logs/
 **/__pycache__/
+/public/etc/asu/
 
 # ignore ongoing/developing websites
 /archive/

@@ -43,6 +43,19 @@ function get_audio_metadata(string $audio_path, S3Client $s3, string $bucket): a
     }
 }
 
+function get_manual_lrc(string $audio_path, S3Client $s3, string $bucket): ?array {
+    try {
+        $result = $s3->getObject([
+            'Bucket' => $bucket,
+            'Key'    => $audio_path . '.lrc.json',
+        ]);
+        $data = json_decode($result['Body'], true);
+        return !empty($data['lrc']) ? $data['lrc'] : null;
+    } catch (AwsException $e) {
+        return null;
+    }
+}
+
 $thread = $db->prepare("SELECT t.*, b.slug, b.name AS bname FROM threads t JOIN boards b ON b.id=t.board_id WHERE t.id=?");
 $thread->execute([$id]);
 $thread = $thread->fetch(PDO::FETCH_ASSOC);
@@ -170,6 +183,13 @@ function render_body(string $text, int $thread_id): string {
             continue;
         }
 
+        // sapphic text (rainbow text variant)
+        if (str_starts_with($trimmed, '@@!')) {
+            $inner = htmlspecialchars(ltrim(substr($trimmed, 3)));
+            $processed[] = '%%SAPPHIC%%' . $inner . '%%ENDSAPPHIC%%';
+            continue;
+        }
+
         $processed[] = $line;
     }
 
@@ -253,10 +273,40 @@ function render_body(string $text, int $thread_id): string {
         $html
     );
 
+    $html = preg_replace_callback(
+        '/%%SAPPHIC%%(.+?)%%ENDSAPPHIC%%/s',
+        function($m) {
+            $inner = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $colors = [
+                '#d52d00',
+                '#ef7627',
+                '#ff9a56',
+                '#ffffff',
+                '#d162a4',
+                '#b55690',
+                '#a30262'
+            ];
+
+            $rainbow = '';
+            $ci      = 0;
+            foreach (mb_str_split($inner) as $char) {
+                if ($char === ' ') {
+                    $rainbow .= ' ';
+                } else {
+                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">' . htmlspecialchars($char, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</span>';
+                    $ci++;
+                }
+            }
+
+            return '<span class="sapphic-text">' . $rainbow . '</span>';
+        },
+        $html
+    );
+
     return $html;
 }
 
-function render_media(string $path, bool $nsfw, int $thread_id): string {
+function render_media(string $path, bool $nsfw, string $owner_type, int $owner_id): string {
     global $s3, $s3_bucket;
     
     $is_video  = str_ends_with($path, '.mp4');
@@ -264,7 +314,7 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
     $blur_path = media_url('preview/blur_' . $path);
     $orig_path = media_url($path);
     $has_blur  = $nsfw && !$is_video && file_exists(media_url('blur_') . $path);
-    $uid       = 'media_' . md5($path . $thread_id);
+    $uid       = 'media_' . md5($path . $owner_type . $owner_id);
     
     if ($is_video) {
         $nsfw_wrap = $nsfw
@@ -283,7 +333,12 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
 
     if ($is_audio) {
         $meta = get_audio_metadata($path, $s3, $s3_bucket);
-                       
+                     
+        $manual_lrc = get_manual_lrc($path, $s3, $s3_bucket);
+        if ($manual_lrc !== null) {
+            $meta['lrc'] = $manual_lrc;
+        }
+
         $title    = htmlspecialchars($meta['title']    ?? 'Unknown');
         $artist   = htmlspecialchars($meta['artist']   ?? 'Unknown');
         $duration = htmlspecialchars($meta['duration'] ?? '-');
@@ -329,6 +384,8 @@ function render_media(string $path, bool $nsfw, int $thread_id): string {
                         <div class='audio-progress-bar' id='{$pid}-bar'></div>
                     </div>
                     <span class='audio-time' id='{$pid}-time'>0:00</span>
+                    <button class='audio-btn lrc-edit-btn' title='Add or fix lyrics'
+                            onclick='openLrcEditor(\"{$owner_type}\", {$owner_id})'>LRC</button>
                 </div>
             </div>
             <div class='audio-lyrics' id='{$pid}-lyrics'>
@@ -526,7 +583,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 <title>6chan — <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
-
+<script src="settingsloader.js"></script>
 <script src="shortcuts.js"></script>
 </head>
 <body class="page-thread">
@@ -556,7 +613,11 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <div class="thread">
         <?php if (!empty($thread['img_path'])): ?>
         <div class="thread-op" id="p<?= $thread['id'] ?>">
-            <?= render_media($thread['img_path'], (bool)$thread['nsfw'], $thread['id']) ?>
+            <?php if (!empty($thread['img_path'])):
+                $imgpath = htmlspecialchars(media_url($thread['img_path'])); ?>
+                <?= render_media($thread['img_path'], (bool)$thread['nsfw'], 'thread', $thread['id']) ?>
+                <a href="<?= $imgpath ?>">View original</a>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
         <div class="post-header">
@@ -567,7 +628,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             <span class="author">
                 <?= htmlspecialchars($thread['author'] ?? 'Anon') ?>
                 <?php if (!empty($thread['tripcode'])): ?>
-                    <span class="tripcode"><?= htmlspecialchars($thread['tripcode']) ?></span>
+                    <span class="tripcode">ID: <?= htmlspecialchars($thread['tripcode']) ?></span>
                 <?php endif; ?>
             </span>
             <span class="postnum">No.<?= $thread['id'] ?></span>
@@ -590,7 +651,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                 <span class="author">
                     <?= htmlspecialchars($p['author'] ?? 'Anon') ?>
                     <?php if (!empty($p['tripcode'])): ?>
-                        <span class="tripcode"><?= htmlspecialchars($p['tripcode']) ?></span>
+                        <span class="tripcode">ID: <?= htmlspecialchars($p['tripcode']) ?></span>
                     <?php endif; ?>
                 </span>
                 <span class="postnum">No.<?= $p['id'] ?></span>
@@ -602,7 +663,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                    class="report-link">[Report]</a>
             </div>
             <?php if (!empty($p['img_path'])): ?>
-                <?= render_media($p['img_path'], (bool)$p['nsfw'], $id) ?>
+                <?= render_media($p['img_path'], (bool)$p['nsfw'], 'post', $id) ?>
                 <?php if (preg_match('/\.(mp3|flac|ogg|wav)$/i', $p['img_path'])): ?>
                     <form method="post" action="services/set_bgm.php" style="display:inline;">
                         <input type="hidden" name="thread_id" value="<?= $id ?>">
@@ -1002,6 +1063,57 @@ function bgmClose() {
     if (bgmBar) bgmBar.style.display = 'none';
 }
 
+// LRC editor modal
+let lrcTarget = null;
+
+function openLrcEditor(ownerType, ownerId) {
+    lrcTarget = { ownerType, ownerId };
+    document.getElementById('lrc-creds').value = '';
+    document.getElementById('lrc-paste').value = '';
+    document.getElementById('lrc-modal-msg').textContent = '';
+    document.getElementById('lrc-modal').style.display = 'flex';
+}
+
+document.getElementById('lrc-cancel-btn').addEventListener('click', () => {
+    document.getElementById('lrc-modal').style.display = 'none';
+    lrcTarget = null;
+});
+
+document.getElementById('lrc-save-btn').addEventListener('click', async () => {
+    if (!lrcTarget) return;
+
+    const creds = document.getElementById('lrc-creds').value;
+    const lrc   = document.getElementById('lrc-paste').value;
+    const msgEl = document.getElementById('lrc-modal-msg');
+
+    if (!lrc.trim()) {
+        msgEl.textContent = 'Paste some LRC text first.';
+        return;
+    }
+
+    const form = new FormData();
+    form.append('owner_type', lrcTarget.ownerType);
+    form.append('owner_id', lrcTarget.ownerId);
+    form.append('credentials', creds);
+    form.append('lrc', lrc);
+
+    msgEl.textContent = 'Saving...';
+
+    try {
+        const res  = await fetch('services/save_lrc.php', { method: 'POST', body: form });
+        const data = await res.json();
+
+        if (!data.ok) {
+            msgEl.textContent = data.error || 'Could not save lyrics.';
+            return;
+        }
+
+        msgEl.textContent = 'Saved! Reloading...';
+        setTimeout(() => location.reload(), 600);
+    } catch (e) {
+        msgEl.textContent = 'Network error, try again.';
+    }
+});
 </script>
 </body>
 </html>

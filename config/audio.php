@@ -176,7 +176,7 @@ function extract_audio_meta(string $filepath, string $filename): array {
             // Preferred path: getID3's own SYLT parser (module.tag.id3v2.php)
             // structures entries under $frame['lyrics'][i]['data'/'timestamp'].
             // It does NOT convert the text to UTF-8 for us (unlike USLT), so
-            // we decode each line ourselves using the frames `encodingid`.
+            // we'll just decode each of the lines ourselves using the frames `encodingid`.
             if (!empty($sylt['lyrics']) && is_array($sylt['lyrics']) && $format == 2) {
                 foreach ($sylt['lyrics'] as $entry) {
                     $text = $entry['data'] ?? '';
