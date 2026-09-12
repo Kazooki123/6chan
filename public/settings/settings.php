@@ -47,6 +47,25 @@
 .swatch.active,
 .swatch:hover { border-color: var(--white); }
 
+.gif-swatch-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.gif-swatch {
+    width: 64px; height: 44px;
+    background-size: cover;
+    background-position: center;
+    background-color: #111;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--grey);
+    font-size: 9px;
+    text-align: center;
+    transition: border-color .15s;
+}
+.gif-swatch.active,
+.gif-swatch:hover { border-color: var(--orange); }
+
 .font-option {
     background: #111;
     border: 1px solid var(--border);
@@ -389,6 +408,64 @@ input[type=range] {
     </div>
 
     <div class="setting-group">
+        <h2>Audio Lyrics Background</h2>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Background GIF</div>
+                <div class="setting-desc">
+                    Shown behind the lyrics panel on audio posts. Purely
+                    cosmetic — no account needed, stored in your browser only.
+                </div>
+            </div>
+        </div>
+
+        <div class="gif-swatch-row" id="lyricsbg-swatches">
+            <div class="gif-swatch active" data-gif="" title="None">None</div>
+            <div class="gif-swatch" data-gif="assets/lyricsbg/train.gif"
+                 style="background-image:url('assets/lyricsbg/train.gif');" title="Style 1"></div>
+            <div class="gif-swatch" data-gif="assets/lyricsbg/girlkiss.gif"
+                 style="background-image:url('assets/lyricsbg/girlkiss.gif');" title="Style 2"></div>
+            <div class="gif-swatch" data-gif="assets/lyricsbg/anime.gif"
+                 style="background-image:url('assets/lyricsbg/anime.gif');" title="Style 3"></div>
+            <div class="gif-swatch" data-gif="assets/lyricsbg/bg4.gif"
+                 style="background-image:url('assets/lyricsbg/bg4.gif');" title="Style 4"></div>
+            <div class="gif-swatch" data-gif="assets/lyricsbg/bg5.gif"
+                 style="background-image:url('assets/lyricsbg/bg5.gif');" title="Style 5"></div>
+        </div>
+
+        <div class="setting-row" style="margin-top:10px;">
+            <div>
+                <div class="setting-label">Opacity</div>
+                <div class="setting-desc" id="lyricsbg-opacity-label">15% (subtle)</div>
+            </div>
+            <div class="setting-control">
+                <input type="range" id="lyricsbg-opacity" min="2" max="60" value="15" step="1">
+            </div>
+        </div>
+
+        <div id="lyricsbg-preview"
+             style="margin-top:10px;height:90px;border:1px solid var(--border);
+                    background:#111;position:relative;overflow:hidden;">
+            <div id="lyricsbg-preview-bg"
+                 style="position:absolute;inset:0;background-size:cover;
+                        background-position:center;opacity:0.15;
+                        will-change:opacity;transform:translateZ(0);"></div>
+            <div style="position:relative;z-index:1;height:100%;display:flex;
+                        flex-direction:column;align-items:center;justify-content:center;
+                        font-size:12px;line-height:1.9;text-align:center;">
+                <div style="color:var(--grey);">Yeah (yeah, yeah)</div>
+                <div style="color:var(--orange);font-weight:bold;">This is the active line</div>
+                <div style="color:var(--grey);">Next line coming up</div>
+            </div>
+        </div>
+
+        <div style="font-size:11px;color:var(--grey);margin-top:6px;line-height:1.6;">
+            Keep opacity low so lyrics stay readable over busy GIFs.
+        </div>
+    </div>
+
+    <div class="setting-group">
         <button class="save-btn" onclick="saveSettings()">Save Settings</button>
         <div class="save-confirm" id="save-confirm">✔ Settings saved!</div>
         <div style="text-align:center;margin-top:10px;">
@@ -413,6 +490,8 @@ const DEFAULTS = {
     gifbgUrl:     '',
     gifbgOpacity: 8,
     gifbgSize:    'cover',
+    lyricsBgGif:     '',
+    lyricsBgOpacity: 15,
 };
 
 async function savePfp() {
@@ -483,6 +562,12 @@ function applySettings(s) {
         document.body.classList.add('compact');
     else
         document.body.classList.remove('compact');
+
+    root.style.setProperty(
+        '--lyrics-bg-image',
+        s.lyricsBgGif ? 'url(' + CSS.escape(s.lyricsBgGif) + ')' : 'none'
+    );
+    root.style.setProperty('--lyrics-bg-opacity', s.lyricsBgOpacity / 100);
 }
 
 function populateControls(s) {
@@ -503,6 +588,13 @@ function populateControls(s) {
     document.getElementById('hide-images').checked   = s.hideImages;
     document.getElementById('show-nsfw').checked     = s.showNsfw;
     document.getElementById('timestamp-fmt').value = s.timestamps;
+
+    document.querySelectorAll('#lyricsbg-swatches .gif-swatch').forEach(sw => {
+        sw.classList.toggle('active', sw.dataset.gif === s.lyricsBgGif);
+    });
+    document.getElementById('lyricsbg-opacity').value = s.lyricsBgOpacity;
+    document.getElementById('lyricsbg-opacity-label').textContent = s.lyricsBgOpacity + '% opacity';
+    updateLyricsBgPreview(s.lyricsBgGif, s.lyricsBgOpacity);
 }
 
 function saveSettings() {
@@ -517,8 +609,9 @@ function saveSettings() {
 }
 
 function collectControls() {
-    const activeAccent = document.querySelector('#accent-swatches .swatch.active');
-    const activeFont   = document.querySelector('.font-option.active');
+    const activeAccent   = document.querySelector('#accent-swatches .swatch.active');
+    const activeFont     = document.querySelector('.font-option.active');
+    const activeLyricsBg = document.querySelector('#lyricsbg-swatches .gif-swatch.active');
     return {
         accent:     activeAccent ? activeAccent.dataset.color : DEFAULTS.accent,
         bg:         document.getElementById('bg-select').value,
@@ -531,6 +624,8 @@ function collectControls() {
         gifbgUrl:     document.getElementById('gifbg-url').value.trim(),
         gifbgOpacity: Number(document.getElementById('gifbg-opacity').value),
         gifbgSize:    document.getElementById('gifbg-size').value,
+        lyricsBgGif:     activeLyricsBg ? activeLyricsBg.dataset.gif : DEFAULTS.lyricsBgGif,
+        lyricsBgOpacity: Number(document.getElementById('lyricsbg-opacity').value),
     };
 }
 
@@ -547,6 +642,17 @@ function updateGifPreview(url, opacity, size) {
     } else {
         bg.style.backgroundImage    = 'none';
         bg.style.opacity            = 0.08;
+    }
+}
+
+function updateLyricsBgPreview(url, opacity) {
+    const bg = document.getElementById('lyricsbg-preview-bg');
+    if (url) {
+        bg.style.backgroundImage = 'url(' + CSS.escape(url) + ')';
+        bg.style.opacity         = opacity / 100;
+    } else {
+        bg.style.backgroundImage = 'none';
+        bg.style.opacity         = 0;
     }
 }
 
@@ -629,6 +735,22 @@ document.getElementById('gifbg-size').addEventListener('change', function() {
     const url     = document.getElementById('gifbg-url').value.trim();
     const opacity = document.getElementById('gifbg-opacity').value;
     updateGifPreview(url, opacity, this.value);
+});
+
+document.querySelectorAll('#lyricsbg-swatches .gif-swatch').forEach(sw => {
+    sw.addEventListener('click', function() {
+        document.querySelectorAll('#lyricsbg-swatches .gif-swatch')
+                .forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+        const opacity = document.getElementById('lyricsbg-opacity').value;
+        updateLyricsBgPreview(this.dataset.gif, opacity);
+    });
+});
+
+document.getElementById('lyricsbg-opacity').addEventListener('input', function() {
+    const active = document.querySelector('#lyricsbg-swatches .gif-swatch.active');
+    document.getElementById('lyricsbg-opacity-label').textContent = this.value + '% opacity';
+    updateLyricsBgPreview(active ? active.dataset.gif : '', this.value);
 });
 
 const s = loadSettings();

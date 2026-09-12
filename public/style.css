@@ -783,10 +783,23 @@ body.compact .post-img video {
     font-size: 12px;
     line-height: 1.9;
     scroll-behavior: smooth;
+    position: relative;
+    z-index: 0;
 
     /* Custom scrollbar — subtle */
     scrollbar-width: thin;
     scrollbar-color: var(--pink) transparent;
+}
+.audio-lyrics::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--lyrics-bg-image, none);
+    background-size: cover;
+    background-position: center;
+    opacity: var(--lyrics-bg-opacity, 0);
+    pointer-events: none;
 }
 .audio-lyrics::-webkit-scrollbar       { width: 4px; }
 .audio-lyrics::-webkit-scrollbar-track { background: transparent; }
