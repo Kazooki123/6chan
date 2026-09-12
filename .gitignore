@@ -16,6 +16,7 @@ vendor
 /logs/
 **/__pycache__/
 /public/etc/asu/
+/irc/target/
 
 # ignore ongoing/developing websites
 /archive/

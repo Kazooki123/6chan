@@ -37,6 +37,8 @@
         const gifbgUrl     = get('gifbgUrl')     || '';
         const gifbgOpacity = Number(get('gifbgOpacity') || 8);
         const gifbgSize = get('gifbgSize') || 'cover';
+        const lyricsBgGif     = get('lyricsBgGif')     || '';
+        const lyricsBgOpacity = Number(get('lyricsBgOpacity') || 15);
         const isBoard = document.body.classList.contains('page-board')
                    || document.body.classList.contains('page-thread')
                    || document.body.classList.contains('home');
@@ -83,30 +85,46 @@
             });
         }
 
-        if (isBoard && gifbgUrl) {
-            const sizeVal  = gifbgSize === 'repeat' ? 'auto' : gifbgSize;
-            const sizeMode = gifbgSize === 'repeat' ? 'repeat' : 'no-repeat';
-    
-            document.documentElement.style.setProperty(
-                '--gifbg-url', 'url("' + gifbgUrl.replace(/"/g, '') + '")'
-            );
-            document.documentElement.style.setProperty(
-                '--gifbg-opacity', (gifbgOpacity / 100).toFixed(2)
-            );
-            document.documentElement.style.setProperty(
-                '--gifbg-size', sizeVal
-            );
-            document.body.classList.add('has-gifbg');
-    
-            // Performance: pause GIF when tab is not visible :3
-            document.addEventListener('visibilitychange', () => {
-                const el = document.querySelector('body::before');
-                if (document.hidden) {
-                    document.body.classList.remove('has-gifbg');
-                } else {
-                    document.body.classList.add('has-gifbg');
-                }
-            });
+        if (isBoard) {
+            if (gifbgUrl) {
+                const sizeVal  = gifbgSize === 'repeat' ? 'auto' : gifbgSize;
+                const sizeMode = gifbgSize === 'repeat' ? 'repeat' : 'no-repeat';
+
+                document.documentElement.style.setProperty(
+                    '--gifbg-url', 'url("' + gifbgUrl.replace(/"/g, '') + '")'
+                );
+                document.documentElement.style.setProperty(
+                    '--gifbg-opacity', (gifbgOpacity / 100).toFixed(2)
+                );
+                document.documentElement.style.setProperty(
+                    '--gifbg-size', sizeVal
+                );
+                document.body.classList.add('has-gifbg');
+            }
+
+            if (lyricsBgGif) {
+                document.documentElement.style.setProperty(
+                    '--lyrics-bg-image', 'url("' + lyricsBgGif.replace(/"/g, '') + '")'
+                );
+                document.documentElement.style.setProperty(
+                    '--lyrics-bg-opacity', (lyricsBgOpacity / 100).toFixed(2)
+                );
+            }
+
+            if (gifbgUrl || lyricsBgGif) {
+                // Performance: pause background GIFs when the tab isn't visible :3
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        if (gifbgUrl)    document.body.classList.remove('has-gifbg');
+                        if (lyricsBgGif) document.documentElement.style.setProperty('--lyrics-bg-opacity', '0');
+                    } else {
+                        if (gifbgUrl)    document.body.classList.add('has-gifbg');
+                        if (lyricsBgGif) document.documentElement.style.setProperty(
+                            '--lyrics-bg-opacity', (lyricsBgOpacity / 100).toFixed(2)
+                        );
+                    }
+                });
+            }
         }
     });
 })();

@@ -6,6 +6,7 @@ require_once '../../config/captchav2.php';
 require_once '../../config/automod.php';
 require_once '../../config/cache.php';
 require_once '../../config/tripcode.php';
+require_once 'countryflags.php';
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -320,10 +321,11 @@ if ($action === 'new_thread') {
     }
 
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
+    $flag = detect_flag($ip);
 
     $s = $db->prepare(
-        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, tripcode, automod_flag, nsfw)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
+        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, tripcode, automod_flag, nsfw, flag_code, flag_name)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
     );
     $s->execute([
         $board['id'],
@@ -335,6 +337,8 @@ if ($action === 'new_thread') {
         $tripcode,
         $automod_flag,
         $nsfw,
+        $flag['code'],
+        $flag['name'],
     ]);
 
     $tid = $s->fetchColumn();
@@ -461,10 +465,11 @@ if ($action === 'new_thread') {
     }
 
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
+    $flag = detect_flag($ip);
 
     $s = $db->prepare(
-        "INSERT INTO posts (thread_id, body, img_path, ip, author, tripcode, options, automod_flag, nsfw)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO posts (thread_id, body, img_path, ip, author, tripcode, options, automod_flag, nsfw, flag_code, flag_name)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $s->execute([
         $tid,
@@ -476,6 +481,8 @@ if ($action === 'new_thread') {
         $is_sage ? 'sage' : null,
         $automod_flag,
         $nsfw,
+        $flag['code'],
+        $flag['name'],
     ]);
 
     if (!$is_sage) {

@@ -1,0 +1,24 @@
+[package]
+name = "yukiko"
+description = "Terminal IRC client for 6chan"
+authors = ["Kazooki123"]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[[bin]]
+name = "yukiko"
+path = "src/main.rs"
+
+[dependencies]
+ratatui = "0.28"
+crossterm = "0.28"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+clap = { version = "4", features = ["derive"] }
+chrono = "0.4"
+dirs = "5"
+toml = "0.8"
+anyhow = "1"

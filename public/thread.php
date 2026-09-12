@@ -5,6 +5,8 @@ require_once '../config/captchav2.php';
 require_once '../config/markdown.php';
 require_once '../config/reactions.php';
 require_once '../config/pfps.php';
+require_once 'services/map.php';
+require_once 'services/countryflags.php';
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -116,6 +118,14 @@ if (!empty($thread['bgm_post_id'])) {
 }
 
 function render_body(string $text, int $thread_id): string {
+    $map_coords = parse_map_command($text);
+    if ($map_coords !== null) {
+        static $map_counter = 0;
+        $map_counter++;
+        $uid = 'map_' . $thread_id . '_' . $map_counter;
+        return render_map_embed($map_coords[0], $map_coords[1], $uid);
+    }
+
     $lines     = explode("\n", $text);
     $processed = [];
 
@@ -583,6 +593,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 <title>6chan — <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
 <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 <link rel="stylesheet" href="style.css">
+<?= render_leaflet_assets() ?>
 <script src="settingsloader.js"></script>
 <script src="shortcuts.js"></script>
 </head>
@@ -630,6 +641,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                 <?php if (!empty($thread['tripcode'])): ?>
                     <span class="tripcode">ID: <?= htmlspecialchars($thread['tripcode']) ?></span>
                 <?php endif; ?>
+                <?= render_flag_by_code($thread['flag_code'] ?? null, $thread['flag_name'] ?? null) ?>
             </span>
             <span class="postnum">No.<?= $thread['id'] ?></span>
             <span class="postdate"><?= date('Y-m-d H:i', strtotime($thread['created_at'])) ?></span>
@@ -653,6 +665,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                     <?php if (!empty($p['tripcode'])): ?>
                         <span class="tripcode">ID: <?= htmlspecialchars($p['tripcode']) ?></span>
                     <?php endif; ?>
+                    <?= render_flag_by_code($p['flag_code'] ?? null, $p['flag_name'] ?? null) ?>
                 </span>
                 <span class="postnum">No.<?= $p['id'] ?></span>
                 <span class="postdate"

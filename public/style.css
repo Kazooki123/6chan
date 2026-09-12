@@ -672,6 +672,21 @@ body.compact .post-img video {
     letter-spacing: 0.5px;
 }
 
+.post-map {
+    height: 220px;
+    max-width: 400px;
+    border: 1px solid var(--border);
+    margin-top: 6px;
+    background: #111;
+}
+
+.post-flag {
+    margin-left: 4px;
+    font-size: 13px;
+    cursor: default;
+}
+
+/* ── LRC editor modal ── */
 .lrc-modal {
     position: fixed;
     inset: 0;
