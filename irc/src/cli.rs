@@ -17,6 +17,25 @@ pub enum Command {
         #[arg(long)]
         name: Option<String>,
     },
+    Daemon {
+        #[arg(long, default_value = "#general")]
+        channel: String,
+        #[arg(long)]
+        server: Option<String>,
+        #[arg(long)]
+        name: Option<String>,
+        #[arg(long)]
+        port: Option<u16>,
+    },
+    /// Redeems a one-time invite code (from admin/invite.php) for a
+    /// permanent staff token, and save it to the config file.
+    Redeem {
+        code: String,
+        #[arg(long)]
+        username: String,
+        #[arg(long)]
+        server: Option<String>,
+    },
     Config {
         #[command(subcommand)]
         action: ConfigAction,

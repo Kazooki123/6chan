@@ -1,7 +1,5 @@
 use ratatui::style::Color;
 
-// Fixed palette, deliberately excludes very dark/very light colors
-// so text stays readable on both light and dark terminal themes.
 const PALETTE: &[Color] = &[
     Color::Red,
     Color::Green,
@@ -22,9 +20,9 @@ pub fn color_for(author: &str, tripcode: &Option<String>) -> Color {
     PALETTE[(hash as usize) % PALETTE.len()]
 }
 
-/// Staff always render in a fixed, unmistakable color rather than the
-/// hashed palette... A mod's color shouldn't be confusable with an anon's.
 pub const STAFF_COLOR: Color = Color::White;
+
+pub const FRIEND_COLOR: Color = Color::LightYellow;
 
 fn fnv1a(bytes: &[u8]) -> u64 {
     let mut hash: u64 = 0xcbf29ce484222325;

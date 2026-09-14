@@ -4,11 +4,16 @@ use std::fs;
 use std::path::PathBuf;
 
 const DEFAULT_SERVER: &str = "http://localhost:8080";
+pub const DEFAULT_DAEMON_PORT: u16 = 7878;
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Config {
     pub server: Option<String>,
     pub name: Option<String>,
+    pub staff_token: Option<String>,
+    pub daemon_port: Option<u16>,
+    #[serde(default)]
+    pub friends: Vec<String>,
 }
 
 impl Config {
@@ -54,5 +59,10 @@ impl Config {
         cli_override
             .or_else(|| self.name.clone())
             .unwrap_or_else(|| "Anon".to_string())
+    }
+
+    /// Resolution order: CLI flag > config file > built-in default (7878).
+    pub fn resolve_daemon_port(&self, cli_override: Option<u16>) -> u16 {
+        cli_override.or(self.daemon_port).unwrap_or(DEFAULT_DAEMON_PORT)
     }
 }

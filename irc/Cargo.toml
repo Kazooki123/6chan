@@ -2,9 +2,10 @@
 name = "yukiko"
 description = "Terminal IRC client for 6chan"
 authors = ["Kazooki123"]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
+readme = "README.md"
 
 [[bin]]
 name = "yukiko"

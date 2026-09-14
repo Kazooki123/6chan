@@ -444,9 +444,7 @@ input[type=range] {
             </div>
         </div>
 
-        <div id="lyricsbg-preview"
-             style="margin-top:10px;height:90px;border:1px solid var(--border);
-                    background:#111;position:relative;overflow:hidden;">
+        <div id="lyricsbg-preview" style="margin-top:10px;height:90px;border:1px solid var(--border);background:#111;position:relative;overflow:hidden;">
             <div id="lyricsbg-preview-bg"
                  style="position:absolute;inset:0;background-size:cover;
                         background-position:center;opacity:0.15;

@@ -17,6 +17,8 @@ vendor
 **/__pycache__/
 /public/etc/asu/
 /irc/target/
+/storage/
+/models/
 
 # ignore ongoing/developing websites
 /archive/
