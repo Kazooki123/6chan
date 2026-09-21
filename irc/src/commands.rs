@@ -1,8 +1,15 @@
+use std::path::PathBuf;
+
 use tokio::sync::mpsc;
 
 use crate::app::App;
 use crate::config::Config;
 use crate::events::UiCommand;
+
+pub enum AsyncJob {
+    Upload { channel: String, author: String, path: PathBuf },
+    Download { file_id: String, dest_dir: PathBuf, feedback_channel: String },
+}
 
 fn normalize(raw: &str) -> String {
     let raw = raw.trim();
@@ -13,7 +20,7 @@ fn normalize(raw: &str) -> String {
     }
 }
 
-pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: &str) {
+pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: &str) -> Option<AsyncJob> {
     let mut parts = line.splitn(2, ' ');
     let cmd = parts.next().unwrap_or("").to_lowercase();
     let rest = parts.next().unwrap_or("").trim();
@@ -23,10 +30,9 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
         "nick" => {
             if rest.is_empty() {
                 app.push_system_message(&active, "Usage: /nick <name> (or \"name#password\" for a tripcode)");
-                return;
+                return None;
             }
             app.name = rest.to_string();
-            
             if let Ok(mut cfg) = Config::load() {
                 cfg.name = Some(rest.to_string());
                 let _ = cfg.save();
@@ -37,10 +43,11 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
         "join" => {
             if rest.is_empty() {
                 app.push_system_message(&active, "Usage: /join <#channel>");
-                return;
+                return None;
             }
             let channel = normalize(rest);
             app.add_channel(channel.clone());
+            app.push_system_message(&channel, format!("Joined {channel}"));
             let _ = out_tx.send(UiCommand::Join { channel });
         }
 
@@ -54,7 +61,7 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
         "me" => {
             if rest.is_empty() {
                 app.push_system_message(&active, "Usage: /me <action>");
-                return;
+                return None;
             }
             let body = format!("*{} {}*", app.name, rest);
             let _ = out_tx.send(UiCommand::Send {
@@ -66,8 +73,8 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
 
         "friend" => {
             if rest.is_empty() {
-                app.push_system_message(&active, "Usage: /friend <name or tripcode>");
-                return;
+                app.push_system_message(&active, "Usage: /friend <name or !tripcode>");
+                return None;
             }
             if !app.friends.iter().any(|f| f == rest) {
                 app.friends.push(rest.to_string());
@@ -81,8 +88,8 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
 
         "unfriend" => {
             if rest.is_empty() {
-                app.push_system_message(&active, "Usage: /unfriend <name or tripcode>");
-                return;
+                app.push_system_message(&active, "Usage: /unfriend <name or !tripcode>");
+                return None;
             }
             app.friends.retain(|f| f != rest);
             if let Ok(mut cfg) = Config::load() {
@@ -92,6 +99,32 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
             app.push_system_message(&active, format!("Removed {rest} from friends"));
         }
 
+        "settings" => {
+            app.settings_open = !app.settings_open;
+        }
+
+        "send" | "upload" => {
+            if rest.is_empty() {
+                app.push_system_message(&active, "Usage: /send <local file path> (5MB max)");
+                return None;
+            }
+            let path = PathBuf::from(rest);
+            app.push_system_message(&active, format!("Uploading {}...", path.display()));
+            return Some(AsyncJob::Upload { channel: active, author: app.name.clone(), path });
+        }
+
+        "getfile" | "download" => {
+            if rest.is_empty() {
+                app.push_system_message(&active, "Usage: /getfile <id> [folder]  (id comes from a 📎 line)");
+                return None;
+            }
+            let mut args = rest.splitn(2, ' ');
+            let file_id = args.next().unwrap_or("").to_string();
+            let dest_dir = args.next().map(PathBuf::from).unwrap_or_else(|| PathBuf::from("yukiko-downloads"));
+            app.push_system_message(&active, format!("Downloading {file_id}..."));
+            return Some(AsyncJob::Download { file_id, dest_dir, feedback_channel: active });
+        }
+
         "quit" => {
             app.should_quit = true;
         }
@@ -99,7 +132,7 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
         "help" => {
             app.push_system_message(
                 &active,
-                "/nick <name>  /join <#channel>  /part [#channel]  /me <action>  /friend <name>  /unfriend <name>  /quit  /help",
+                "/nick <name>  /join <#channel>  /part [#channel]  /me <action>  /friend <name>  /unfriend <name>  /send <path>  /getfile <id>  /settings  /quit  /help",
             );
         }
 
@@ -107,4 +140,5 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
             app.push_system_message(&active, format!("Unknown command: /{other} (try /help)"));
         }
     }
+    None
 }

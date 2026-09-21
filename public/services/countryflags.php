@@ -61,8 +61,6 @@ function detect_flag(string $ip): array {
         return $country;
     }
 
-    // Lookup failed (db missing, IP not in db, etc.) — still show
-    // something rather than a blank space.
     return novelty_flag_for($ip);
 }
 

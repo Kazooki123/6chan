@@ -720,7 +720,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                             <input type="file" id="pfp-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
                             <span id="pfp-set-status" style="font-size:11px;color:var(--grey);margin-left:6px;"></span>
                             <div style="font-size:11px;color:var(--grey);margin-top:2px;">
-                                Requires a tripcode (ame#password) - the pfp is tied to the trip, not the name.
+                                Requires a tripcode (name#password) - the pfp is tied to the trip, not the name.
                             </div>
                         </td>
                     </tr>

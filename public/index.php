@@ -103,7 +103,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
         </div>
     </div>
 
-    <footer>@6chan v0.6 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.html">[Support]</a> <a href="news/news.php">[News]</a> <a href="feed.php">[RSS]</a> </footer>
+    <footer>@6chan v0.6 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.html">[Support]</a> <a href="news/news.php">[News]</a> <a href="feed.php">[RSS]</a> | <a href="rfc/index.php">[::RFC]</a></footer>
     
     <script>
     (function() {

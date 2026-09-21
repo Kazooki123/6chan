@@ -6,6 +6,8 @@ use std::path::PathBuf;
 const DEFAULT_SERVER: &str = "http://localhost:8080";
 pub const DEFAULT_DAEMON_PORT: u16 = 7878;
 
+use crate::theme::ThemeName;
+
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Config {
     pub server: Option<String>,
@@ -14,6 +16,9 @@ pub struct Config {
     pub daemon_port: Option<u16>,
     #[serde(default)]
     pub friends: Vec<String>,
+    pub theme: Option<String>,
+    pub show_timestamps: Option<bool>,
+    pub show_tripcodes: Option<bool>,
 }
 
 impl Config {
@@ -64,5 +69,17 @@ impl Config {
     /// Resolution order: CLI flag > config file > built-in default (7878).
     pub fn resolve_daemon_port(&self, cli_override: Option<u16>) -> u16 {
         cli_override.or(self.daemon_port).unwrap_or(DEFAULT_DAEMON_PORT)
+    }
+
+    pub fn resolve_theme(&self) -> ThemeName {
+        self.theme.as_deref().map(ThemeName::from_key).unwrap_or(ThemeName::Default)
+    }
+
+    pub fn resolve_show_timestamps(&self) -> bool {
+        self.show_timestamps.unwrap_or(true)
+    }
+
+    pub fn resolve_show_tripcodes(&self) -> bool {
+        self.show_tripcodes.unwrap_or(true)
     }
 }

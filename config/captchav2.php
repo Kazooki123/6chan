@@ -71,7 +71,7 @@ function captchav2_render(string $code): void {
     }
 
     $char_w  = (int)($w / (strlen($code) + 1));
-    $font    = __DIR__ . '/../public/font/captcha_font.ttf';
+    $font    = __DIR__ . '/../public/assets/font/captcha_font.ttf';
 
     // Fallback — if no TTF font, use built-in GD font.
     $has_ttf = file_exists($font) && function_exists('imagettftext');

@@ -1,6 +1,7 @@
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,6 +56,16 @@ struct RedeemResponse {
     #[serde(default)]
     error: Option<String>,
 }
+
+#[derive(Debug, Deserialize)]
+struct UploadResponse {
+    #[serde(default)]
+    ok: bool,
+    #[serde(default)]
+    error: Option<String>,
+}
+
+pub const MAX_UPLOAD_BYTES: u64 = 5 * 1024 * 1024;
 
 fn generate_client_id() -> String {
     let nanos = SystemTime::now()
@@ -168,4 +179,92 @@ impl Api {
 
         Ok(())
     }
+
+    pub async fn upload_file(&self, channel: &str, author: &str, path: &Path) -> Result<String> {
+        let data = tokio::fs::read(path)
+            .await
+            .with_context(|| format!("reading {}", path.display()))?;
+
+        if data.len() as u64 > MAX_UPLOAD_BYTES {
+            bail!(
+                "{} is {} bytes, over the {}MB limit",
+                path.display(),
+                data.len(),
+                MAX_UPLOAD_BYTES / (1024 * 1024)
+            );
+        }
+
+        let filename = path
+            .file_name()
+            .and_then(|f| f.to_str())
+            .unwrap_or("file")
+            .to_string();
+
+        let part = reqwest::multipart::Part::bytes(data).file_name(filename.clone());
+        let form = reqwest::multipart::Form::new()
+            .text("channel", Self::normalize_channel(channel).to_string())
+            .text("author", author.to_string())
+            .part("file", part);
+
+        let mut req = self
+            .client
+            .post(self.endpoint())
+            .query(&[("endpoint", "upload")])
+            .multipart(form);
+        if let Some(token) = &self.staff_token {
+            req = req.header("X-Yukiko-Token", token);
+        }
+        let resp = req.send().await?;
+
+        let status = resp.status();
+        let parsed: UploadResponse = resp.json().await?;
+        if !status.is_success() || !parsed.ok {
+            bail!(parsed.error.unwrap_or_else(|| format!("upload failed ({status})")));
+        }
+
+        Ok(filename)
+    }
+
+    pub async fn download_file(&self, file_id: &str, dest_dir: &Path) -> Result<PathBuf> {
+        let mut req = self
+            .client
+            .get(self.endpoint())
+            .query(&[("endpoint", "download"), ("id", file_id)]);
+        if let Some(token) = &self.staff_token {
+            req = req.header("X-Yukiko-Token", token);
+        }
+        let resp = req.send().await?;
+
+        let status = resp.status();
+        if !status.is_success() {
+            // Error responses here are JSON; best-effort surface the message.
+            let text = resp.text().await.unwrap_or_default();
+            bail!("download failed ({status}): {text}");
+        }
+
+        let filename = resp
+            .headers()
+            .get(reqwest::header::CONTENT_DISPOSITION)
+            .and_then(|v| v.to_str().ok())
+            .and_then(extract_filename)
+            .unwrap_or_else(|| file_id.to_string());
+
+        let bytes = resp.bytes().await?;
+        tokio::fs::create_dir_all(dest_dir)
+            .await
+            .with_context(|| format!("creating {}", dest_dir.display()))?;
+        let dest = dest_dir.join(&filename);
+        tokio::fs::write(&dest, &bytes)
+            .await
+            .with_context(|| format!("writing {}", dest.display()))?;
+
+        Ok(dest)
+    }
+}
+
+fn extract_filename(header_val: &str) -> Option<String> {
+    let marker = "filename=\"";
+    let start = header_val.find(marker)? + marker.len();
+    let end = header_val[start..].find('"')? + start;
+    Some(header_val[start..end].to_string())
 }

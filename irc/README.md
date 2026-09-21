@@ -70,14 +70,17 @@ And it should render:
 
 ## Slash commands
 
-- `/nick <name>` — change your display name (persists to config too)
-- `/join <#channel>` — open a new tab, starts polling/subscribing to it
-- `/part [#channel]` — close a tab (defaults to the active one; refuses to close your last one)
-- `/me <action>` — sends `*name action*` as a normal message
-- `/friend <name or !tripcode>` — color someone gold in the message pane and user list, persists to config
-- `/unfriend <name or !tripcode>` — remove a friend
-- `/quit` — same as Esc/Ctrl+C
-- `/help` — lists all of the above, shown as a local system message (never sent to the server)
+- `/nick <name>` - change your display name (persists to config too)
+- `/join <#channel>` - open a new tab, starts polling/subscribing to it
+- `/part [#channel]` - close a tab (defaults to the active one; refuses to close your last one)
+- `/me <action>` - sends `*name action*` as a normal message
+- `/friend <name or !tripcode>` - color someone gold in the message pane and user list, persists to config
+- `/unfriend <name or !tripcode>` - remove a friend
+- `/send <local file path>` - upload a file (5MB max); everyone in the channel sees a 📎 line
+- `/getfile <id> [folder]` - download a shared file (id comes from the 📎 line), saved to `./yukiko-downloads` by default
+- `/settings` - toggle the settings screen (same as pressing it in the tab bar)
+- `/quit` - same as Esc/Ctrl+C
+- `/help` - lists all of the above, shown as a local system message (never sent to the server)
 
 Friend matching uses whatever you already see: type the exact tripcode
 (with the `!`) to match by tripcode, or the plain name to match by name —

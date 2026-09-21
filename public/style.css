@@ -38,9 +38,9 @@
 
 @font-face {
     font-family: 'MapleMono';
-    src: url('/font/MapleMono-SemiBold.ttf') format('truetype');
-    /* src: url('/font/Minecraft.ttf') format('truetype'); */
-    /* src: url('/font/SuperMario256.ttf') format('truetype'); */
+    src: url('/assets/font/MapleMono-SemiBold.ttf') format('truetype');
+    /* src: url('/assets/font/Minecraft.ttf') format('truetype'); */
+    /* src: url('/assets/font/SuperMario256.ttf') format('truetype'); */
     font-variant: swap;
 }
 
@@ -621,7 +621,10 @@ body.compact .post-img video {
     font-weight: bold;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip;
+
+    /* transition: transform 2s ease-in-out; */
+    /* transform: translateX(calc(-100% + 200%)); */
 }
 
 .audio-artist {

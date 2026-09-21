@@ -7,7 +7,7 @@ $chat_db = get_chat_db();
 $action  = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // =================================================================
-// Redeem — called by `yukiko redeem <code>`, NOT an admin session.
+// Redeem - called by `yukiko redeem <code>`, NOT an admin session.
 // This is precisely how a brand-new staffer bootstraps a token
 // without ever having logged into the web panel from that machine.
 // =================================================================

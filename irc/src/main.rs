@@ -1,5 +1,6 @@
 mod api;
 mod app;
+mod banner;
 mod cli;
 mod color;
 mod commands;
@@ -8,6 +9,7 @@ mod daemon;
 mod daemon_client;
 mod events;
 mod protocol;
+mod theme;
 mod ui;
 
 use std::collections::HashMap;
@@ -24,8 +26,9 @@ use ratatui::{backend::CrosstermBackend, Terminal};
 use tokio::sync::mpsc;
 
 use api::Api;
-use app::App;
+use app::{App, AppInit};
 use cli::{Cli, Command, ConfigAction};
+use commands::AsyncJob;
 use config::Config;
 use events::{NetEvent, UiCommand};
 
@@ -69,8 +72,22 @@ async fn main() -> Result<()> {
             let display_name = cfg.resolve_name(name);
             let daemon_port = cfg.resolve_daemon_port(None);
             let friends = cfg.friends.clone();
+            let theme_name = cfg.resolve_theme();
+            let show_timestamps = cfg.resolve_show_timestamps();
+            let show_tripcodes = cfg.resolve_show_tripcodes();
             let channels = parse_channels(&channel);
-            run_client(channels, server_url, display_name, cfg.staff_token, daemon_port, friends).await
+            run_client(
+                channels,
+                server_url,
+                display_name,
+                cfg.staff_token,
+                daemon_port,
+                friends,
+                theme_name,
+                show_timestamps,
+                show_tripcodes,
+            )
+            .await
         }
     }
 }
@@ -108,6 +125,7 @@ fn run_config(mut cfg: Config, action: ConfigAction) -> Result<()> {
                 "daemon port: {}",
                 cfg.daemon_port.map(|p| p.to_string()).unwrap_or_else(|| "(default: 7878)".to_string())
             );
+            println!("theme: {}", cfg.resolve_theme().label());
         }
         ConfigAction::SetServer { url } => {
             cfg.server = Some(url.clone());
@@ -123,6 +141,7 @@ fn run_config(mut cfg: Config, action: ConfigAction) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn run_client(
     channels: Vec<String>,
     server_url: String,
@@ -130,6 +149,9 @@ async fn run_client(
     staff_token: Option<String>,
     daemon_port: u16,
     friends: Vec<String>,
+    theme_name: theme::ThemeName,
+    show_timestamps: bool,
+    show_tripcodes: bool,
 ) -> Result<()> {
     if channels.is_empty() {
         anyhow::bail!("no channels given");
@@ -137,7 +159,18 @@ async fn run_client(
 
     let (net_tx, mut net_rx) = mpsc::unbounded_channel::<NetEvent>();
     let (out_tx, out_rx) = mpsc::unbounded_channel::<UiCommand>();
-    let mut app = App::new(channels.clone(), name.clone(), friends);
+    let mut app = App::new(AppInit {
+        channels: channels.clone(),
+        name: name.clone(),
+        friends,
+        theme_name,
+        show_timestamps,
+        show_tripcodes,
+        server_url: server_url.clone(),
+    });
+
+    let action_api = Api::new(server_url.clone(), staff_token.clone());
+    let job_net_tx = net_tx.clone();
 
     if let Some(stream) = daemon_client::try_connect(daemon_port).await {
         tokio::spawn(daemon_client::run(stream, channels.clone(), net_tx, out_rx));
@@ -152,7 +185,7 @@ async fn run_client(
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = event_loop(&mut terminal, &mut app, &mut net_rx, &out_tx).await;
+    let result = event_loop(&mut terminal, &mut app, &mut net_rx, &out_tx, &action_api, job_net_tx).await;
 
     disable_raw_mode()?;
     execute!(
@@ -165,21 +198,43 @@ async fn run_client(
     result
 }
 
+fn spawn_async_job(job: AsyncJob, api: Api, net_tx: mpsc::UnboundedSender<NetEvent>) {
+    tokio::spawn(async move {
+        match job {
+            AsyncJob::Upload { channel, author, path } => {
+                let body = match api.upload_file(&channel, &author, &path).await {
+                    Ok(filename) => format!("Uploaded {filename}"),
+                    Err(e) => format!("Upload failed: {e}"),
+                };
+                let _ = net_tx.send(NetEvent::SystemMessage { channel, body });
+            }
+            AsyncJob::Download { file_id, dest_dir, feedback_channel } => {
+                let body = match api.download_file(&file_id, &dest_dir).await {
+                    Ok(path) => format!("Saved to {}", path.display()),
+                    Err(e) => format!("Download failed: {e}"),
+                };
+                let _ = net_tx.send(NetEvent::SystemMessage { channel: feedback_channel, body });
+            }
+        }
+    });
+}
+
 async fn event_loop(
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     app: &mut App,
     net_rx: &mut mpsc::UnboundedReceiver<NetEvent>,
     out_tx: &mpsc::UnboundedSender<UiCommand>,
+    action_api: &Api,
+    job_net_tx: mpsc::UnboundedSender<NetEvent>,
 ) -> Result<()> {
     loop {
         while let Ok(evt) = net_rx.try_recv() {
             match evt {
                 NetEvent::Messages { channel, messages } => app.push_messages(&channel, messages),
                 NetEvent::Users { channel, users } => app.set_users(&channel, users),
-                NetEvent::ChannelStatus { channel, status } => {
-                    app.set_channel_status(&channel, status)
-                }
+                NetEvent::ChannelStatus { channel, status } => app.set_channel_status(&channel, status),
                 NetEvent::Connected(s) => app.global_status = s,
+                NetEvent::SystemMessage { channel, body } => app.push_system_message(&channel, body),
             }
         }
 
@@ -190,6 +245,25 @@ async fn event_loop(
                 if key.kind != KeyEventKind::Press {
                     continue;
                 }
+
+                if app.settings_open {
+                    match key.code {
+                        KeyCode::Esc => app.settings_open = false,
+                        KeyCode::Char('c') if key.modifiers.contains(event::KeyModifiers::CONTROL) => {
+                            app.should_quit = true;
+                        }
+                        KeyCode::Up => app.settings_move(-1),
+                        KeyCode::Down => app.settings_move(1),
+                        KeyCode::Left => app.settings_cycle(false),
+                        KeyCode::Right | KeyCode::Enter => app.settings_cycle(true),
+                        _ => {}
+                    }
+                    if app.should_quit {
+                        break;
+                    }
+                    continue;
+                }
+
                 match key.code {
                     KeyCode::Esc => {
                         app.should_quit = true;
@@ -207,7 +281,9 @@ async fn event_loop(
                     KeyCode::Enter => {
                         if let Some(text) = app.take_input() {
                             if let Some(rest) = text.strip_prefix('/') {
-                                commands::dispatch(app, out_tx, rest);
+                                if let Some(job) = commands::dispatch(app, out_tx, rest) {
+                                    spawn_async_job(job, action_api.clone(), job_net_tx.clone());
+                                }
                             } else {
                                 let channel = app.active_channel().to_string();
                                 let author = app.name.clone();

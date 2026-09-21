@@ -32,6 +32,33 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
+  anubis:
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      BIND: ":8080"
+      DIFFICULTY: "4"
+      METRICS_BIND: ":9090"
+      SERVE_ROBOTS_TXT: "true"
+      TARGET: "http://nginx"
+      POLICY_FNAME: "/data/cfg/botPolicy.yaml"
+      OG_PASSTHROUGH: "true"
+      OG_EXPIRY_TIME: "24h"
+    healthcheck:
+      test: ["CMD", "anubis", "--healthcheck"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+      start_period: 500ms
+    ports:
+      - 8080:8080
+    volumes:
+      - "./botPolicy.yaml:/data/cfg/botPolicy.yaml:ro"
+
+  nginx:
+    image: nginx
+    volumes:
+      - "./www:/usr/share/nginx/html"
+
   # Note to self: just experimental, prob removed/comment out or kept later on ^_^
   fail2ban:
     image: lscr.io/linuxserver/fail2ban:latest
@@ -66,14 +93,17 @@ services:
       - minio_data:/data:Z
     command: server /data --console-address ":9001"
 
-  owncast:
-    image: owncast/owncast:latest
-    container_name: livestream
-    ports:
-      - "8080:8080"
-      - "1935:1935"
-    volumes:
-      - ./data:/app/data
+  # Might still use this in the future, for now the Pion engine
+  # written in Go will take the role.
+  #
+  # owncast:
+  #  image: owncast/owncast:latest
+  #  container_name: livestream
+  #  ports:
+  #    - "8080:8080"
+  #    - "1935:1935"
+  #  volumes:
+  #    - ./data:/app/data
 
   coturn:
     image: docker.io/coturn/coturn

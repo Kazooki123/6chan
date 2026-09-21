@@ -49,7 +49,8 @@
 
 .gif-swatch-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .gif-swatch {
-    width: 64px; height: 44px;
+    width: 64px;
+    height: 44px;
     background-size: cover;
     background-position: center;
     background-color: #111;
@@ -414,24 +415,23 @@ input[type=range] {
             <div>
                 <div class="setting-label">Background GIF</div>
                 <div class="setting-desc">
-                    Shown behind the lyrics panel on audio posts. Purely
-                    cosmetic — no account needed, stored in your browser only.
+                    Shown behind the lyrics panel on audio posts. Stored in your browser only.
                 </div>
             </div>
         </div>
 
         <div class="gif-swatch-row" id="lyricsbg-swatches">
             <div class="gif-swatch active" data-gif="" title="None">None</div>
-            <div class="gif-swatch" data-gif="assets/lyricsbg/train.gif"
-                 style="background-image:url('assets/lyricsbg/train.gif');" title="Style 1"></div>
-            <div class="gif-swatch" data-gif="assets/lyricsbg/girlkiss.gif"
-                 style="background-image:url('assets/lyricsbg/girlkiss.gif');" title="Style 2"></div>
-            <div class="gif-swatch" data-gif="assets/lyricsbg/anime.gif"
-                 style="background-image:url('assets/lyricsbg/anime.gif');" title="Style 3"></div>
-            <div class="gif-swatch" data-gif="assets/lyricsbg/bg4.gif"
-                 style="background-image:url('assets/lyricsbg/bg4.gif');" title="Style 4"></div>
-            <div class="gif-swatch" data-gif="assets/lyricsbg/bg5.gif"
-                 style="background-image:url('assets/lyricsbg/bg5.gif');" title="Style 5"></div>
+            <div class="gif-swatch" data-gif="../assets/lyricsbg/train.gif"
+                 style="background-image:url('../assets/lyricsbg/train.gif');" title="Train on Rain"></div>
+            <div class="gif-swatch" data-gif="../assets/lyricsbg/girlkiss.gif"
+                 style="background-image:url('../assets/lyricsbg/girlkiss.gif');" title="Yuri"></div>
+            <div class="gif-swatch" data-gif="../assets/lyricsbg/anime.gif"
+                 style="background-image:url('../assets/lyricsbg/anime.gif');" title="Anime Girl"></div>
+            <div class="gif-swatch" data-gif="../assets/lyricsbg/green.gif"
+                 style="background-image:url('../assets/lyricsbg/green.gif');" title="Green Beauty"></div>
+            <div class="gif-swatch" data-gif="../assets/lyricsbg/snowtrain.gif"
+                 style="background-image:url('../assets/lyricsbg/snowtrain.gif');" title="Snow Train"></div>
         </div>
 
         <div class="setting-row" style="margin-top:10px;">
@@ -445,16 +445,11 @@ input[type=range] {
         </div>
 
         <div id="lyricsbg-preview" style="margin-top:10px;height:90px;border:1px solid var(--border);background:#111;position:relative;overflow:hidden;">
-            <div id="lyricsbg-preview-bg"
-                 style="position:absolute;inset:0;background-size:cover;
-                        background-position:center;opacity:0.15;
-                        will-change:opacity;transform:translateZ(0);"></div>
-            <div style="position:relative;z-index:1;height:100%;display:flex;
-                        flex-direction:column;align-items:center;justify-content:center;
-                        font-size:12px;line-height:1.9;text-align:center;">
-                <div style="color:var(--grey);">Yeah (yeah, yeah)</div>
-                <div style="color:var(--orange);font-weight:bold;">This is the active line</div>
-                <div style="color:var(--grey);">Next line coming up</div>
+            <div id="lyricsbg-preview-bg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.15;will-change:opacity;transform:translateZ(0);"></div>
+            <div style="position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;line-height:1.9;text-align:center;">
+                <div style="color:var(--grey);">Yes, I feel the weight, it come on top of me</div>
+                <div style="color:var(--orange);font-weight:bold;">Yes, I feel like— yes, I feel like Kratos, I got Spartan Rage (Ooh-woah)</div>
+                <div style="color:var(--grey);">Yes, I feel the— yes, I feel the bass, it's really hard to me (Ah)</div>
             </div>
         </div>
 

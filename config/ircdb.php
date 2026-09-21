@@ -1,5 +1,6 @@
 <?php
 const CHAT_RETENTION_DAYS = 14;
+const CHAT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 function get_chat_db(): PDO {
     static $pdo = null;
@@ -64,6 +65,17 @@ function get_chat_db(): PDO {
         'CREATE INDEX IF NOT EXISTS idx_presence_channel_seen ON presence (channel, last_seen)'
     );
 
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS chat_files (
+            id         TEXT PRIMARY KEY,
+            channel    TEXT    NOT NULL,
+            uploader   TEXT    NOT NULL,
+            filename   TEXT    NOT NULL,
+            size_bytes INTEGER NOT NULL,
+            created_at TEXT    NOT NULL
+        )"
+    );
+
     return $pdo;
 }
 
@@ -76,4 +88,15 @@ function get_chat_db(): PDO {
 function prune_old_chat_messages(PDO $chat_db): void {
     $cutoff = gmdate('Y-m-d\TH:i:s\Z', time() - CHAT_RETENTION_DAYS * 86400);
     $chat_db->prepare('DELETE FROM irc_messages WHERE created_at < ?')->execute([$cutoff]);
+}
+
+function prune_old_chat_files(PDO $chat_db): void {
+    $cutoff = gmdate('Y-m-d\TH:i:s\Z', time() - CHAT_RETENTION_DAYS * 86400);
+    $stmt = $chat_db->prepare('SELECT id FROM chat_files WHERE created_at < ?');
+    $stmt->execute([$cutoff]);
+    $dir = __DIR__ . '/../storage/files';
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        @unlink($dir . '/' . $id);
+    }
+    $chat_db->prepare('DELETE FROM chat_files WHERE created_at < ?')->execute([$cutoff]);
 }

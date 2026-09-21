@@ -38,7 +38,7 @@
 
       // [C] — jump to catalog (if on a board page)
       case 'c': case 'C':
-        window.location.href = '/catalog.php?b=qa';
+        window.location.href = '/catalog.php?b=';
         break;
 
       // [H] — go home

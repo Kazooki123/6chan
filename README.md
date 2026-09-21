@@ -1,6 +1,8 @@
 # 6chan - The Peak Imageboard
 
-![Logo](6chan.png)
+
+<img src="public/assets/6chan.png" width="400" height="300" alt="Logo">
+<img src="public/assets/org-banner.png" alt="Official Banner">
 
 Welcome to **6chan**! An imageboard from scratch with the philosophy of **4chan** and a few modern web
 concepts that still keeps users anonymous and private!
@@ -26,7 +28,8 @@ Read the **/rules**, don't be an idiot.
 
 **Prerequisites:**
 
-- PostgreSQL18 **OR** Podman
+- PostgreSQL18
+- Podman
 - PHP (8.5+)
 - Composer
 

@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
 use crate::api::{ChatMessage, PresenceEntry};
+use crate::theme::{Theme, ThemeName};
 
 const SCROLL_PAGE: usize = 10;
+
+pub const SETTINGS_ROW_COUNT: usize = 3;
 
 pub struct ChannelState {
     pub messages: Vec<ChatMessage>,
@@ -10,6 +13,8 @@ pub struct ChannelState {
     pub scroll: usize,
     pub status: Option<String>,
     pub users: Vec<PresenceEntry>,
+    pub unread: usize,
+    pub mentioned: bool,
 }
 
 impl ChannelState {
@@ -20,8 +25,20 @@ impl ChannelState {
             scroll: 0,
             status: None,
             users: Vec::new(),
+            unread: 0,
+            mentioned: false,
         }
     }
+}
+
+pub struct AppInit {
+    pub channels: Vec<String>,
+    pub name: String,
+    pub friends: Vec<String>,
+    pub theme_name: ThemeName,
+    pub show_timestamps: bool,
+    pub show_tripcodes: bool,
+    pub server_url: String,
 }
 
 pub struct App {
@@ -36,24 +53,46 @@ pub struct App {
     /// local, no server involvement. Matched the same way message colors
     /// are keyed: tripcode if present, else the display name.
     pub friends: Vec<String>,
+    pub theme_name: ThemeName,
+    pub show_timestamps: bool,
+    pub show_tripcodes: bool,
+    pub settings_open: bool,
+    pub settings_selected: usize,
 }
 
 impl App {
-    pub fn new(channels: Vec<String>, name: String, friends: Vec<String>) -> Self {
+    pub fn new(init: AppInit) -> Self {
         let mut state = HashMap::new();
-        for ch in &channels {
+        for ch in &init.channels {
             state.insert(ch.clone(), ChannelState::new());
         }
-        Self {
-            name,
-            channels,
+        let mut app = Self {
+            name: init.name,
+            channels: init.channels,
             active: 0,
             state,
             input: String::new(),
             global_status: "connecting...".to_string(),
             should_quit: false,
-            friends,
+            friends: init.friends,
+            theme_name: init.theme_name,
+            show_timestamps: init.show_timestamps,
+            show_tripcodes: init.show_tripcodes,
+            settings_open: false,
+            settings_selected: 0,
+        };
+
+        if let Some(first) = app.channels.first().cloned() {
+            for line in crate::banner::nfo_banner(&first, &init.server_url) {
+                app.push_system_message(&first, line);
+            }
         }
+
+        app
+    }
+
+    pub fn theme(&self) -> Theme {
+        self.theme_name.theme()
     }
 
     pub fn active_channel(&self) -> &str {
@@ -65,17 +104,35 @@ impl App {
     }
 
     pub fn next_channel(&mut self) {
-        self.active = (self.active + 1) % self.channels.len();
+        let idx = (self.active + 1) % self.channels.len();
+        self.focus(idx);
     }
 
     pub fn prev_channel(&mut self) {
-        self.active = (self.active + self.channels.len() - 1) % self.channels.len();
+        let idx = (self.active + self.channels.len() - 1) % self.channels.len();
+        self.focus(idx);
+    }
+
+    fn focus(&mut self, idx: usize) {
+        self.active = idx;
+        if let Some(channel) = self.channels.get(idx).cloned() {
+            if let Some(state) = self.state.get_mut(&channel) {
+                state.unread = 0;
+                state.mentioned = false;
+            }
+        }
     }
 
     pub fn push_messages(&mut self, channel: &str, mut new_msgs: Vec<ChatMessage>) {
         if new_msgs.is_empty() {
             return;
         }
+        let is_active = self.active_channel() == channel;
+        let name_lower = self.name.to_lowercase();
+        let mentioned_now = !name_lower.is_empty()
+            && new_msgs.iter().any(|m| m.body.to_lowercase().contains(&name_lower));
+        let added = new_msgs.len();
+
         if let Some(state) = self.state.get_mut(channel) {
             if let Some(last) = new_msgs.last() {
                 state.last_id = state.last_id.max(last.id);
@@ -85,6 +142,12 @@ impl App {
             if state.messages.len() > MAX_HISTORY {
                 let excess = state.messages.len() - MAX_HISTORY;
                 state.messages.drain(0..excess);
+            }
+            if !is_active {
+                state.unread += added;
+                if mentioned_now {
+                    state.mentioned = true;
+                }
             }
         }
     }
@@ -111,13 +174,14 @@ impl App {
     /// `/join` — adds a new tab and switches to it. No-ops (just
     /// switches focus) if the channel's already open.
     pub fn add_channel(&mut self, channel: String) {
+        self.settings_open = false;
         if let Some(idx) = self.channels.iter().position(|c| c == &channel) {
-            self.active = idx;
+            self.focus(idx);
             return;
         }
         self.state.insert(channel.clone(), ChannelState::new());
         self.channels.push(channel);
-        self.active = self.channels.len() - 1;
+        self.focus(self.channels.len() - 1);
     }
 
     /// `/part` — closes a tab. Refuses to close your last remaining
@@ -134,6 +198,8 @@ impl App {
         if self.active >= self.channels.len() {
             self.active = self.channels.len() - 1;
         }
+        let new_active = self.active;
+        self.focus(new_active);
         Ok(())
     }
 
@@ -179,5 +245,32 @@ impl App {
         let out = trimmed.to_string();
         self.input.clear();
         Some(out)
+    }
+
+    pub fn settings_move(&mut self, delta: isize) {
+        let len = SETTINGS_ROW_COUNT as isize;
+        let next = (self.settings_selected as isize + delta).rem_euclid(len);
+        self.settings_selected = next as usize;
+    }
+
+    pub fn settings_cycle(&mut self, forward: bool) {
+        match self.settings_selected {
+            0 => {
+                self.theme_name = if forward { self.theme_name.next() } else { self.theme_name.prev() };
+            }
+            1 => self.show_timestamps = !self.show_timestamps,
+            2 => self.show_tripcodes = !self.show_tripcodes,
+            _ => {}
+        }
+        self.persist_settings();
+    }
+
+    fn persist_settings(&self) {
+        if let Ok(mut cfg) = crate::config::Config::load() {
+            cfg.theme = Some(self.theme_name.as_key().to_string());
+            cfg.show_timestamps = Some(self.show_timestamps);
+            cfg.show_tripcodes = Some(self.show_tripcodes);
+            let _ = cfg.save();
+        }
     }
 }
