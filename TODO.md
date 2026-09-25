@@ -4,6 +4,7 @@
 - [x] Country flag for users
 - [ ] LaTeX support
 - [x] Profile Pictures (tied to tripcodes)
+- [ ] Secure tripcodes (##pwrd)
 - [ ] Better filtering (Automod)
 - [ ] Livestream (Pion)
 - [x] Recommendation algorithm (score-based)

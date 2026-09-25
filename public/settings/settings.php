@@ -430,6 +430,8 @@ input[type=range] {
                  style="background-image:url('../assets/lyricsbg/anime.gif');" title="Anime Girl"></div>
             <div class="gif-swatch" data-gif="../assets/lyricsbg/green.gif"
                  style="background-image:url('../assets/lyricsbg/green.gif');" title="Green Beauty"></div>
+            <div class="gif-swatch" data-gif="../assets/lyricsbg/iayze.gif"
+                 style="background-image:url('../assets/lyricsbg/iayze.gif');" title="The Leek"></div>
             <div class="gif-swatch" data-gif="../assets/lyricsbg/snowtrain.gif"
                  style="background-image:url('../assets/lyricsbg/snowtrain.gif');" title="Snow Train"></div>
         </div>

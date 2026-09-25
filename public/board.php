@@ -785,7 +785,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                     <?php if (!empty($t['img_path'])):
                         $imgpath = htmlspecialchars(media_url($t['img_path'])); ?>
                     <?= render_media($t['img_path'], (bool)$t['nsfw'], 'thread', $t['id']) ?>
-                    <a href="<?= $imgpath ?>">View original</a>
+                    <a href="<?= $imgpath ?>">[View original]</a>
                     <?php endif; ?>
                 <div class="post-header">
                     <img class="pfp" src="<?= htmlspecialchars(pfp_url_for_trip($t['tripcode'] ?? null, $db)) ?>" alt="" width="32" height="32" loading="lazy">
@@ -858,7 +858,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                        $imgpath = htmlspecialchars(media_url($p['img_path'])); ?>
                    <div class="post-img">
                        <?= render_media($p['img_path'], (bool)$p['nsfw'], 'post', $p['id']) ?>
-                       <a href="<?= $imgpath ?>">View original</a>
+                       <a href="<?= $imgpath ?>">[View original]</a>
                    </div>
                    <?php endif; ?>
                    <div class="post-body"><?= render_body($p['body'], $t['id']) ?></div>

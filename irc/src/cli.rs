@@ -40,6 +40,12 @@ pub enum Command {
         #[command(subcommand)]
         action: ConfigAction,
     },
+
+    SetBackground {
+        path: String,
+        #[arg(long)]
+        opacity: Option<f32>,
+    },
 }
 
 #[derive(Subcommand)]

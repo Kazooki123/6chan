@@ -1,5 +1,6 @@
 mod api;
 mod app;
+mod background;
 mod banner;
 mod cli;
 mod color;
@@ -8,6 +9,7 @@ mod config;
 mod daemon;
 mod daemon_client;
 mod events;
+mod player;
 mod protocol;
 mod theme;
 mod ui;
@@ -30,6 +32,7 @@ use app::{App, AppInit};
 use cli::{Cli, Command, ConfigAction};
 use commands::AsyncJob;
 use config::Config;
+use player::Player;
 use events::{NetEvent, UiCommand};
 
 fn parse_channels(raw: &str) -> Vec<String> {
@@ -46,6 +49,7 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Command::Config { action } => run_config(cfg, action),
+        Command::SetBackground { path, opacity } => background::set_background(&path, opacity),
         Command::Redeem {
             code,
             username,
@@ -169,6 +173,15 @@ async fn run_client(
         server_url: server_url.clone(),
     });
 
+    let mut player = match Player::new() {
+        Ok(p) => Some(p),
+        Err(e) => {
+            let first = app.active_channel().to_string();
+            app.push_system_message(&first, format!("No audio output available ({e}) — /play etc. disabled"));
+            None
+        }
+    };
+
     let action_api = Api::new(server_url.clone(), staff_token.clone());
     let job_net_tx = net_tx.clone();
 
@@ -185,7 +198,7 @@ async fn run_client(
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = event_loop(&mut terminal, &mut app, &mut net_rx, &out_tx, &action_api, job_net_tx).await;
+    let result = event_loop(&mut terminal, &mut app, &mut net_rx, &out_tx, &action_api, job_net_tx, &mut player).await;
 
     disable_raw_mode()?;
     execute!(
@@ -219,6 +232,7 @@ fn spawn_async_job(job: AsyncJob, api: Api, net_tx: mpsc::UnboundedSender<NetEve
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn event_loop(
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     app: &mut App,
@@ -226,6 +240,7 @@ async fn event_loop(
     out_tx: &mpsc::UnboundedSender<UiCommand>,
     action_api: &Api,
     job_net_tx: mpsc::UnboundedSender<NetEvent>,
+    player: &mut Option<Player>, // Music Player
 ) -> Result<()> {
     loop {
         while let Ok(evt) = net_rx.try_recv() {
@@ -281,7 +296,7 @@ async fn event_loop(
                     KeyCode::Enter => {
                         if let Some(text) = app.take_input() {
                             if let Some(rest) = text.strip_prefix('/') {
-                                if let Some(job) = commands::dispatch(app, out_tx, rest) {
+                                if let Some(job) = commands::dispatch(app, out_tx, player, rest) {
                                     spawn_async_job(job, action_api.clone(), job_net_tx.clone());
                                 }
                             } else {

@@ -1,6 +1,10 @@
 # Yukiko 🎀
 
+<img src="banner.png" width="300px" height="200px" alt="Yukiko Banner">
+
 A terminal IRC client for 6chan's `#general` and `#staffs` chat.
+
+> **Yukiko** Amagi is a fictional female character from the hit game Persona 4, she is a sweat and kind character whos a member of the Investigation Team.
 
 [![Built With Ratatui](https://img.shields.io/badge/Built_With_Ratatui-000?logo=ratatui&logoColor=fff)](https://ratatui.rs/)
 
@@ -85,6 +89,45 @@ And it should render:
 Friend matching uses whatever you already see: type the exact tripcode
 (with the `!`) to match by tripcode, or the plain name to match by name —
 same key the color hashing itself uses.
+
+## Music
+
+```bash
+/play <local file path>
+/pause  /resume  /stop
+/volume <0-200>
+```
+
+`/play` renders "🎵 now playing: X" as a normal chat message so that others
+know what's on, it does **NOT** try to play it on their computers/devices or
+keeps multiple listeners in <span style="color:red;">sync</span>. True synchronized listening (clock
+sync, buffer alignment across independently-polling clients) is a real,
+hard problem that <span style="color:lime;">Spotify</span>/<span style="color:#6c63ff;">Discord</span> have whole teams for. This deliberately doesn't attempt it. Combine with file sharing: `/getfile <id>` a shared track, and then `/play yukiko-downloads/<filename>`.
+
+## Background Image
+
+```bash
+yukiko set-background <path> [--opacity 0.0-1.0]
+```
+
+This actually can't paint anything itself.. a TUI can't draw behind its own text
+through the terminal protocol, however the terminal emulator can. So this
+detects which terminal you're in and edits *its* config the way that
+terminal actually supports:
+
+- **Windows Terminal** = edits `settings.json` (`profiles.defaults.backgroundImage`
+  / `backgroundImageOpacity`), backs up the original first. Note:
+  round-tripping through JSON strips any `//` comments you had.
+- **kitty** = edits `~/.config/kitty/kitty.conf` (`background_image` line),
+  backs up first. Reload kitty (ctrl+shift+F5) to see it.
+- **WezTerm** = config is Lua, so this won't blind edit it; just prints the
+  exact line to add yourself.
+- **Konsole** = background images live inside whichever `.colorscheme`
+  file your profile uses, which isn't reliably detectable from outside;
+  prints the manual steps instead of guessing at a file to rewrite.
+- **GNOME Terminal, Alacritty, plain cmd.exe/PowerShell console** = <span style="color:red;">NOT</span>
+  supported at all, by the terminal itself, not by anything this can
+  work around.
 
 ## Keys
 

@@ -28,3 +28,6 @@ sql/
 .crush/
 cache/
 __pycache__/
+models/
+docs/
+public/uploads/

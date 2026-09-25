@@ -1,4 +1,8 @@
 <?php
+/**
+ * Used for Yukiko the **IRC client**.
+ */
+
 session_start();
 require_once '../../config/db.php';
 require_once '../../config/ircdb.php';
@@ -275,7 +279,7 @@ switch ($endpoint) {
         header('Content-Disposition: attachment; filename="' . addslashes($file['filename']) . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
-        exit; // done — bypass the json_encode below entirely
+        exit;
 
     default:
         http_response_code(400);

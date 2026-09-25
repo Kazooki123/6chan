@@ -2,7 +2,7 @@
 name = "yukiko"
 description = "Terminal IRC client for 6chan"
 authors = ["Kazooki123"]
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 license = "MIT"
 readme = "README.md"
@@ -23,3 +23,7 @@ chrono = "0.4"
 dirs = "5"
 toml = "0.8"
 anyhow = "1"
+rodio = "0.19"
+
+# WiP/Planned to use
+rvoip-sip = "0.3.10"

@@ -627,7 +627,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             <?php if (!empty($thread['img_path'])):
                 $imgpath = htmlspecialchars(media_url($thread['img_path'])); ?>
                 <?= render_media($thread['img_path'], (bool)$thread['nsfw'], 'thread', $thread['id']) ?>
-                <a href="<?= $imgpath ?>">View original</a>
+                <a href="<?= $imgpath ?>">[View original]</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>

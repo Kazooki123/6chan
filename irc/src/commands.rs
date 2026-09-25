@@ -5,6 +5,7 @@ use tokio::sync::mpsc;
 use crate::app::App;
 use crate::config::Config;
 use crate::events::UiCommand;
+use crate::player::Player;
 
 pub enum AsyncJob {
     Upload { channel: String, author: String, path: PathBuf },
@@ -20,7 +21,12 @@ fn normalize(raw: &str) -> String {
     }
 }
 
-pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: &str) -> Option<AsyncJob> {
+pub fn dispatch(
+    app: &mut App,
+    out_tx: &mpsc::UnboundedSender<UiCommand>,
+    player: &mut Option<Player>,
+    line: &str,
+) -> Option<AsyncJob> {
     let mut parts = line.splitn(2, ' ');
     let cmd = parts.next().unwrap_or("").to_lowercase();
     let rest = parts.next().unwrap_or("").trim();
@@ -103,6 +109,73 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
             app.settings_open = !app.settings_open;
         }
 
+        "play" => {
+            if rest.is_empty() {
+                app.push_system_message(&active, "Usage: /play <local file path>");
+                return None;
+            }
+            let Some(player) = player else {
+                app.push_system_message(&active, "No audio output device available");
+                return None;
+            };
+            let path = PathBuf::from(rest);
+            match player.play(&path) {
+                Ok(()) => {
+                    let title = player.now_playing.clone().unwrap_or_else(|| rest.to_string());
+                    app.push_system_message(&active, format!("Now playing: {title}"));
+                    let _ = out_tx.send(UiCommand::Send {
+                        channel: active,
+                        author: app.name.clone(),
+                        body: format!("🎵 now playing: {title}"),
+                    });
+                }
+                Err(e) => {
+                    app.push_system_message(&active, format!("Couldn't play {}: {e}", path.display()));
+                }
+            }
+        }
+
+        "pause" => {
+            if let Some(player) = player {
+                player.pause();
+                app.push_system_message(&active, "Paused");
+            } else {
+                app.push_system_message(&active, "No audio output device available");
+            }
+        }
+
+        "resume" => {
+            if let Some(player) = player {
+                player.resume();
+                app.push_system_message(&active, "Resumed");
+            } else {
+                app.push_system_message(&active, "No audio output device available");
+            }
+        }
+
+        "stop" => {
+            if let Some(player) = player {
+                player.stop();
+                app.push_system_message(&active, "Stopped");
+            } else {
+                app.push_system_message(&active, "No audio output device available");
+            }
+        }
+
+        "volume" => {
+            let Some(player) = player else {
+                app.push_system_message(&active, "No audio output device available");
+                return None;
+            };
+            match rest.trim().parse::<u32>() {
+                Ok(pct) => {
+                    player.set_volume(pct);
+                    app.push_system_message(&active, format!("Volume set to {}%", pct.min(200)));
+                }
+                Err(_) => app.push_system_message(&active, "Usage: /volume <0-200>"),
+            }
+        }
+
         "send" | "upload" => {
             if rest.is_empty() {
                 app.push_system_message(&active, "Usage: /send <local file path> (5MB max)");
@@ -132,7 +205,7 @@ pub fn dispatch(app: &mut App, out_tx: &mpsc::UnboundedSender<UiCommand>, line: 
         "help" => {
             app.push_system_message(
                 &active,
-                "/nick <name>  /join <#channel>  /part [#channel]  /me <action>  /friend <name>  /unfriend <name>  /send <path>  /getfile <id>  /settings  /quit  /help",
+                "/nick <name>  /join <#channel>  /part [#channel]  /me <action>  /friend <name>  /unfriend <name>  /send <path>  /getfile <id>  /play <path>  /pause  /resume  /stop  /volume <0-200>  /settings  /quit  /help",
             );
         }
 

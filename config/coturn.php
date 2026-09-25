@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__ . '/../.env'));
+$dotenv->load();
 
 function turn_credentials(string $session_id, int $ttl = 3600): array {
     $secret = $_ENV['TURN_SECRET'] ?? '';

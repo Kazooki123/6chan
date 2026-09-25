@@ -67,6 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <span class="site-name">@6chan</span>
     <a href="index.php">Home</a>
     <a href="rules.html">[Rules]</a>
+    <a href="etc/privacy.html">[Privacy]</a>
+    <a href="etc/fos.html">[FoS]</a>
 </div>
 
 <div class="wrap">
@@ -124,6 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 </div>
 
-<footer>@6chan — <a href="index.php">Home</a></footer>
+<footer>@6chan — <a href="index.php">Home</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a></footer>
 </body>
 </html>
