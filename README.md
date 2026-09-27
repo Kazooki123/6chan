@@ -100,6 +100,8 @@ ETH: `0x52c38E0097D5cbc8e552E38014805eC4E43DD18e`
 
 SOL: `4CZQYQCvArR6PYm9x4NoW5wDGjVUQKiGcFYBcStNQxUP`
 
+**Paypal?** [here](https://www.paypal.me/MarkGelito)!
+
 **A huge Huge thanks to `@.zelte` for donating to this project!!**
 
 ## Contribution
