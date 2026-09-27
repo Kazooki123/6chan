@@ -59,7 +59,7 @@
 const bootLines = [
   { text: '6CHAN BIOS v1.3.67  (C) 1980 Free Software Federation', cls: 'dim', delay: 0 },
   { text: 'CPU: AMD Ryzen 3-A∞  @  [REDACTED] MHz', cls: 'dim', delay: 120 },
-  { text: 'RAM Check: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  640k — enough for anyone', cls: 'dim', delay: 240 },
+  { text: 'RAM Check: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  640k - enough for anyone', cls: 'dim', delay: 240 },
   { text: '', delay: 350 },
   { text: 'Loading kernel modules ...', cls: '', delay: 420 },
   { text: '  [  OK  ] anon_identity          ..............  LOADED', cls: 'dim', delay: 580 },
@@ -123,7 +123,7 @@ function printWelcome() {
   ╚██████╗ ╚██████╗██║  ██║██║  ██║██║ ╚████║
    ╚═════╝  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
 </span>`);
-  print('  /dev/null — the place where posts go to die', 'dim');
+  print('  /dev/null - the place where posts go to die', 'dim');
   print();
   print('  You found a secret. Congrats, you are incredibly online.', 'bright');
   print();
@@ -158,7 +158,7 @@ const COMMANDS = {
 
   about() {
     print();
-    print('  6chan — an imageboard', 'bright');
+    print('  6chan - an imageboard', 'bright');
     print();
     print('  Built from scratch in PHP. No JavaScript frameworks were');
     print('  harmed in the making of this site (mostly).');
@@ -183,7 +183,7 @@ const COMMANDS = {
       ['/pol/', 'Politically Incorrect', '(jannies are asleep)'],
       ['/meta/','Site Feedback',   'be civil or be banned'],
     ].forEach(([board, name, desc]) => {
-      print(`  ${board.padEnd(8)} ${name.padEnd(24)} — ${desc}`, 'dim');
+      print(`  ${board.padEnd(8)} ${name.padEnd(24)} - ${desc}`, 'dim');
     });
     print();
     print('  Suggestion: use the catalog. It is right there.', 'dim');
@@ -195,7 +195,7 @@ const COMMANDS = {
       'Your post will get exactly 0 replies.',
       'A janny is watching you right now.',
       'You will find dubs. But not today.',
-      '>tfw no gf — this will not change.',
+      '>tfw no gf - this will not change.',
       'The answer is lurk more.',
       'Touch grass. Skill issue.',
       'Your IP has been reported to the based department.',
@@ -257,7 +257,7 @@ const COMMANDS = {
       ['Anonymous',     'not a person. not a group. a shared identity.'],
       ['Sage',          'posting without bumping. ultimate power move.'],
       ['Dubs',          'getting repeating post IDs. quasi-religious experience.'],
-      ['Janitor',       '"janny" — unpaid mod. highest calling. lowest status.'],
+      ['Janitor',       '"janny" - unpaid mod. highest calling. lowest status.'],
       ['Greentext',     '> story format. often sad. sometimes triumphant.'],
       ['OC',            'original content. rare. precious. usually stolen immediately.'],
       ['Lurk moar',     'the eternal advice. never wrong.'],

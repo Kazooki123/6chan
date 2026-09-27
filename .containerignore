@@ -26,6 +26,7 @@ wiki/
 sql/
 .venv/
 .crush/
+.vscode/
 cache/
 __pycache__/
 models/
