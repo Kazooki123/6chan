@@ -5,8 +5,9 @@
 **Pion**eer is a <span style="color:pink;">webRTC</span> livestreaming platform
 for the moderators / staffs of <u>6chan</u>.
 
-Named after the Go service **Pion** which is literally this platform is built on and **eer** means
-**Peers**. Also uses <span style="color:skyblue;">PocketBase</span> as the main database for real-time subscribing to the website.
+Named after the Go service **Pion** which is literally where this platform is built on and **eer** means **Peers**.
+
+Also uses <span style="color:skyblue;">PocketBase</span> as the main database for real-time subscribing to the website.
 
 > [!WARNING]
 > This project is ongoing development, still experiencing updates and bugs, and also please feel free to contribute :,)
@@ -21,8 +22,11 @@ go mod tidy
 
 Step 1: Compile the <span style="color:lime;">server.</span>
 
+> [!NOTE]
+> You might want to locate the executable in the root `bin/` directory for quickly navigating it.
+
 ```bash
-go build -o pioneer.exe
+go build -o ../../../bin/pioneer.exe
 ```
 
 Step 2: Run the server

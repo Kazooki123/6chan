@@ -19,6 +19,7 @@ vendor
 /irc/target/
 /storage/
 /models/
+/owncast_data/
 
 # ignore ongoing/developing websites
 /archive/

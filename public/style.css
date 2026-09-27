@@ -412,7 +412,7 @@ footer {
 .welcome-title {
     color: var(--orange);
     font-weight: bold;
-    font-size: 15px;
+    font-size: 17px;
     margin-bottom: 6px;
     letter-spacing: 1px;
     animation: slide-left 8s linear infinite;
