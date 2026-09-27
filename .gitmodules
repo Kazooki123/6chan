@@ -1,0 +1,3 @@
+[submodule "yukiko"]
+	path = yukiko
+	url = https://codeberg.org/6chan-org/yukiko.git
