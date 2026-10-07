@@ -21,6 +21,7 @@ Read the **/rules**, don't be an idiot.
 - Markdown support (LaTeX support later)
 - Customizable colors and fonts (in settings)
 - <span style="color:pink">(NEW!)</span> IRC clients for mods / staffs and average users
+- Audio Streaming (**Spaces**)
 
 > [!IMPORTANT]
 > This project is still in it's early development stage, updates and patches are ongoing, thank you!

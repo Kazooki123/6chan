@@ -3,10 +3,11 @@
 *.sh
 *.conf
 *.dump
+*.htpasswd
 
 sql
 dump
-vendor
+/vendor/
 **/uploads/*
 .venv
 .crush

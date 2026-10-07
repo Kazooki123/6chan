@@ -1,5 +1,5 @@
 <?php
-// TODO: Finish the syntaz highlighter for code blocks
+// TODO: Finish the syntax highlighter for code blocks
 require_once __DIR__ . '/../vendor/autoload.php';
 
 const EXTENSIONS = [

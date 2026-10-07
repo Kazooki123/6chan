@@ -4,6 +4,7 @@ session_start();
 require_once '../../config/db.php';
 require_once '../../config/captchav2.php';
 require_once '../../config/automod.php';
+require_once '../../config/robot9k.php';
 require_once '../../config/cache.php';
 require_once '../../config/tripcode.php';
 require_once 'countryflags.php';
@@ -320,6 +321,26 @@ if ($action === 'new_thread') {
         ");
     }
 
+    if (r9k_bool($board['robot9k_enabled'] ?? false) && r9k_is_duplicate($db, $board['id'], $body)) {
+        http_response_code(409);
+        die("
+            <link rel='stylesheet' href='../style.css'>
+            <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
+                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
+                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    [R9K] This has been said before.
+                </div>
+                <div style='color:#aaa;font-size:13px;'>
+                    /" . htmlspecialchars($board['slug']) . "/ requires original text,
+                    that exact post has already been made here. Say something original.
+                </div>
+                <div style='margin-top:12px;'>
+                    <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
+                </div>
+            </div>
+        ");
+    }
+
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
     $flag = detect_flag($ip);
 
@@ -344,6 +365,10 @@ if ($action === 'new_thread') {
     $tid = $s->fetchColumn();
     $new_post_id = (int)$db->query("SELECT lastval()")->fetchColumn();
     notify_automod((int)$tid, 'thread', $body);
+
+    if (r9k_bool($board['robot9k_enabled'] ?? false)) {
+        r9k_record($db, $board['id'], $body);
+    }
 
     if (!empty($_POST['add_poll']) && !empty($_POST['poll_question'])) {
         $question = trim($_POST['poll_question']);
@@ -419,8 +444,7 @@ if ($action === 'new_thread') {
     $upload = handle_upload((bool)$nsfw);
     $img  = $upload['object_key'] ?? null;
     
-    $check        = automod_check($body, $db);
-    $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
+    $check = automod_check($body, $db);
 
     if ($check['action'] === 'block') {
         http_response_code(403);
@@ -442,20 +466,18 @@ if ($action === 'new_thread') {
         ");
     }
 
-    $check = automod_check($body, $db);
-
-    if ($check['action'] === 'block') {
-        http_response_code(403);
+    if (r9k_bool($board['robot9k_enabled'] ?? false) && r9k_is_duplicate($db, $board['id'], $body)) {
+        http_response_code(409);
         die("
             <link rel='stylesheet' href='../style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
-                        border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
-                <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
-                    Post blocked by automod!!
+                        border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
+                <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
+                    [R9K] This has been said before.
                 </div>
                 <div style='color:#aaa;font-size:13px;'>
-                    Your post contains content that violates 6chan's rules.<br>
-                    If you believe this is a mistake, use the contact page <3
+                    /" . htmlspecialchars($board['slug']) . "/ requires original text -
+                    that exact post has already been made here. Say it differently.
                 </div>
                 <div style='margin-top:12px;'>
                     <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
@@ -493,6 +515,10 @@ if ($action === 'new_thread') {
     $new_post_id = (int)$db->query("SELECT lastval()")->fetchColumn();
 
     notify_automod($new_post_id, 'post', $body);
+
+    if (r9k_bool($board['robot9k_enabled'] ?? false)) {
+        r9k_record($db, $board['id'], $body);
+    }
     cache_delete("board:{$board['id']}:p1", $db);
     cache_delete("thread:{$tid}", $db);
 

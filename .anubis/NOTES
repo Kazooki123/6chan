@@ -1,0 +1,10 @@
+                                [ A N U B I S ]
+
+We use this cute anti-scraper software called **Anubis**, it's very helpful, and *surely* fun to use or configure.
+
+Jokes aside, we're using this to combat the Dead-Internet-Theory amount of bots in the web, PoW works but it's resource-heavy and just bullshitize your work.
+
+So our only solution for now (and thankfully found it with the help of my friends) is Anubis.
+
+https://github.com/techarohq/anubis
+https://ghcr.io/techarohq/anubis

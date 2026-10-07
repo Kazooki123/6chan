@@ -8,9 +8,10 @@ require_once '../config/pfps.php';
 require_once 'services/map.php';
 require_once 'services/countryflags.php';
 
+require_once __DIR__ . '/services/palettes.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__ . '/../.env'));
 $dotenv->load();
 
 use Aws\S3\S3Client;
@@ -206,18 +207,27 @@ function render_body(string $text, int $thread_id): string {
             continue;
         }
 
-        // rainbow text !! :3
+        // Existing shorthand aliases remain supported.
         if (str_starts_with($trimmed, '@@@')) {
             $inner = htmlspecialchars(ltrim(substr($trimmed, 3)));
-            $processed[] = '%%RAINBOW%%' . $inner . '%%ENDRAINBOW%%';
+            $processed[] = '%%FLAG:rainbow%%' . $inner . '%%ENDFLAG%%';
             continue;
         }
 
-        // sapphic text (rainbow text variant)
         if (str_starts_with($trimmed, '@@!')) {
             $inner = htmlspecialchars(ltrim(substr($trimmed, 3)));
-            $processed[] = '%%SAPPHIC%%' . $inner . '%%ENDSAPPHIC%%';
+            $processed[] = '%%FLAG:sapphic%%' . $inner . '%%ENDFLAG%%';
             continue;
+        }
+
+        // Any palette in assets/misc/rainbows.json is used as `@@name text`.
+        if (preg_match('/^@@([a-z][a-z0-9_-]*)\s+(.*)$/i', $trimmed, $match)) {
+            $palette = strtolower($match[1]);
+            if (isset(get_text_palettes()[$palette])) {
+                $inner = htmlspecialchars($match[2]);
+                $processed[] = '%%FLAG:' . $palette . '%%' . $inner . '%%ENDFLAG%%';
+                continue;
+            }
         }
 
         $processed[] = $line;
@@ -274,62 +284,8 @@ function render_body(string $text, int $thread_id): string {
     );
 
     $html = preg_replace_callback(
-        '/%%RAINBOW%%(.+?)%%ENDRAINBOW%%/s',
-        function($m) {
-            $inner = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            $colors = [
-                '#ff0000',
-                '#ff6600',
-                '#ffcc00',
-                '#00cc44',
-                '#4a9eff',
-                '#9b59b6',
-                '#ff66cc'
-            ];
-
-            $rainbow = '';
-            $ci      = 0;
-            foreach (mb_str_split($inner) as $char) {
-                if ($char === ' ') {
-                    $rainbow .= ' ';
-                } else {
-                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">' . htmlspecialchars($char, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</span>';
-                    $ci++;
-                }
-            }
-
-            return '<span class="rainbow-text">' . $rainbow . '</span>';
-        },
-        $html
-    );
-
-    $html = preg_replace_callback(
-        '/%%SAPPHIC%%(.+?)%%ENDSAPPHIC%%/s',
-        function($m) {
-            $inner = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            $colors = [
-                '#d52d00',
-                '#ef7627',
-                '#ff9a56',
-                '#ffffff',
-                '#d162a4',
-                '#b55690',
-                '#a30262'
-            ];
-
-            $rainbow = '';
-            $ci      = 0;
-            foreach (mb_str_split($inner) as $char) {
-                if ($char === ' ') {
-                    $rainbow .= ' ';
-                } else {
-                    $rainbow .= '<span style="color:' . $colors[$ci % count($colors)] . '">' . htmlspecialchars($char, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</span>';
-                    $ci++;
-                }
-            }
-
-            return '<span class="sapphic-text">' . $rainbow . '</span>';
-        },
+        '/%%FLAG:([a-z][a-z0-9_-]*)%%(.*?)%%ENDFLAG%%/s',
+        static fn($m) => render_palette_text($m[2], $m[1]),
         $html
     );
 
@@ -504,7 +460,7 @@ function render_media(string $path, bool $nsfw, string $owner_type, int $owner_i
 
     return "
         <div class='post-img'>
-            <img src='{$orig_path}' alt='image' width='300' height='200' loading='lazy'"
+            <img src='{$orig_path}' alt='image' loading='lazy'"
             . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
             . ">
         </div>";
@@ -904,7 +860,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
     </div>
 
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a></footer>
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a> <a href="blogs/blogs.php">[Blogs]</a> <a href="news/news.php">[News]</a></footer>
 
     <div id="quote-popup"></div>
     

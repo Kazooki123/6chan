@@ -1,0 +1,25 @@
+# Cautious first test: challenge only board/thread pages — the actual
+# content scrapers want. Admin stays untouched (it's already gated by
+# its own session auth + the Basic Auth layer in admin/.htaccess, a PoW
+# puzzle on top of that is just friction, not real protection there).
+#
+# Rule order matters — Anubis evaluates top to bottom and stops at the
+# first match, so the most specific exceptions go first.
+
+bots:
+  - name: allow-admin
+    path_regex: ^/public/admin/
+    action: ALLOW
+
+  - import: (data)/meta/default-config.yaml
+
+  - name: challenge-boards
+    path_regex: ^/(board|thread)\.php
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 4
+
+  - name: allow-rest
+    path_regex: .*
+    action: ALLOW

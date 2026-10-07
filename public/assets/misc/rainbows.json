@@ -18,6 +18,35 @@
         "rose_pink":    "#a30262"
     },
     "trans": {
-        "": ""
+        "blue":       "#5bcefa",
+        "pink":       "#f5a9b8",
+        "white":      "#ffffff",
+        "pink_again": "#f5a9b8",
+        "blue_again": "#5bcefa"
+    },
+    "bi": {
+        "pink":     "#D60270",
+        "purple":   "#9B4F96",
+        "blue":     "#0038AB"
+    },
+    "pan": {
+        "magenta":  "#FF218c",
+        "yellow":   "#FFD800",
+        "cyan":     "#21B1FF"
+    },
+    "butch": {
+        "red":       "#DB1D00",
+        "rorange":   "#F66F26",
+        "lorange":   "#FF9657",
+        "white":     "#FFFBEE",
+        "biege":     "#FFCA8A",
+        "yellow":    "#FFA81A",
+        "brown":     "#A56C0B"
+    },
+    "ase": {
+        "black":    "#000000",
+        "grey":     "#A3A3A3",
+        "white":    "#FFFFFF",
+        "purple":   "#800080"
     }
 }

@@ -1,0 +1,6 @@
+AuthType Basic
+AuthName "6chan Admin — Restricted"
+
+AuthUserFile /var/www/html/config/admin.htpasswd
+
+Require valid-user

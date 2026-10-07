@@ -48,8 +48,8 @@ If you found a bug, please include:
 
 New ideas and suggestions are very, very welcome.
 
-**Before opening a feature request, please consider whether it fits the goals of 6chan and whether again it keeps the project lightweight or stable.**
+**Before opening a feature request, please consider whether it fits the goals of 6chan and whether again it keeps the project stable.**
 
 ## Respect
 
-
+Our top priorities is for our community developers & contributors to respect each other no matter their **age, religion, sexuality, nationality, ethinicity, and more**. Discrimination is genuinely forbidden here and if you spotted one of our team breaking the rules, please contact us, Thank you 🩷

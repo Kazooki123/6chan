@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tetris</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #0a0a3c; overflow: hidden; }
+  #status {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 20px "Courier New", monospace; color: #00dcf0; letter-spacing: 2px;
+  }
+  canvas { display: block; }
+</style>
+<script src="../../services/wasm/wasm_exec.js"></script>
+</head>
+<body>
+<div id="status">Loading Tetris...</div>
+<script>
+  const go = new Go();
+  const url = "/../../vendor/Games/Tetris.wasm";
+  const status = document.getElementById("status");
+
+  const load = WebAssembly.instantiateStreaming
+    ? WebAssembly.instantiateStreaming(fetch(url), go.importObject).catch(() =>
+        fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, go.importObject)))
+    : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, go.importObject));
+
+  load.then(result => {
+    status.remove();
+    go.run(result.instance);
+  }).catch(err => {
+    status.textContent = "Could not load the game: " + err;
+  });
+</script>
+</body>
+</html>

@@ -5,9 +5,6 @@ services:
       dockerfile: Containerfile
     container_name: 6chan
 
-    ports:
-      - "8080:80"
-
     volumes:
       - ./:/var/www/html
 
@@ -39,10 +36,11 @@ services:
       DIFFICULTY: "4"
       METRICS_BIND: ":9090"
       SERVE_ROBOTS_TXT: "true"
-      TARGET: "http://nginx"
+      TARGET: "http://php:80"
       POLICY_FNAME: "/data/cfg/botPolicy.yaml"
       OG_PASSTHROUGH: "true"
       OG_EXPIRY_TIME: "24h"
+      USE_REMOTE_ADDRESS: "true"
     healthcheck:
       test: ["CMD", "anubis", "--healthcheck"]
       interval: 5s
@@ -52,13 +50,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - "./botPolicy.yaml:/data/cfg/botPolicy.yaml:ro"
-
-  nginx:
-    image: nginx
-    container_name: server
-    volumes:
-      - "./www:/usr/share/nginx/html"
+      - "./anubis/botPolicy-boards-only.yaml:/data/cfg/botPolicy.yaml:ro"
 
   # Note to self: just experimental, prob removed/comment out or kept later on ^_^
   fail2ban:

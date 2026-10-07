@@ -6,7 +6,13 @@ $dotenv->load();
 
 $r_salt = $_ENV['R_SALT'];
 
-define('ALLOWED_REACTIONS', ['😂', '🥹', '⭐', '🔥', '💀', '🤔', '😭', '💯', '🎵', '🤯']);
+define('ALLOWED_REACTIONS', [
+    '😂', '🥹', '⭐', '🔥',
+    '💀', '🤔', '😭', '💯',
+    '🎵', '🤯', '🤡', '🩷',
+    '🤤'
+
+]);
 define('REACTION_SALT', $r_salt);
 
 function hash_ip(string $ip): string {

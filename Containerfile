@@ -17,4 +17,8 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/conf-available/*.conf
 
 RUN a2enmod rewrite
+
+COPY admin-protect.conf /etc/apache2/conf-available/admin-protect.conf
+RUN a2enconf admin-protect
+
 RUN chown -R www-data:www-data /var/www/html

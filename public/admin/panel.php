@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 $threads = $db->query(
-  "SELECT t.id, t.subject, t.body, t.created_at, b.slug
+  "SELECT t.id, t.subject, t.body, t.created_at, t.pinned, t.locked, b.slug
    FROM threads t JOIN boards b ON b.id=t.board_id
    ORDER BY t.created_at DESC LIMIT 30"
 )->fetchAll(PDO::FETCH_ASSOC);
@@ -65,7 +65,7 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — @6chan</title>
+<title>Admin Panel - @6chan</title>
 <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
 <link rel="stylesheet" href="../style.css">
 <style>
@@ -102,9 +102,13 @@ $bans = $db->query("SELECT * FROM bans ORDER BY banned_at DESC")->fetchAll(PDO::
 <div id="topbar">
   <span class="site-name">@6chan</span>
   <a href="../index.php">Home</a>
+  <a href="robots.php">[R9K]</a>
+  <a href="invite.php">[Invite]</a>
+  <a href="monitor.php">[Health]</a>
+  <a href="system.php">[Criticals]</a>
   <span style="margin-left:auto;font-size:12px;color:#ccc;">
     Logged in as <strong style="color:white;"><?= htmlspecialchars($_SESSION['admin_user']) ?></strong>
-    — <a href="logout.php" style="color:red;">[Logout]</a>
+    — <a href="logout.php" style="color:black;">[Logout]</a>
   </span>
 </div>
 

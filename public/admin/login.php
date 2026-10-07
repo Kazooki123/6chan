@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </style>
 </head>
 <body>
-<div id="topbar"><span class="site-name">6chan Admin</span> <a href="../index.php">Home</a></div>
+<div id="topbar"><span style="color:white;">Admin</span> <a href="../index.php">Home</a></div>
 <div class="login-box">
   <h2>⬡ Admin Login</h2>
   <?php if ($error): ?><div class="error"><?= htmlspecialchars($error) ?></div><?php endif; ?>

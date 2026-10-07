@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Settings — @6chan</title>
+<title>Settings - @6chan</title>
 <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
 <link rel="stylesheet" href="../style.css">
 <style>
@@ -237,17 +237,11 @@ input[type=range] {
                     style="font-family:Verdana,sans-serif;">
                 Verdana
             </button>
-            <button class="font-option"  data-font="'Minecraft', monospace"
-                    style="font-family:Minecraft, monospace;">
-                Minecraft
-            </button>
-            <button class="font-option" data-font="'SuperMario256', monospace"
-                    style="font-family:SuperMario256, monospace;">
-                Super Mario 256
-            </button>
             <?php
             $custom_fonts = [
-                'MapleMono' => "'MapleMono', monospace"  
+                'MapleMono'       => "'MapleMono', monospace",
+                'Minecraft'       => "'Minecraft', monospace",
+                'Super Mario 256' => "'SuperMario256', monospace"
             ];
             foreach ($custom_fonts as $label => $family): ?>
             <button class="font-option" data-font="<?= htmlspecialchars($family) ?>"
