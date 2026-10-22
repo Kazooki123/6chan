@@ -8,9 +8,25 @@ services:
     volumes:
       - ./:/var/www/html
 
+    environment:
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+    depends_on:
+      - redis
+
     # userns_mode: keep-id
     security_opt:
       - label=disable
+
+  redis:
+    image: redis:7-alpine
+    container_name: 6chan-redis
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
 
   db:
     image: postgres:17-alpine

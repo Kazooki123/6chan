@@ -12,7 +12,6 @@
         <nav id="topbar">
             <span class="site-name">@RFC</span>
             <a href="/">[::Home]</a>
-            
         </nav>
     </header>
 </body>

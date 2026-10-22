@@ -34,3 +34,8 @@ docs/
 public/uploads/
 nginx/
 yukiko/
+
+*.ps1
+*.bat
+
+.mailmap

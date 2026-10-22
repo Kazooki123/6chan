@@ -7,6 +7,7 @@ require_once '../config/reactions.php';
 require_once '../config/pfps.php';
 require_once 'services/map.php';
 require_once 'services/countryflags.php';
+require_once '../config/pg_types.php';
 
 require_once __DIR__ . '/services/palettes.php';
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -272,15 +273,21 @@ function render_body(string $text, int $thread_id): string {
     return $html;
 }
 
-function render_media(string $path, bool $nsfw, string $owner_type, int $owner_id): string {
+function render_media(string $path, bool $nsfw, string $owner_type, int $owner_id, bool $has_preview = false): string {
     global $s3, $s3_bucket;
     
     $is_video  = str_ends_with($path, '.mp4');
     $is_audio  = preg_match('/\.(mp3|flac|ogg|wav)$/i', $path);
-    $blur_path = media_url('preview/blur_' . $path);
-    $orig_path = media_url($path);
-    $has_blur  = $nsfw && !$is_video && file_exists(media_url('blur_') . $path);
-    $uid       = 'media_' . md5($path . $owner_type . $owner_id);
+
+    $bare_name = basename($path);
+    $orig_path  = media_url($path);
+    $blur_path  = media_url('preview/blur_'  . $bare_name);
+    $thumb_path = media_url('preview/thumb_' . $bare_name);
+
+    $has_blur  = $nsfw  && !$is_video && !$is_audio && $has_preview;
+    $has_thumb = !$nsfw && !$is_video && !$is_audio && $has_preview;
+
+    $uid = 'media_' . md5($path . $owner_type . $owner_id);
     
     if ($is_video) {
         $nsfw_wrap = $nsfw
@@ -430,18 +437,31 @@ function render_media(string $path, bool $nsfw, string $owner_type, int $owner_i
                      alt='nsfw image'
                      loading='lazy'
                      class='nsfw-blur'
-                     onclick='revealNsfw(this)'
-                     width='300'
-                     height='200'
+                     onclick='revealFullImage(this)'
                      title='Nsfw - click to show'>
-                <div class='nsfw-label'>Nsfw - click to reveal</div>
+                <div class='nsfw-label reveal-label'>Nsfw - click to reveal</div>
+            </div>";
+    }
+
+    if ($has_thumb) {
+        return "
+            <div class='post-img'>
+                <img id='{$uid}'
+                     src='{$thumb_path}'
+                     data-orig='{$orig_path}'
+                     alt='image'
+                     loading='lazy'
+                     class='img-thumb'
+                     onclick='revealFullImage(this)'
+                     title='Click to view original quality'>
+                <div class='thumb-label reveal-label'>Click for original quality</div>
             </div>";
     }
 
     return "
         <div class='post-img'>
             <img src='{$orig_path}' alt='image' loading='lazy'"
-            . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
+            . ($nsfw ? " class='nsfw-blur' onclick='revealFullImage(this)' title='Nsfw - click to reveal'" : "")
             . ">
         </div>";
 }
@@ -582,7 +602,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         <div class="thread-op" id="p<?= $thread['id'] ?>">
             <?php if (!empty($thread['img_path'])):
                 $imgpath = htmlspecialchars(media_url($thread['img_path'])); ?>
-                <?= render_media($thread['img_path'], (bool)$thread['nsfw'], 'thread', $thread['id']) ?>
+                <?= render_media($thread['img_path'], pg_bool($thread['nsfw']), 'thread', $thread['id'], pg_bool($thread['has_preview'] ?? false)) ?>
                 <a href="<?= $imgpath ?>">[View original]</a>
             <?php endif; ?>
         </div>
@@ -632,7 +652,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                    class="report-link">[Report]</a>
             </div>
             <?php if (!empty($p['img_path'])): ?>
-                <?= render_media($p['img_path'], (bool)$p['nsfw'], 'post', $id) ?>
+                <?= render_media($p['img_path'], pg_bool($p['nsfw']), 'post', $p['id'], pg_bool($p['has_preview'] ?? false)) ?>
                 <?php if (preg_match('/\.(mp3|flac|ogg|wav)$/i', $p['img_path'])): ?>
                     <form method="post" action="services/set_bgm.php" style="display:inline;">
                         <input type="hidden" name="thread_id" value="<?= $id ?>">
@@ -821,7 +841,7 @@ document.querySelectorAll('.quotelink').forEach(link => {
 //   const row = document.getElementById('lrc-row');
 //   const isAudio = f && f.type.startsWith('audio/');
 //   row.style.display = isAudio ? '';
- // });
+// });
 
 function movePopup(e) {
     const pad = 14;
@@ -833,15 +853,16 @@ function movePopup(e) {
     popup.style.top  = y + 'px';
 }
 
-function revealNsfw(el) {
+function revealFullImage(el) {
     const orig = el.dataset.orig;
     if (orig) el.src = orig;
-    el.classList.remove('nsfw-blur');
+    el.classList.remove('nsfw-blur', 'img-thumb');
     el.onclick = null;
     el.title   = '';
-    const label = el.closest('.post-img')?.querySelector('.nsfw-label');
+    const label = el.closest('.post-img')?.querySelector('.reveal-label');
     if (label) label.style.display = 'none';
 }
+function revealNsfw(el) { revealFullImage(el); }
 
 document.addEventListener('click', async e => {
     if (e.target.matches('.reaction-btn')) {

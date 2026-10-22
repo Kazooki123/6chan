@@ -17,3 +17,6 @@
 - [ ] Twemoji Support
 - [ ] Wikipedia page
 - [ ] Repolish `news/` webpage design
+- [x] Redis Caching
+
+- [ ] Implement and configure **Caddy**

@@ -7,6 +7,7 @@ require_once '../config/reactions.php';
 require_once '../config/pfps.php';
 require_once 'services/map.php';
 require_once 'services/countryflags.php';
+require_once '../config/pg_types.php';
 
 require_once __DIR__ . '/services/palettes.php';
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -292,15 +293,21 @@ function render_body(string $text, int $thread_id): string {
     return $html;
 }
 
-function render_media(string $path, bool $nsfw, string $owner_type, int $owner_id): string {
+function render_media(string $path, bool $nsfw, string $owner_type, int $owner_id, bool $has_preview = false): string {
     global $s3, $s3_bucket;
     
     $is_video  = str_ends_with($path, '.mp4');
     $is_audio  = preg_match('/\.(mp3|flac|ogg|wav)$/i', $path);
-    $blur_path = media_url('preview/blur_' . $path);
-    $orig_path = media_url($path);
-    $has_blur  = $nsfw && !$is_video && file_exists(media_url('blur_') . $path);
-    $uid       = 'media_' . md5($path . $owner_type . $owner_id);
+
+    $bare_name = basename($path);
+    $orig_path  = media_url($path);
+    $blur_path  = media_url('preview/blur_'  . $bare_name);
+    $thumb_path = media_url('preview/thumb_' . $bare_name);
+
+    $has_blur  = $nsfw  && !$is_video && !$is_audio && $has_preview;
+    $has_thumb = !$nsfw && !$is_video && !$is_audio && $has_preview;
+
+    $uid = 'media_' . md5($path . $owner_type . $owner_id);
     
     if ($is_video) {
         $nsfw_wrap = $nsfw
@@ -450,18 +457,31 @@ function render_media(string $path, bool $nsfw, string $owner_type, int $owner_i
                      alt='nsfw image'
                      loading='lazy'
                      class='nsfw-blur'
-                     onclick='revealNsfw(this)'
-                     width='300'
-                     height='200'
+                     onclick='revealFullImage(this)'
                      title='Nsfw - click to show'>
-                <div class='nsfw-label'>Nsfw - click to reveal</div>
+                <div class='nsfw-label reveal-label'>Nsfw - click to reveal</div>
+            </div>";
+    }
+
+    if ($has_thumb) {
+        return "
+            <div class='post-img'>
+                <img id='{$uid}'
+                     src='{$thumb_path}'
+                     data-orig='{$orig_path}'
+                     alt='image'
+                     loading='lazy'
+                     class='img-thumb'
+                     onclick='revealFullImage(this)'
+                     title='Click to view original quality'>
+                <div class='thumb-label reveal-label'>Click for original quality</div>
             </div>";
     }
 
     return "
         <div class='post-img'>
             <img src='{$orig_path}' alt='image' loading='lazy'"
-            . ($nsfw ? " class='nsfw-blur' onclick='revealNsfw(this)' title='Nsfw - click to reveal'" : "")
+            . ($nsfw ? " class='nsfw-blur' onclick='revealFullImage(this)' title='Nsfw - click to reveal'" : "")
             . ">
         </div>";
 }
@@ -740,7 +760,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             <div class="thread-op" id="p<?= $t['id'] ?>">
                     <?php if (!empty($t['img_path'])):
                         $imgpath = htmlspecialchars(media_url($t['img_path'])); ?>
-                    <?= render_media($t['img_path'], (bool)$t['nsfw'], 'thread', $t['id']) ?>
+                    <?= render_media($t['img_path'], pg_bool($t['nsfw']), 'thread', $t['id'], pg_bool($t['has_preview'] ?? false)) ?>
                     <a href="<?= $imgpath ?>">[View original]</a>
                     <?php endif; ?>
                 <div class="post-header">
@@ -813,7 +833,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                    <?php if (!empty($p['img_path'])):
                        $imgpath = htmlspecialchars(media_url($p['img_path'])); ?>
                    <div class="post-img">
-                       <?= render_media($p['img_path'], (bool)$p['nsfw'], 'post', $p['id']) ?>
+                       <?= render_media($p['img_path'], pg_bool($p['nsfw']), 'post', $p['id'], pg_bool($p['has_preview'] ?? false)) ?>
                        <a href="<?= $imgpath ?>">[View original]</a>
                    </div>
                    <?php endif; ?>
@@ -846,6 +866,10 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         </div>
     </div>
 
+    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a> <a href="blogs/blogs.php">[Blogs]</a> <a href="news/news.php">[News]</a></footer>
+
+    <div id="quote-popup"></div>
+
     <div id="lrc-modal" class="lrc-modal" style="display:none;">
         <div class="lrc-modal-box">
             <h3>Add / fix lyrics</h3>
@@ -859,10 +883,6 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
             </div>
         </div>
     </div>
-
-    <footer>@6chan — /<?= htmlspecialchars($board['slug']) ?>/ — <a href="index.php">Home</a> | <a href="settings/settings.php">[Settings]</a> | <a href="contact.php">[Contact]</a> <a href="support.html">[Support]</a> <a href="etc/tsnclf.html">[Logics]</a> <a href="blogs/blogs.php">[Blogs]</a> <a href="news/news.php">[News]</a></footer>
-
-    <div id="quote-popup"></div>
     
     <script>
     const popup = document.getElementById('quote-popup');
@@ -900,15 +920,16 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
       popup.style.top  = y + 'px';
     }
 
-    function revealNsfw(el) {
+    function revealFullImage(el) {
       const orig = el.dataset.orig;
       if (orig) el.src = orig;
-      el.classList.remove('nsfw-blur');
+      el.classList.remove('nsfw-blur', 'img-thumb');
       el.onclick = null;
       el.title   = '';
-      const label = el.closest('.post-img')?.querySelector('.nsfw-label');
-      if (label) label.style.display = 'none'; 
+      const label = el.closest('.post-img')?.querySelector('.reveal-label');
+      if (label) label.style.display = 'none';
     }
+    function revealNsfw(el) { revealFullImage(el); }
 
     document.addEventListener('click', async e => {
         if (e.target.matches('.reaction-btn')) {
@@ -1094,7 +1115,6 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
         location.href = 'space.php?id=' + data.space_id;
     });
 
-    // LRC editor modal
     let lrcTarget = null;
 
     function openLrcEditor(ownerType, ownerId) {

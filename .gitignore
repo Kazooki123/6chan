@@ -4,6 +4,7 @@
 *.conf
 *.dump
 *.htpasswd
+*.rdb
 
 sql
 dump
@@ -21,6 +22,7 @@ dump
 /storage/
 /models/
 /owncast_data/
+/garage/
 
 # ignore ongoing/developing websites
 /archive/

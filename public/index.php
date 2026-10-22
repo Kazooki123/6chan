@@ -38,12 +38,12 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
             <div class="welcome-links">
                 <a href="rules.html">[rules]</a>
                 <a href="board.php?b=r">[/r/ - random]</a>
-                <a href="board.php?b=t">[/t/ - tech]</a>
                 <a href="about.html">[about]</a>
                 <a href="etc/copyright.html">[copyright]</a>
                 <a href="etc/privacy.html">[privacy]</a>
                 <a href="etc/fos.html">[freedom]</a>
                 <a href="">[wiki]</a>
+                <a href="http://localhost:3000">[booru]</a>
             </div>
         </div>
         
@@ -93,6 +93,10 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
                     <span class="stat-val" id="stat-posters">—</span>
                     <span class="stat-label">active posters</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-val" id="stat-posters">90</span>
+                    <span class="stat-label">MB of media</span>
+                </div>
             </div>
             <div class="stats-footer">
                 <span id="stats-updated" style="color:var(--grey);font-size:10px;">
@@ -103,7 +107,7 @@ $boards = $db->query("SELECT slug, name, descript FROM boards ORDER BY id")->fet
         </div>
     </div>
 
-    <footer>@6chan v0.6.1 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.html">[Support]</a> <a href="news/news.php">[News]</a> <a href="feed.php">[RSS]</a> | <a href="rfc/index.php">[::RFC]</a></footer>
+    <footer>@6chan v0.6.1 - aGPL v3.0 - All boards: <a href="index.php">Home</a> | <a href="settings/settings.php">Settings</a> | <a href="contact.php">[Contact]</a> <a href="etc/license.html">[License]</a> <a href="support.html">[Support]</a> <a href="news/news.php">[News]</a> <a href="etc/changelog.html">[Changelog]</a> <a href="feed.php">[RSS]</a> | <a href="rfc/index.php">[::RFC]</a></footer>
     
     <script>
     (function() {

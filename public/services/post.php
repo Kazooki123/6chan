@@ -206,7 +206,37 @@ function handle_upload(bool $nsfw = false): ?array {
     }
 
     $preview_key = null;
-    
+    $thumb_key   = null;
+
+    $static_image_mimes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (in_array($mime, $static_image_mimes, true) && class_exists('Imagick')) {
+        try {
+            $tmp_thumb = tempnam(sys_get_temp_dir(), 'thumb_');
+
+            $img = new Imagick($f['tmp_name']);
+            $img->setImageCompressionQuality(78);
+            $img->thumbnailImage(600, 600, true);
+            $img->stripImage(); // drop EXIF/metadata — smaller file, also avoids leaking upload metadata
+            $img->writeImage($tmp_thumb);
+            $img->destroy();
+
+            $thumb_key = 'preview/thumb_' . $name;
+
+            $s3->putObject([
+                'Bucket'      => $bucket,
+                'Key'         => $thumb_key,
+                'SourceFile'  => $tmp_thumb,
+                'ContentType' => $mime,
+            ]);
+
+            unlink($tmp_thumb);
+        } catch (ImagickException $e) {
+            error_log("Imagick thumbnail failed: " . $e->getMessage());
+            $thumb_key = null;
+        }
+    }
+
     if ($nsfw && $mime !== 'video/mp4' && class_exists('Imagick')) {
         try {
             $tmp_preview = tempnam(sys_get_temp_dir(), 'blur_');
@@ -234,8 +264,9 @@ function handle_upload(bool $nsfw = false): ?array {
     }
 
     // Public URL (local)
-    $file_url = "http://localhost:9000/{$bucket}/{$object_key}";
+    $file_url    = "http://localhost:9000/{$bucket}/{$object_key}";
     $preview_url = $preview_key ? "http://localhost:9000/{$bucket}/{$preview_key}" : null;
+    $thumb_url   = $thumb_key   ? "http://localhost:9000/{$bucket}/{$thumb_key}"   : null;
 
     return [
         'name'         => $name,
@@ -245,6 +276,8 @@ function handle_upload(bool $nsfw = false): ?array {
         'object_key'   => $object_key,
         'url'          => $file_url,
         'nsfw_preview' => $preview_url,
+        'thumb'        => $thumb_url,
+        'has_preview'  => ($preview_key !== null || $thumb_key !== null),
     ];
 }
 
@@ -298,6 +331,11 @@ if ($action === 'new_thread') {
     $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1' ? 1 : 0;
     $upload = handle_upload((bool)$nsfw);
     $img  = $upload['object_key'] ?? null;
+    // Cast to int, not a raw PHP bool — PDO stringifies bound params by
+    // default, and (string)false is '' (empty string), which Postgres's
+    // boolean column rejects outright. (string)1/(string)0 are both
+    // valid boolean input, matching how $nsfw above already does this.
+    $has_preview = ($upload['has_preview'] ?? false) ? 1 : 0;
 
     $check = automod_check($body, $db);
 
@@ -345,8 +383,8 @@ if ($action === 'new_thread') {
     $flag = detect_flag($ip);
 
     $s = $db->prepare(
-        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, tripcode, automod_flag, nsfw, flag_code, flag_name)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
+        "INSERT INTO threads (board_id, subject, body, img_path, ip, author, tripcode, automod_flag, nsfw, flag_code, flag_name, has_preview)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
     );
     $s->execute([
         $board['id'],
@@ -360,6 +398,7 @@ if ($action === 'new_thread') {
         $nsfw,
         $flag['code'],
         $flag['name'],
+        $has_preview,
     ]);
 
     $tid = $s->fetchColumn();
@@ -443,6 +482,7 @@ if ($action === 'new_thread') {
     $nsfw = isset($_POST['nsfw']) && $_POST['nsfw'] === '1' ? 1 : 0;
     $upload = handle_upload((bool)$nsfw);
     $img  = $upload['object_key'] ?? null;
+    $has_preview = ($upload['has_preview'] ?? false) ? 1 : 0;
     
     $check = automod_check($body, $db);
 
@@ -476,8 +516,8 @@ if ($action === 'new_thread') {
                     [R9K] This has been said before.
                 </div>
                 <div style='color:#aaa;font-size:13px;'>
-                    /" . htmlspecialchars($board['slug']) . "/ requires original text -
-                    that exact post has already been made here. Say it differently.
+                    /" . htmlspecialchars($board['slug']) . "/ requires original text,
+                    that exact post has already been made here. Say something original.
                 </div>
                 <div style='margin-top:12px;'>
                     <a href='javascript:history.back()' style='color:var(--orange);'>[Go Back]</a>
@@ -490,8 +530,8 @@ if ($action === 'new_thread') {
     $flag = detect_flag($ip);
 
     $s = $db->prepare(
-        "INSERT INTO posts (thread_id, body, img_path, ip, author, tripcode, options, automod_flag, nsfw, flag_code, flag_name)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO posts (thread_id, body, img_path, ip, author, tripcode, options, automod_flag, nsfw, flag_code, flag_name, has_preview)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $s->execute([
         $tid,
@@ -505,6 +545,7 @@ if ($action === 'new_thread') {
         $nsfw,
         $flag['code'],
         $flag['name'],
+        $has_preview,
     ]);
 
     if (!$is_sage) {

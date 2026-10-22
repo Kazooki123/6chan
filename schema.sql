@@ -34,6 +34,7 @@ CREATE TABLE threads (
     bgm_post_id  INT REFERENCES posts(id) ON DELETE SET NULL,
     flag_code    VARCHAR(10),
     flag_name    VARCHAR(64),
+    has_preview  BOOLEAN NOT NULL DEFAULT FALSE,
     nsfw         BOOLEAN NOT NULL DEFAULT FALSE,
     pinned       BOOLEAN NOT NULL DEFAULT FALSE,
     locked       BOOLEAN NOT NULL DEFAULT FALSE,
@@ -52,6 +53,7 @@ CREATE TABLE posts (
     automod_flag VARCHAR(50),
     flag_code    VARCHAR(10),
     flag_code    VARCHAR(64),
+    has_preview  BOOLEAN NOT NULL DEFAULT FALSE,
     nsfw         BOOLEAN NOT NULL DEFAULT FALSE,
     options      VARCHAR(64),
     created_at   TIMESTAMPTZ DEFAULT NOW()
