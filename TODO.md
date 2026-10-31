@@ -11,12 +11,12 @@
 - [x] Recommendation algorithm (score-based)
 - [x] Live Audio streams (Spaces)
 - [x] Robot9000 (RB9k) style algorithm
-- [ ] Syntax Highlighting (Phiki)
+- [x] Syntax Highlighting (Phiki)
 - [x] Map tiles on thread posts
-- [ ] WASM games on thread post (**EXPERIMENTAL**)
+- [ ] Custom Username Fonts (either client or server sided, might need a tripcode verifier(?))
 - [ ] Twemoji Support
 - [ ] Wikipedia page
 - [ ] Repolish `news/` webpage design
 - [x] Redis Caching
 
-- [ ] Implement and configure **Caddy**
+- [ ] Stabalize the implementation and configuration of **Caddy**

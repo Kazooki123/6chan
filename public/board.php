@@ -6,8 +6,10 @@ require_once '../config/markdown.php';
 require_once '../config/reactions.php';
 require_once '../config/pfps.php';
 require_once 'services/map.php';
+require_once 'services/latex.php';
 require_once 'services/countryflags.php';
 require_once '../config/pg_types.php';
+require_once '../config/embeds.php';
 
 require_once __DIR__ . '/services/palettes.php';
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -63,6 +65,8 @@ function get_manual_lrc(string $audio_path, S3Client $s3, string $bucket): ?arra
         return null;
     }
 }
+
+$all_boards = $db->query("SELECT slug, name FROM boards ORDER BY slug ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 $board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
 $board->execute([$slug]);
@@ -289,6 +293,14 @@ function render_body(string $text, int $thread_id): string {
         static fn($m) => render_palette_text($m[2], $m[1]),
         $html
     );
+
+    global $db;
+    foreach (extract_embed_urls($text) as $url) {
+        $card = get_embed_card($url, $db);
+        if ($card) {
+            $html .= render_embed_card($card);
+        }
+    }
 
     return $html;
 }
@@ -588,17 +600,24 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="6chan the Open Source Imageboard.">
     <title>/<?= htmlspecialchars($board['slug']) ?>/ - <?= htmlspecialchars($board['name']) ?></title>
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.svg">
+    <link rel="stylesheet" href="style/style.css">
     <?= render_leaflet_assets() ?>
-    <script src="settingsloader.js"></script>
-    <script src="shortcuts.js"></script>
+    <?= render_latex_assets() ?>
+    <script src="js/settingsloader.js"></script>
+    <script src="js/shortcuts.js"></script>
 </head>
 <body class="page-board">
     <div id="topbar">
         <span class="site-name">@6chan</span>
         <a href="index.php">Home</a>
-        <a href="board.php?b=<?= htmlspecialchars($board['slug']) ?>">/<?= htmlspecialchars($board['slug']) ?>/</a>
+        <select class="board-switcher" onchange="if(this.value) location.href='board.php?b='+this.value">
+            <?php foreach ($all_boards as $b): ?>
+                <option value="<?= htmlspecialchars($b['slug']) ?>" <?= $b['slug'] === $board['slug'] ? 'selected' : '' ?>>
+                    /<?= htmlspecialchars($b['slug']) ?>/
+                </option>
+            <?php endforeach; ?>
+        </select>
         <a href="catalog.php?b=<?= htmlspecialchars($board['slug']) ?>">[Catalog]</a>
         <a href="rules.html">[Rules]</a>
         <a href="search.php">[Search]</a>
@@ -644,6 +663,7 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
                                 <code>`code`</code> <code>~~strike~~</code>
                                 <code>&gt;greentext</code> <code>&gt;&gt;123</code> |
                                 <a href="docs/markdownguide.html" style="color:var(--orange);font-size:11px;">[Guide]</a>
+                                <a href="docs/latexguide.html" style="color:var(--orange);font-size:11px;">[LaTeX]</a>
                             </div>
                         </td>
                     </tr>

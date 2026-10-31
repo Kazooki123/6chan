@@ -91,7 +91,17 @@ function host_resolves_to_public_ip(string $host): bool {
 function is_safe_embed_url(string $url): bool {
     $parts = parse_url($url);
     if (!$parts || !isset($parts['scheme'], $parts['host'])) return false;
-    if (!in_array(strtolower($parts['scheme']), ['http', 'https'], true)) return false;
+    $scheme = strtolower($parts['scheme']);
+    if (!in_array($scheme, ['http', 'https'], true)) return false;
+
+    $allowed = array_filter(array_map('trim', explode(',', $_ENV['EMBED_ALLOWED_HOSTS'] ?? '')));
+    if ($allowed) {
+        $port = $parts['port'] ?? ($scheme === 'https' ? 443 : 80);
+        if (in_array(strtolower($parts['host']) . ':' . $port, array_map('strtolower', $allowed), true)) {
+            return true;
+        }
+    }
+
     return host_resolves_to_public_ip($parts['host']);
 }
 

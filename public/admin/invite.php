@@ -65,8 +65,8 @@ $tokens  = list_staff_tokens($chat_db);
 <head>
 <meta charset="utf-8">
 <title>Staff Invites — 6chan</title>
-<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
-<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../style/style.css">
 <style>
     body { background:#1a1a1a; color:#ddd; font-family: monospace; padding: 2rem; }
     h1, h2 { color: white; }

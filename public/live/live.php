@@ -24,7 +24,7 @@ $turn = pioneer_turn_credentials();
 <meta charset="utf-8">
 <title>Pioneer :: 6chan</title>
 <link rel="icon" type="image/x-icon" href="../assets/pioneer.ico"/>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style/style.css">
 </head>
 <body class="pioneer-mod">
 <header class="bar">

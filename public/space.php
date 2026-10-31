@@ -21,9 +21,9 @@ if (!$space) { http_response_code(404); die('Space not found.'); }
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎙️ <?= htmlspecialchars($space['title']) ?> - @6chan Space</title>
-<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-<link rel="stylesheet" href="style.css">
-<script src="settingsloader.js"></script>
+<link rel="icon" type="image/x-icon" href="assets/favicon.svg">
+<link rel="stylesheet" href="style/style.css">
+<script src="js/settingsloader.js"></script>
 <style>
 .space-room { max-width: 700px; margin: 0 auto; padding: 12px; }
 .space-header { background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 14px; }
@@ -96,7 +96,7 @@ if (!$space) { http_response_code(404); die('Space not found.'); }
         <div class="space-status-line" id="space-status">connecting…</div>
     </div>
 
-    <script src="space.js"></script>
+    <script src="js/space.js"></script>
     <script>
         SpaceRoom.init({ spaceId: <?= (int)$space['id'] ?>, status: <?= json_encode($space['status']) ?> });
     </script>

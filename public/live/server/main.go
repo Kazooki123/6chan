@@ -367,7 +367,7 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
-	godotenv.Load("/../.env")
+	godotenv.Load("../.env")
 	secret := os.Getenv("PIONEER_SECRET")
 	if secret == "" {
 		log.Fatal("PIONEER_SECRET env var is required")

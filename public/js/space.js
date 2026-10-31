@@ -28,7 +28,7 @@ const SpaceRoom = (() => {
         form.append('space_id', cfg.spaceId);
         form.append('author', nameField);
 
-        const res  = await fetch('services/space_join.php', { method: 'POST', body: form });
+        const res  = await fetch('/../services/space_join.php', { method: 'POST', body: form });
         const data = await res.json();
         if (!data.ok) { setStatus('Could not join: ' + data.error); return; }
 
@@ -156,7 +156,7 @@ const SpaceRoom = (() => {
         form.append('type', type);
         if (to) form.append('to', to);
         form.append('payload', JSON.stringify(payload));
-        fetch('services/space_signal.php', { method: 'POST', body: form });
+        fetch('/../services/space_signal.php', { method: 'POST', body: form });
     }
 
     async function pollLoop() {
@@ -164,7 +164,7 @@ const SpaceRoom = (() => {
         polling = true;
         try {
             while (!ended) {
-                const url = `services/space_poll.php?space_id=${cfg.spaceId}&sid=${sid}&since=${lastSignalId}`;
+                const url = `/../services/space_poll.php?space_id=${cfg.spaceId}&sid=${sid}&since=${lastSignalId}`;
                 const res  = await fetch(url);
                 const data = await res.json();
                 if (!data.ok) break;
@@ -295,7 +295,7 @@ const SpaceRoom = (() => {
         const form = new FormData();
         form.append('sid', sid);
         form.append('space_id', cfg.spaceId);
-        fetch('services/space_request_speak.php', { method: 'POST', body: form });
+        fetch('/../services/space_request_speak.php', { method: 'POST', body: form });
         setStatus('Hand raised — waiting for the host.');
     }
 
@@ -313,7 +313,7 @@ const SpaceRoom = (() => {
         form.append('space_id', cfg.spaceId);
         form.append('action', action);
         if (target) form.append('target', target);
-        fetch('services/space_moderate.php', { method: 'POST', body: form });
+        fetch('/../services/space_moderate.php', { method: 'POST', body: form });
         document.getElementById('req-' + target)?.remove();
     }
 
@@ -321,7 +321,7 @@ const SpaceRoom = (() => {
         const form = new FormData();
         form.append('sid', sid);
         form.append('space_id', cfg.spaceId);
-        navigator.sendBeacon('services/space_leave.php', form);
+        navigator.sendBeacon('/../services/space_leave.php', form);
         window.location.href = 'board.php';
     }
 

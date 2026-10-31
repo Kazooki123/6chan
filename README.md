@@ -1,7 +1,7 @@
 # 6chan - The Peak Imageboard
 
 
-<img src="public/assets/6chan.png" width="400" height="300" alt="Logo">
+<img src="public/assets/6chan.png" width="400" height="300" alt="Logo"><img src="public/assets/favicon.svg" alt="Clover">
 <img src="public/assets/org-banner.png" alt="Official Banner">
 
 Welcome to **6chan**! An imageboard from scratch with the philosophy of **4chan** and a few modern web
@@ -22,6 +22,7 @@ Read the **/rules**, don't be an idiot.
 - Customizable colors and fonts (in settings)
 - <span style="color:pink">(NEW!)</span> IRC clients for mods / staffs and average users
 - Audio Streaming (**Spaces**)
+- OpenGraph support for rich embeds
 
 > [!IMPORTANT]
 > This project is still in it's early development stage, updates and patches are ongoing, thank you!
@@ -108,6 +109,10 @@ SOL: `4CZQYQCvArR6PYm9x4NoW5wDGjVUQKiGcFYBcStNQxUP`
 ## Contribution
 
 You're always welcome to contribute to 6chan and make it a better place !! ⭐💗
+
+## Governance
+
+We (as a community) prioritize the safety and maintainability of this project, read [this](GOVERNANCNE.md) if you want to learn how we govern things here.
 
 ## License
 

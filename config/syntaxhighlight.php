@@ -1,28 +1,26 @@
 <?php
-// TODO: Finish the syntax highlighter for code blocks
 require_once __DIR__ . '/../vendor/autoload.php';
 
-const EXTENSIONS = [
-    'php' => 'php', 'phtml' => 'php',
-    'js' => 'javascript', 'mjs' => 'javascript', 'cjs' => 'javascript',
-    'ts' => 'typescript', 'tsx' => 'tsx', 'jsx' => 'jsx',
-    'py' => 'python',
-    'rb' => 'ruby',
-    'go' => 'go',
-    'rs' => 'rust',
-    'c' => 'c', 'h' => 'c',
-    'cpp' => 'cpp', 'cc' => 'cpp', 'cxx' => 'cpp', 'hpp' => 'cpp', 'hh' => 'cpp',
-    'java' => 'java',
-    'cs' => 'csharp',
-    'sh' => 'bash', 'bash' => 'bash',
-    'sql' => 'sql',
-    'yml' => 'yaml', 'yaml' => 'yaml',
-    'json' => 'json',
-    'md' => 'markdown', 'markdown' => 'markdown',
-    'html' => 'html', 'htm' => 'html',
-    'css' => 'css',
-    'xml' => 'xml',
-    'toml' => 'toml',
-    'ini' => 'ini',
-    'diff' => 'diff', 'patch' => 'diff',
-];
+use Phiki\Adapters\CommonMark\PhikiExtension;
+
+const PHIKI_THEME = 'gruvbox-dark-hard';
+# NOTE to self and maybe to contributors: you can use catppuccin, github, mamterial, or whatever sets your mood. Heres a list reference from Phiki themes:
+# andromeda, aurora-x, ayu-dark, catppuccin-frappe, catppuccin-latte, catppuccin-macchiato,
+# catppuccin-mocha, dark-plus, dracula, dracula-soft, everforest-dark, everforest-light, 
+# github-dark-default, github-dark-dimmed, github-dark-high-contrast, github-dark,
+# github-light-default, github-light-hight-contrast, github-light, gruvbox-dark-hard (current),
+# gruvbox-dark-medium, gruvbox-dark-soft, gruvbox-light-hard, gruvbox-light-medium,
+# gruvbox-light-soft, houston, kanagawa-dragon, kanagawa-lotus, kanagawa-wave, laserwave,
+# light-plus, material-theme-darker, material-theme-lighter, material-theme-ocean,
+# material-theme-palenight, material-theme, min-dark, min-light, monokai, night-owl, nord,
+# one-dark-pro, one-light, plastic, poimandres, red, rose-pine-dawn, rose-pine-moon, rose-pine,
+# slack-dark, slack-ochin, snazzy-light, solarized-dark, solarized-light, synthwave-84, tokyo-night,
+# vesper, vitesse-black, vitesse-dark, vitesse-light
+
+function get_phiki_extension(): PhikiExtension {
+    static $extension = null;
+    if ($extension) return $extension;
+
+    $extension = new PhikiExtension(PHIKI_THEME);
+    return $extension;
+}

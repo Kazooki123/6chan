@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/syntaxhighlight.php';
 
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
@@ -23,6 +24,7 @@ function get_markdown_converter(): MarkDownConverter {
     $env->addExtension(new StrikethroughExtension());
     $env->addExtension(new TableExtension());
     $env->addExtension(new AutolinkExtension());
+    $env->addExtension(get_phiki_extension());
 
     $converter = new MarkdownConverter($env);
     return $converter;
@@ -39,13 +41,17 @@ function get_purifier(): HTMLPurifier {
     $config->set('Cache.SerializerPath', $cache);
 
     $config->set('HTML.Allowed',
-        value: 'p,br,strong,b,em,i,del,s,code,pre,blockquote,' .
+        value: 'p,br,strong,b,em,i,del,s,code[style|class],pre[style|class],blockquote,' .
         'ul,ol,li,a[href|title],img[src|alt|title|width|height],' .
-        'h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,hr,span'
+        'h1,h2,h3,h4,h5,h6,table,thead,tbody,tr,th,td,hr,span[style|class]'
     );
 
     $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true]);
     $config->set('URI.DisableExternalResources', true);
+
+    $config->set('CSS.AllowedProperties', [
+        'color', 'background-color', 'font-weight', 'font-style', 'text-decoration',
+    ]);
 
     $purifier = new HTMLPurifier($config);
     return $purifier;

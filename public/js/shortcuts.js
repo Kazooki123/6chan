@@ -11,7 +11,7 @@
       pos++;
       if (pos === KONAMI.length) {
         pos = 0;
-        window.location.href = '/etc/dev/null/egg.html';
+        window.location.href = '/../etc/dev/null/egg.html';
       }
     } else {
       pos = e.key === KONAMI[0] ? 1 : 0;
@@ -38,7 +38,7 @@
 
       // [C] — jump to catalog (if on a board page)
       case 'c': case 'C':
-        window.location.href = '/catalog.php?b=';
+        window.location.href = '/../catalog.php?b=';
         break;
 
       // [H] — go home

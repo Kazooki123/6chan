@@ -44,8 +44,8 @@ $boards = $db->query('SELECT id, slug, name, robot9k_enabled FROM boards ORDER B
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Handle R9K</title>
-<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
-<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../style/style.css">
 <style>
 .panel-box {
     max-width: 560px; margin: 50px auto;

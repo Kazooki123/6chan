@@ -13,8 +13,8 @@ $turn = pioneer_turn_credentials();
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pioneer</title>
 <link rel="icon" type="image/x-icon" href="../assets/pioneer.ico"/>
-<link rel="stylesheet" href="style.css">
-<script src="../oneko.js" defer></script>
+<link rel="stylesheet" href="style/style.css">
+<script src="../js/oneko.js" defer></script>
 </head>
 <body class="pioneer-viewer">
 <header class="bar">

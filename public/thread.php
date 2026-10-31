@@ -6,6 +6,7 @@ require_once '../config/markdown.php';
 require_once '../config/reactions.php';
 require_once '../config/pfps.php';
 require_once 'services/map.php';
+require_once 'services/latex.php';
 require_once 'services/countryflags.php';
 require_once '../config/pg_types.php';
 
@@ -19,6 +20,7 @@ use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
 $db = get_db();
+$slug = $_GET['b'] ?? '';
 $id = (int)($_GET['id'] ?? 0);
 
 $s3key    = $_ENV['S3_KEY'];
@@ -59,6 +61,12 @@ function get_manual_lrc(string $audio_path, S3Client $s3, string $bucket): ?arra
         return null;
     }
 }
+
+$all_boards = $db->query("SELECT slug, name FROM boards ORDER BY slug ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+$board = $db->prepare("SELECT * FROM boards WHERE slug = ?");
+$board->execute([$slug]);
+$board = $board->fetch(PDO::FETCH_ASSOC);
 
 $thread = $db->prepare("SELECT t.*, b.slug, b.name AS bname FROM threads t JOIN boards b ON b.id=t.board_id WHERE t.id=?");
 $thread->execute([$id]);
@@ -567,18 +575,25 @@ function render_poll(int $thread_id, ?int $post_id, string $viewer_ip, PDO $db):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>6chan - <?= htmlspecialchars($thread['subject'] ?: 'Thread #'.$id) ?></title>
-<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/x-icon" href="assets/favicon.svg">
+<link rel="stylesheet" href="style/style.css">
 <?= render_leaflet_assets() ?>
-<script src="settingsloader.js"></script>
-<script src="shortcuts.js"></script>
+<?= render_latex_assets() ?>
+<script src="js/settingsloader.js"></script>
+<script src="js/shortcuts.js"></script>
 </head>
 <body class="page-thread">
 
 <div id="topbar">
     <span class="site-name">@6chan</span>
     <a href="index.php">Home</a>
-    <a href="board.php?b=<?= htmlspecialchars($thread['slug']) ?>">/<?= htmlspecialchars($thread['slug']) ?>/</a>
+    <select class="board-switcher" onchange="if(this.value) location.href='board.php?b='+this.value">
+        <?php foreach ($all_boards as $b): ?>
+            <option value="<?= htmlspecialchars($b['slug']) ?>" <?= $b['slug'] === $board['slug'] ? 'selected' : '' ?>>
+                /<?= htmlspecialchars($b['slug']) ?>/
+            </option>
+        <?php endforeach; ?>
+    </select>
     <a href="catalog.php?b=<?= htmlspecialchars($thread['slug']) ?>">[Catalog]</a>
     <a href="rules.html">[Rules]</a>
     <a href="search.php">[Search]</a>

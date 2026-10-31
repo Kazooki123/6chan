@@ -73,8 +73,8 @@ if ($productId) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>6chan - Checkout</title>
-  <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
-  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../style/style.css">
   <script src="https://unpkg.com/@polar-sh/checkout@0/dist/embed.global.js"
           defer data-auto-init></script>
   <style>

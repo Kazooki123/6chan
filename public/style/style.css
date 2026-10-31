@@ -1,4 +1,4 @@
-/* public/style.css */
+/* public/style/style.css */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -38,9 +38,9 @@
 
 @font-face {
     font-family: 'MapleMono';
-    src: url('/assets/font/MapleMono-SemiBold.ttf') format('truetype');
-    /* src: url('/assets/font/Minecraft.ttf') format('truetype'); */
-    /* src: url('/assets/font/SuperMario256.ttf') format('truetype'); */
+    src: url('/../assets/font/MapleMono-SemiBold.ttf') format('truetype');
+    /* src: url('/../assets/font/Minecraft.ttf') format('truetype'); */
+    /* src: url('/../assets/font/SuperMario256.ttf') format('truetype'); */
     font-variant: swap;
 }
 
@@ -73,6 +73,15 @@ a:hover      { text-decoration: underline; }
 }
 #topbar a { color: #000; font-size: 16px; }
 #topbar a:hover { text-decoration: underline; }
+
+#topbar .board-switcher {
+    background: #fff;
+    border: none;
+    font: bold 13px 'MapleMono', monospace;
+    padding: 2px 6px;
+    cursor: pointer;
+    max-width: 160px;
+}
 
 /* ── page wrapper ── */
 .wrap { max-width: 900px; margin: 0 auto; padding: 12px; }
@@ -555,6 +564,60 @@ footer {
     margin-top: 3px;
     cursor: pointer;
     user-select: none;
+}
+
+.embed-card {
+    display: block;
+    margin-top: 8px;
+    max-width: 400px;
+    border: 1px solid var(--border);
+    background: #111;
+}
+
+.embed-website {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+}
+.embed-website:hover { border-color: var(--orange); }
+.embed-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+}
+.embed-text { padding: 8px 10px; }
+.embed-site {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--grey);
+    margin-bottom: 2px;
+}
+.embed-title {
+    font-size: 13px;
+    color: var(--white);
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+.embed-desc {
+    font-size: 12px;
+    color: var(--grey);
+    line-height: 1.4;
+}
+
+.embed-youtube {
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    overflow: hidden;
+}
+.embed-youtube iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
 }
 
 .captcha-question {

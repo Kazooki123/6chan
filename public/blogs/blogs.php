@@ -23,9 +23,9 @@ $posts = $post ? [] : load_md_posts(__DIR__ . '/../../content/blogs');
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= $post ? htmlspecialchars($post['title']) . ' — ' : '' ?>Blogs — @6chan</title>
-<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
-<link rel="stylesheet" href="../style.css">
-<script src="../settingsloader.js"></script>
+<link rel="icon" type="image/x-icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../style/style.css">
+<script src="../js/settingsloader.js"></script>
 <style>
 .blogs-wrap { max-width: 720px; margin: 0 auto; padding: 12px; }
 

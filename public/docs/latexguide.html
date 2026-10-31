@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LaTeX Guide - @6chan</title>
-<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
-<link rel="stylesheet" href="../style.css">
-<script src="../settingsloader.js"></script>
+<link rel="icon" type="image/x-icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../style/style.css">
+<script src="../js/settingsloader.js"></script>
 <style>
 .guide-wrap  { max-width: 720px; margin: 0 auto; padding: 12px; }
 .guide-block {
@@ -98,6 +98,56 @@
 </style>
 </head>
 <body>
+    <div id="topbar">
+        <span class="site-name">@6chan</span>
+        <a href="../index.php">Home</a>
+        <a href="../rules.html">[Rules]</a>
+        <a href="../search.php">[Search]</a>
+        <a href="../support.html">[Support]</a>
+        <a href="../contact.php">[Contact]</a>
+        <a href="../feed.php">[RSS]</a>
+    </div>
     
+    <div class="guide-wrap">
+        <div class="page-header">
+            <h1>LaTeX Guide</h1>
+            <p>Use KaTeX to render math inline or in display mode inside post bodies.</p>
+        </div>
+
+        <div class="guide-block">
+            <h2>Inline math</h2>
+            <div class="guide-header">
+                <span>You type</span><span>You get</span>
+            </div>
+            <div class="guide-row">
+                <div class="guide-syntax"><code>\(E = mc^2\)</code></div>
+                <div class="guide-preview">\(E = mc^2\)</div>
+            </div>
+            <div class="guide-row">
+                <div class="guide-syntax"><code>$x^2 + y^2 = z^2$</code></div>
+                <div class="guide-preview">$x^2 + y^2 = z^2$</div>
+            </div>
+        </div>
+
+        <div class="guide-block">
+            <h2>Display math</h2>
+            <div class="guide-header">
+                <span>You type</span><span>You get</span>
+            </div>
+            <div class="guide-row">
+                <div class="guide-syntax"><code>\[\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}\]</code></div>
+                <div class="guide-preview">\[\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}\]</div>
+            </div>
+            <div class="guide-row">
+                <div class="guide-syntax"><code>$$\int_0^1 x^2 dx = \frac13$$</code></div>
+                <div class="guide-preview">$$\int_0^1 x^2 dx = \frac13$$</div>
+            </div>
+        </div>
+
+        <div class="guide-block">
+            <h2>Notes</h2>
+            <div class="guide-syntax"><code>KaTeX supports most LaTeX syntax, but it does not run arbitrary HTML/JS.</code></div>
+        </div>
+    </div>
 </body>
 </html>

@@ -36,7 +36,7 @@ if ($ban) {
     $reason = htmlspecialchars($ban['reason'] ?? 'No reason given.');
     $expiry = $ban['expires_at'] ? date('Y-m-d H:i', strtotime($ban['expires_at'])) : 'Permanent';
     die("
-        <link rel='stylesheet' href='style.css'>
+        <link rel='stylesheet' href='style/style.css'>
         <div style='max-width:400px;margin:60px auto;background:#1e1e1e;
                     border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
             <div style='color:#ff4444;font-size:16px;font-weight:bold;margin-bottom:10px;'>
@@ -210,6 +210,11 @@ function handle_upload(bool $nsfw = false): ?array {
 
     $static_image_mimes = ['image/jpeg', 'image/png', 'image/webp'];
 
+    $image_automod = ['action' => 'allow', 'reason' => null];
+    if (in_array($mime, $static_image_mimes, true) && class_exists('Codewithkyrian\Transformers\Transformers')) {
+        $image_automod = automod_check_image($f['tmp_name']);
+    }
+
     if (in_array($mime, $static_image_mimes, true) && class_exists('Imagick')) {
         try {
             $tmp_thumb = tempnam(sys_get_temp_dir(), 'thumb_');
@@ -278,6 +283,7 @@ function handle_upload(bool $nsfw = false): ?array {
         'nsfw_preview' => $preview_url,
         'thumb'        => $thumb_url,
         'has_preview'  => ($preview_key !== null || $thumb_key !== null),
+        'image_automod' => $image_automod,
     ];
 }
 
@@ -312,7 +318,7 @@ if ($action === 'new_thread') {
     if (!captchav2_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
         die("
-            <link rel='stylesheet' href='../style.css'>
+            <link rel='stylesheet' href='../style/style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
                 <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -342,7 +348,7 @@ if ($action === 'new_thread') {
     if ($check['action'] === 'block') {
         http_response_code(403);
         die("
-            <link rel='stylesheet' href='../style.css'>
+            <link rel='stylesheet' href='../style/style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
                 <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -362,7 +368,7 @@ if ($action === 'new_thread') {
     if (r9k_bool($board['robot9k_enabled'] ?? false) && r9k_is_duplicate($db, $board['id'], $body)) {
         http_response_code(409);
         die("
-            <link rel='stylesheet' href='../style.css'>
+            <link rel='stylesheet' href='../style/style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
                 <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -380,6 +386,11 @@ if ($action === 'new_thread') {
     }
 
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
+
+    $image_check = $upload['image_automod'] ?? null;
+    if (!$automod_flag && $image_check && $image_check['action'] === 'flag') {
+        $automod_flag = $image_check['reason'];
+    }
     $flag = detect_flag($ip);
 
     $s = $db->prepare(
@@ -456,7 +467,7 @@ if ($action === 'new_thread') {
     if (!captchav2_verify($captcha_token, $captcha_answer)) {
         http_response_code(400);
         die("
-            <link rel='stylesheet' href='../style.css'>
+            <link rel='stylesheet' href='../style/style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
                 <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -489,7 +500,7 @@ if ($action === 'new_thread') {
     if ($check['action'] === 'block') {
         http_response_code(403);
         die("
-            <link rel='stylesheet' href='../style.css'>
+            <link rel='stylesheet' href='../style/style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid #ff4444;padding:20px;font-family:MapleMono;'>
                 <div style='color:#ff4444;font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -509,7 +520,7 @@ if ($action === 'new_thread') {
     if (r9k_bool($board['robot9k_enabled'] ?? false) && r9k_is_duplicate($db, $board['id'], $body)) {
         http_response_code(409);
         die("
-            <link rel='stylesheet' href='../style.css'>
+            <link rel='stylesheet' href='../style/style.css'>
             <div style='max-width:420px;margin:60px auto;background:#1e1e1e;
                         border:1px solid var(--orange);padding:20px;font-family:MapleMono;'>
                 <div style='color:var(--orange);font-weight:bold;font-size:15px;margin-bottom:8px;'>
@@ -527,6 +538,11 @@ if ($action === 'new_thread') {
     }
 
     $automod_flag = $check['action'] === 'flag' ? $check['reason'] : null;
+
+    $image_check = $upload['image_automod'] ?? null;
+    if (!$automod_flag && $image_check && $image_check['action'] === 'flag') {
+        $automod_flag = $image_check['reason'];
+    }
     $flag = detect_flag($ip);
 
     $s = $db->prepare(

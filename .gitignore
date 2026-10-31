@@ -5,6 +5,7 @@
 *.dump
 *.htpasswd
 *.rdb
+redis.conf
 
 sql
 dump

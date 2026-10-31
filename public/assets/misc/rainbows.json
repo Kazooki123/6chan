@@ -48,5 +48,14 @@
         "grey":     "#A3A3A3",
         "white":    "#FFFFFF",
         "purple":   "#800080"
+    },
+    "mlm": {
+        "dgreen":   "#078D70",
+        "green":    "#26CEAA",
+        "lgreen":   "#99E8C2",
+        "white":    "#FFFFFF",
+        "lblue":    "#7BADE3",
+        "blue":     "#5049CB",
+        "indigo":   "#3E1A78"
     }
 }

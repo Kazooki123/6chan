@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Settings - @6chan</title>
-<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
-<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../style/style.css">
 <style>
 .settings-wrap  { max-width: 600px; margin: 0 auto; padding: 12px; }
 .setting-group  {

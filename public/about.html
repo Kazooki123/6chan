@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Who Are We - @6chan</title>
-<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-<link rel="stylesheet" href="style.css">
-<script src="settingsloader.js"></script></head>
+<link rel="icon" type="image/x-icon" href="assets/favicon.svg">
+<link rel="stylesheet" href="style/style.css">
+<script src="js/settingsloader.js"></script></head>
 <style>
   .about-header {
     background: var(--surface);
@@ -30,6 +30,12 @@
   }
   .about-block p  { margin: 0 0 10px 0; color: var(--white); }
   .about-block p:last-child { margin-bottom: 0; }
+
+  .small-logo {
+    gap: 5px;
+    width: 24px;
+    height: auto;
+  }
 </style>
 <body>
 <div id="topbar">
@@ -44,7 +50,7 @@
 <div class="wrap">
   <div class="about-header">
     <center>
-      <h1>About 6chan</h1>
+      <h1><img src="assets/favicon.svg" alt="Logo" class="small-logo">About 6chan<img src="assets/favicon.svg" alt="Logo" class="small-logo"></h1>
     </center>
   </div>
 
