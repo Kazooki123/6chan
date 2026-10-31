@@ -4,6 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Codewithkyrian\Transformers\Transformers;
 use function Codewithkyrian\Transformers\Pipelines\pipeline;
+use Codewithkyrian\Transformers\Utils\ImageDriver;
 
 const NSFW_MODEL_ID        = 'onnx-community/nsfw_image_detection-ONNX';
 const NSFW_CONFIDENCE_FLAG = 0.75;
