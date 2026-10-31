@@ -2,7 +2,7 @@
 
 - [ ] Notification system & UI
 - [x] Country flag for users
-- [ ] LaTeX support
+- [x] LaTeX support (KaTeX)
 - [x] Profile Pictures (tied to tripcodes)
 - [ ] Secure tripcodes (##pwrd)
 - [x] Anubis ^w^
